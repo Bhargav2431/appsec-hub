@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Interview War Room — Days 1–4 + Tools + Git</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#080808;--bg1:#101010;--bg2:#161616;--bg3:#1e1e1e;
+  --border:#262626;--border-hi:#333;
+  --text:#e8e8e8;--text2:#a0a0a0;--text3:#606060;
+  --orange:#ff6b1a;--orange-dim:#993f0f;--orange-glow:rgba(255,107,26,.12);
+  --gold:#ffd700;--gold-dim:#997e00;
+  --green:#22c55e;--amber:#f59e0b;--red:#ef4444;
+  --blue:#3b82f6;--purple:#a855f7;--cyan:#22d3ee;
+  --got-it:#166534;--got-it-text:#86efac;
+  --almost:#854d0e;--almost-text:#fde68a;
+  --missed:#7f1d1d;--missed-text:#fca5a5;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;}
+main{max-width:900px;margin:0 auto;padding:48px 24px 200px;}
+code{font-family:'JetBrains Mono',monospace;background:var(--bg2);color:var(--orange);padding:2px 7px;border-radius:4px;font-size:.83em;border:1px solid var(--border);}
+strong{color:#fff;font-weight:600;}
+a{color:var(--orange);text-decoration:none;}
+
+/* ========== HEADER ========== */
+.war-room-header{
+  text-align:center;padding:60px 0 40px;margin-bottom:40px;
+  border-bottom:1px solid var(--border);position:relative;
+}
+.war-room-header::before{
+  content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:200px;height:2px;
+  background:linear-gradient(to right,transparent,var(--orange),transparent);
+}
+.wr-tag{
+  font-family:'JetBrains Mono',monospace;font-size:11px;
+  letter-spacing:.3em;color:var(--orange);margin-bottom:14px;
+}
+h1.wr-title{
+  font-size:clamp(36px,6vw,64px);font-weight:700;
+  line-height:1.05;letter-spacing:-.02em;color:#fff;margin-bottom:12px;
+}
+h1.wr-title span{color:var(--orange);}
+.wr-sub{font-size:18px;color:var(--text2);margin-bottom:32px;}
+
+/* stats bar */
+.stats-bar{
+  display:flex;gap:24px;justify-content:center;flex-wrap:wrap;
+  padding:20px;background:var(--bg1);border:1px solid var(--border);
+}
+.stat-item{text-align:center;}
+.stat-num{
+  font-family:'JetBrains Mono',monospace;font-size:28px;
+  font-weight:700;color:var(--orange);line-height:1;
+}
+.stat-label{font-size:11px;letter-spacing:.15em;color:var(--text3);margin-top:4px;text-transform:uppercase;}
+
+/* progress ring */
+.progress-ring-wrap{
+  display:flex;align-items:center;justify-content:center;
+  gap:32px;flex-wrap:wrap;margin:28px 0;
+}
+.ring-container{position:relative;width:100px;height:100px;}
+.ring-svg{transform:rotate(-90deg);}
+.ring-bg{fill:none;stroke:var(--border);stroke-width:8;}
+.ring-fill{fill:none;stroke:var(--orange);stroke-width:8;stroke-linecap:round;transition:stroke-dashoffset .6s ease;}
+.ring-center{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  text-align:center;
+}
+.ring-pct{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700;color:#fff;}
+.ring-sub{font-size:10px;letter-spacing:.1em;color:var(--text3);}
+
+/* legend */
+.legend{display:flex;gap:16px;flex-wrap:wrap;}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);}
+.legend-dot{width:10px;height:10px;border-radius:50%;}
+
+/* ========== TOOL DEEP DIVES ========== */
+.section-title{
+  font-family:'JetBrains Mono',monospace;font-size:13px;
+  letter-spacing:.2em;color:var(--orange);
+  margin:48px 0 20px;display:flex;align-items:center;gap:16px;
+}
+.section-title::after{content:"";flex:1;height:1px;background:linear-gradient(to right,var(--orange-dim),transparent);}
+
+.tool-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+  gap:14px;margin-bottom:40px;
+}
+.tool-card{
+  background:var(--bg1);border:1px solid var(--border);
+  overflow:hidden;cursor:pointer;
+  transition:border-color .2s,box-shadow .2s;
+}
+.tool-card:hover{border-color:var(--orange-dim);box-shadow:0 0 24px var(--orange-glow);}
+.tool-card.open{border-color:var(--orange);}
+.tool-header{
+  padding:16px 18px;display:flex;align-items:center;gap:14px;
+}
+.tool-icon{
+  width:38px;height:38px;flex-shrink:0;
+  background:var(--bg2);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;
+}
+.tool-name{font-weight:600;color:#fff;font-size:15px;}
+.tool-type{font-size:12px;color:var(--text3);}
+.tool-chevron{margin-left:auto;color:var(--text3);transition:transform .3s;font-size:12px;}
+.tool-card.open .tool-chevron{transform:rotate(90deg);color:var(--orange);}
+.tool-body{
+  display:none;padding:0 18px 18px;border-top:1px solid var(--border);
+}
+.tool-card.open .tool-body{display:block;}
+.tool-section{margin-top:14px;}
+.tool-section-title{
+  font-family:'JetBrains Mono',monospace;font-size:9px;
+  letter-spacing:.2em;color:var(--orange);margin-bottom:6px;
+  display:flex;align-items:center;gap:8px;
+}
+.tool-section-title::after{content:"";flex:1;height:1px;background:var(--border);}
+.tool-section p,.tool-section li{font-size:14px;line-height:1.65;color:var(--text2);}
+.tool-section ul{margin-left:16px;margin-bottom:8px;}
+.tool-section li::marker{color:var(--orange);}
+.tool-code{
+  background:var(--bg);border:1px solid var(--border);
+  padding:10px 14px;margin-top:8px;
+  font-family:'JetBrains Mono',monospace;font-size:12px;
+  color:#c4b5fd;line-height:1.7;overflow-x:auto;
+}
+.interview-angle{
+  background:var(--orange-glow);border-left:3px solid var(--orange);
+  padding:10px 14px;margin-top:10px;font-size:13px;font-style:italic;color:var(--text);
+}
+.interview-angle::before{
+  content:"★ Say in interview: ";
+  font-style:normal;font-weight:600;color:var(--orange);
+  font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.1em;
+  display:block;margin-bottom:4px;
+}
+.roadmap-day{
+  display:inline-block;font-family:'JetBrains Mono',monospace;font-size:10px;
+  letter-spacing:.1em;background:var(--bg3);border:1px solid var(--border);
+  color:var(--text3);padding:2px 8px;margin-top:8px;
+}
+
+/* ========== FLASHCARD SYSTEM ========== */
+.fc-controls{
+  background:var(--bg1);border:1px solid var(--border);
+  padding:20px;margin-bottom:24px;
+}
+.fc-top-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px;}
+.fc-search{
+  flex:1;min-width:200px;
+  background:var(--bg);border:1px solid var(--border);
+  color:var(--text);padding:9px 14px;
+  font-family:'JetBrains Mono',monospace;font-size:13px;
+  outline:none;transition:border-color .2s;
+}
+.fc-search:focus{border-color:var(--orange);}
+.fc-search::placeholder{color:var(--text3);}
+.btn{
+  font-family:'JetBrains Mono',monospace;font-size:11px;
+  letter-spacing:.1em;padding:9px 16px;cursor:pointer;
+  border:1px solid var(--border);background:var(--bg2);
+  color:var(--text2);transition:all .15s;white-space:nowrap;
+}
+.btn:hover{border-color:var(--orange-dim);color:var(--text);}
+.btn.active{background:var(--orange);border-color:var(--orange);color:#000;font-weight:600;}
+.btn.primary{background:var(--orange);border-color:var(--orange);color:#000;font-weight:600;}
+.btn.primary:hover{opacity:.85;}
+
+.fc-filter-row{display:flex;gap:8px;flex-wrap:wrap;}
+.filter-chip{
+  font-family:'JetBrains Mono',monospace;font-size:10px;
+  letter-spacing:.1em;padding:5px 12px;cursor:pointer;
+  border:1px solid var(--border);background:var(--bg);
+  color:var(--text3);transition:all .15s;
+}
+.filter-chip:hover{border-color:var(--border-hi);color:var(--text2);}
+.filter-chip.active{color:#000;font-weight:600;}
+.filter-chip[data-cat="all"].active{background:var(--orange);border-color:var(--orange);}
+.filter-chip[data-cat="tools"].active{background:#22d3ee;border-color:#22d3ee;}
+.filter-chip[data-cat="git"].active{background:#f97316;border-color:#f97316;}
+.filter-chip[data-cat="http"].active{background:#a855f7;border-color:#a855f7;}
+.filter-chip[data-cat="linux"].active{background:#22c55e;border-color:#22c55e;}
+.filter-chip[data-cat="networking"].active{background:#3b82f6;border-color:#3b82f6;}
+.filter-chip[data-cat="python"].active{background:#ffd700;border-color:#ffd700;}
+.filter-chip[data-diff="easy"].active{background:#22c55e;border-color:#22c55e;}
+.filter-chip[data-diff="medium"].active{background:#f59e0b;border-color:#f59e0b;}
+.filter-chip[data-diff="hard"].active{background:#ef4444;border-color:#ef4444;}
+
+/* ====== CARD ====== */
+.card-counter{
+  font-family:'JetBrains Mono',monospace;font-size:12px;
+  color:var(--text3);text-align:center;margin-bottom:14px;
+  letter-spacing:.1em;
+}
+.card-stage{perspective:1400px;min-height:360px;margin-bottom:16px;cursor:pointer;}
+.card-inner{
+  width:100%;min-height:360px;
+  transform-style:preserve-3d;
+  transition:transform .55s cubic-bezier(.4,0,.2,1);
+  position:relative;
+}
+.card-stage.flipped .card-inner{transform:rotateY(180deg);}
+.card-front,.card-back{
+  position:absolute;inset:0;
+  backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  border:1px solid var(--border);padding:32px 36px;
+  display:flex;flex-direction:column;
+}
+.card-front{background:var(--bg1);}
+.card-back{background:var(--bg2);transform:rotateY(180deg);}
+.card-cat-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  font-family:'JetBrains Mono',monospace;font-size:10px;
+  letter-spacing:.15em;padding:3px 10px;border:1px solid;
+  margin-bottom:16px;width:fit-content;
+}
+.card-diff{
+  display:inline-block;font-family:'JetBrains Mono',monospace;
+  font-size:9px;letter-spacing:.15em;padding:2px 8px;
+  border:1px solid;margin-left:8px;
+}
+.diff-easy{color:var(--green);border-color:var(--green);}
+.diff-medium{color:var(--amber);border-color:var(--amber);}
+.diff-hard{color:var(--red);border-color:var(--red);}
+
+.card-question{
+  font-size:clamp(18px,2.5vw,24px);font-weight:600;
+  color:#fff;line-height:1.35;flex:1;
+  display:flex;align-items:center;
+}
+.card-flip-hint{
+  font-size:12px;color:var(--text3);letter-spacing:.1em;
+  font-family:'JetBrains Mono',monospace;margin-top:20px;
+}
+.card-answer{flex:1;font-size:15px;line-height:1.7;color:var(--text);}
+.card-answer p{margin-bottom:10px;}
+.card-answer ul{margin:8px 0 10px 16px;}
+.card-answer li{margin-bottom:4px;}
+.card-answer li::marker{color:var(--orange);}
+.card-answer code{background:var(--bg);font-size:.82em;}
+.card-why{
+  background:rgba(59,130,246,.08);border-left:3px solid var(--blue);
+  padding:10px 14px;margin-top:14px;font-size:13px;color:var(--text2);
+}
+.card-why strong{color:var(--blue);font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.1em;display:block;margin-bottom:4px;}
+.card-protip{
+  background:rgba(255,215,0,.06);border-left:3px solid var(--gold);
+  padding:10px 14px;margin-top:10px;font-size:13px;font-style:italic;color:var(--text2);
+}
+.card-protip strong{font-style:normal;color:var(--gold);font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.1em;display:block;margin-bottom:4px;}
+
+/* rating buttons */
+.rating-row{
+  display:flex;gap:10px;margin-top:16px;
+  justify-content:center;flex-wrap:wrap;
+}
+.rate-btn{
+  flex:1;min-width:100px;
+  padding:12px 10px;border:2px solid;cursor:pointer;
+  font-family:'JetBrains Mono',monospace;font-size:12px;
+  font-weight:700;letter-spacing:.1em;transition:all .15s;
+  background:transparent;
+}
+.rate-btn.got{color:var(--got-it-text);border-color:var(--got-it-text);}
+.rate-btn.got:hover,.rate-btn.got.selected{background:var(--got-it);border-color:var(--got-it-text);}
+.rate-btn.almost{color:var(--almost-text);border-color:var(--almost-text);}
+.rate-btn.almost:hover,.rate-btn.almost.selected{background:var(--almost);border-color:var(--almost-text);}
+.rate-btn.miss{color:var(--missed-text);border-color:var(--missed-text);}
+.rate-btn.miss:hover,.rate-btn.miss.selected{background:var(--missed);border-color:var(--missed-text);}
+
+/* nav */
+.card-nav{display:flex;gap:10px;justify-content:space-between;align-items:center;}
+.card-nav .btn{flex:1;}
+.no-results{
+  text-align:center;padding:80px 20px;
+  font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--text3);
+}
+
+/* timer */
+.timer-bar-wrap{height:4px;background:var(--border);margin-bottom:16px;overflow:hidden;}
+.timer-bar{height:100%;background:var(--orange);width:100%;transition:width .1s linear;}
+.timer-bar.urgent{background:var(--red);}
+
+/* category colors */
+.cat-tools{color:var(--cyan);border-color:var(--cyan);}
+.cat-git{color:#f97316;border-color:#f97316;}
+.cat-http{color:var(--purple);border-color:var(--purple);}
+.cat-linux{color:var(--green);border-color:var(--green);}
+.cat-networking{color:var(--blue);border-color:var(--blue);}
+.cat-python{color:var(--gold);border-color:var(--gold);}
+
+/* saved pill */
+.saved-pill{position:fixed;top:16px;right:16px;background:var(--orange);color:#000;padding:5px 14px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.2em;opacity:0;transition:opacity .3s;z-index:100;}
+.saved-pill.show{opacity:1;}
+
+@media(max-width:680px){
+  main{padding:28px 16px 120px;}
+  .card-front,.card-back{padding:22px 18px;}
+  .tool-grid{grid-template-columns:1fr;}
+  .stats-bar{gap:16px;}
+  .stat-num{font-size:22px;}
+}
+</style>
+</head>
+<body>
+<div class="saved-pill" id="sv">▸ SAVED</div>
+<main>
+
+<!-- HEADER -->
+<div class="war-room-header">
+  <div class="wr-tag">INTERVIEW WAR ROOM // DAYS 0–4</div>
+  <h1 class="wr-title">Get <span>Hired.</span></h1>
+  <p class="wr-sub">Tools deep-dives, Git mastery, and 62 interview questions across HTTP, Linux, Networking, and Python.</p>
+
+  <div class="stats-bar">
+    <div class="stat-item">
+      <div class="stat-num" id="totalQ">62</div>
+      <div class="stat-label">Questions</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num" id="masteredQ">0</div>
+      <div class="stat-label">Mastered</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num" id="almostQ">0</div>
+      <div class="stat-label">Almost</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num" id="missedQ">0</div>
+      <div class="stat-label">Missed</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num" id="pctQ">0%</div>
+      <div class="stat-label">Ready</div>
+    </div>
+  </div>
+
+  <div class="progress-ring-wrap" style="margin-top:20px;">
+    <div class="ring-container">
+      <svg class="ring-svg" width="100" height="100" viewBox="0 0 100 100">
+        <circle class="ring-bg" cx="50" cy="50" r="42"/>
+        <circle class="ring-fill" id="ringFill" cx="50" cy="50" r="42" stroke-dasharray="264" stroke-dashoffset="264"/>
+      </svg>
+      <div class="ring-center"><div class="ring-pct" id="ringPct">0%</div><div class="ring-sub">READY</div></div>
+    </div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>Got it</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--amber)"></div>Almost</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div>Missed</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--border)"></div>Unseen</div>
+    </div>
+  </div>
+</div>
+
+<!-- ======== TOOL DEEP DIVES ======== -->
+<div class="section-title">// TOOL DEEP DIVES — DAY 0 INSTALLS</div>
+<div class="tool-grid" id="toolGrid"></div>
+
+<!-- ======== FLASHCARDS ======== -->
+<div class="section-title">// INTERVIEW FLASHCARDS</div>
+
+<div class="fc-controls">
+  <div class="fc-top-row">
+    <input type="text" class="fc-search" id="fcSearch" placeholder="Search questions..." oninput="applyFilters()">
+    <button class="btn" id="shuffleBtn" onclick="shuffleDeck()">⇌ Shuffle</button>
+    <button class="btn" id="randomBtn" onclick="randomCard()">? Random</button>
+    <button class="btn" id="timerBtn" onclick="toggleTimer()">⏱ Timer OFF</button>
+    <button class="btn" onclick="resetAll()" style="color:var(--red);border-color:var(--red);">↺ Reset</button>
+  </div>
+  <div class="fc-filter-row">
+    <span style="font-size:12px;color:var(--text3);align-self:center;font-family:'JetBrains Mono',monospace;">CAT:</span>
+    <button class="filter-chip active" data-cat="all" onclick="setCat('all',this)">ALL</button>
+    <button class="filter-chip" data-cat="tools" onclick="setCat('tools',this)">TOOLS</button>
+    <button class="filter-chip" data-cat="git" onclick="setCat('git',this)">GIT</button>
+    <button class="filter-chip" data-cat="http" onclick="setCat('http',this)">HTTP</button>
+    <button class="filter-chip" data-cat="linux" onclick="setCat('linux',this)">LINUX</button>
+    <button class="filter-chip" data-cat="networking" onclick="setCat('networking',this)">NETWORKING</button>
+    <button class="filter-chip" data-cat="python" onclick="setCat('python',this)">PYTHON</button>
+  </div>
+  <div class="fc-filter-row" style="margin-top:8px;">
+    <span style="font-size:12px;color:var(--text3);align-self:center;font-family:'JetBrains Mono',monospace;">DIFF:</span>
+    <button class="filter-chip active" data-diff="all" onclick="setDiff('all',this)">ALL</button>
+    <button class="filter-chip" data-diff="easy" onclick="setDiff('easy',this)">EASY</button>
+    <button class="filter-chip" data-diff="medium" onclick="setDiff('medium',this)">MEDIUM</button>
+    <button class="filter-chip" data-diff="hard" onclick="setDiff('hard',this)">HARD</button>
+  </div>
+</div>
+
+<div class="timer-bar-wrap"><div class="timer-bar" id="timerBar"></div></div>
+<div class="card-counter" id="cardCounter">Card 1 of 62</div>
+
+<div class="card-stage" id="cardStage" onclick="flipCard()">
+  <div class="card-inner" id="cardInner">
+    <div class="card-front" id="cardFront">
+      <div id="frontBadge"></div>
+      <div class="card-question" id="cardQuestion"></div>
+      <div class="card-flip-hint">click to reveal answer →</div>
+    </div>
+    <div class="card-back" id="cardBack">
+      <div id="backBadge"></div>
+      <div class="card-answer" id="cardAnswer"></div>
+      <div class="rating-row" id="ratingRow">
+        <button class="rate-btn got" onclick="rate('got',event)">✓ GOT IT</button>
+        <button class="rate-btn almost" onclick="rate('almost',event)">~ ALMOST</button>
+        <button class="rate-btn miss" onclick="rate('miss',event)">✗ MISSED</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="no-results" id="noResults" style="display:none;">
+  No questions match your filters. Try different categories.
+</div>
+
+<div class="card-nav">
+  <button class="btn" onclick="prevCard()">← Prev</button>
+  <button class="btn primary" onclick="nextCard()">Next →</button>
+</div>
+
+</main>
+
+<script>
+// =========== STATE ===========
+const SK='interview-v2';
+let S={};
+try{S=JSON.parse(localStorage.getItem(SK)||'{}')}catch(e){}
+function save(){try{localStorage.setItem(SK,JSON.stringify(S))}catch(e){}showSv();}
+function showSv(){const p=document.getElementById('sv');p.classList.add('show');clearTimeout(window._st);window._st=setTimeout(()=>p.classList.remove('show'),1500);}
+
+// =========== TOOLS DATA ===========
+const tools = [
+  {
+    icon:'🔵',name:'Visual Studio Code',type:'Code Editor',
+    what:'A free, open-source code editor built by Microsoft. The most popular development tool in the world.',
+    how:'VS Code runs on Electron (a framework built on Chrome\'s V8 engine). It reads files from your filesystem, provides syntax highlighting by analyzing file extensions, and runs extensions as JavaScript processes. Its IntelliSense reads your code and suggests completions in real time.',
+    why:[
+      'Write, edit, and debug code across every language you\'ll use in the roadmap',
+      'Built-in Git integration — see file changes, stage, commit without terminal',
+      'Integrated terminal — run Python scripts, git commands without switching apps',
+      'Extension ecosystem — Python debugger, Terraform syntax, YAML linting, all from one place',
+      'Split panes — view your notes and code side by side'
+    ],
+    commands:['code . — open current folder in VS Code','Cmd+Shift+P — command palette (run any action)','Cmd+` — open integrated terminal','Cmd+Shift+F — search across ALL files in project','Cmd+P — quick open any file by name'],
+    interview:'"VS Code is my primary development environment. I use it for writing Python security scripts, Terraform infrastructure code, and YAML configurations. The integrated Git panel lets me stage and commit without leaving the editor, and the integrated terminal means I can run scans directly without switching applications."',
+    day:'Days 1–60 (every day)'
+  },
+  {
+    icon:'🐙',name:'Git',type:'Version Control System',
+    what:'A distributed version control system created by Linus Torvalds in 2005. Every developer on earth uses it.',
+    how:'Git stores your project as a series of snapshots (commits). Each commit is a complete state of your project, linked to the previous commit. This chain of commits is your repository history. Branches are lightweight pointers to specific commits. When you push, you upload your commits to a remote server (GitHub).',
+    why:[
+      'Track every change to your code — who changed what, when, and why',
+      'Safely experiment — create a branch, try something, discard if it breaks',
+      'Revert mistakes — go back to any previous state instantly',
+      'Collaboration — multiple people work on the same project without overwriting each other',
+      'Portfolio — your GitHub is your public resume. 60 days of commits = proof of work ethic'
+    ],
+    commands:['git init — start tracking a folder','git status — what has changed?','git add . — stage all changes','git commit -m "message" — save snapshot','git push — upload to GitHub','git pull — download latest from GitHub','git log — see commit history','git diff — see exact changes'],
+    interview:'"Git is my version control system. I commit daily with descriptive messages so hiring managers can see my learning progression. I use branches when working on features that might break things, and I never push sensitive data — my .gitignore excludes .env files, AWS credentials, and private keys."',
+    day:'Every day — commit before you close your laptop'
+  },
+  {
+    icon:'🐳',name:'Docker Desktop',type:'Container Platform',
+    what:'A platform that lets you package and run applications in isolated containers. Used in your RADLab internship and in every modern cloud deployment.',
+    how:'Docker uses Linux kernel features called namespaces and cgroups to create isolated environments. Each container shares the host OS kernel but has its own filesystem, network, and process space. An image is a read-only blueprint (like a class). A container is a running instance of that image (like an object). Docker Desktop adds a GUI and Linux VM on top for Mac/Windows.',
+    why:[
+      'Run vulnerable apps in one command without installing dependencies: docker run -p 3000:3000 bkimminich/juice-shop',
+      'Isolated testing — if something crashes, it only crashes the container',
+      'Consistent environments — "works on my machine" problem eliminated',
+      'Security testing containers (Kali-based Docker images)',
+      'RADLab understanding — your internship creates Docker containers as user VMs'
+    ],
+    commands:['docker run -it ubuntu bash — start Ubuntu container interactively','docker ps — list running containers','docker ps -a — all containers including stopped','docker images — list downloaded images','docker pull nginx — download nginx image','docker stop <id> — stop a running container','docker rm <id> — delete a container','docker-compose up — start multi-container apps'],
+    interview:'"Docker lets me spin up isolated environments instantly. For security testing, I run deliberately vulnerable applications like OWASP Juice Shop with a single Docker command without polluting my main system. I understand containers from my RADLab internship where the platform uses Docker to provision user lab environments."',
+    day:'Day 18 (Juice Shop), Days 33, 39, 51'
+  },
+  {
+    icon:'🔴',name:'Burp Suite Community',type:'Web Security Testing Platform',
+    what:'The industry-standard tool for web application security testing. Made by PortSwigger. Every AppSec engineer lives in this tool.',
+    how:'Burp Suite is an intercepting proxy — it sits between your browser and the web server. All traffic flows through Burp, which lets you see, modify, and replay every HTTP request and response. Configure your browser to use Burp\'s proxy (127.0.0.1:8080), and all traffic is intercepted.',
+    why:[
+      'See every HTTP request your browser makes — raw, unfiltered',
+      'Modify requests before they reach the server — change parameters, headers, body',
+      'Replay and fuzz requests — Intruder tests thousands of payloads automatically',
+      'Decode/encode data — base64, URL-encoded, hex',
+      'Industry standard — every AppSec job assumes Burp Suite proficiency'
+    ],
+    commands:['Proxy tab — intercept and view all traffic','Repeater — modify and resend individual requests (most-used tab)','Intruder — automated attacks with payload lists','Decoder — encode/decode data formats','Target — site map of all discovered endpoints','Scanner — automated vulnerability finding (Pro only)'],
+    interview:'"Burp Suite is my primary AppSec tool. I proxy all browser traffic through it during assessments, then use Repeater to manually modify and test requests for injection vulnerabilities, authentication bypasses, and IDOR. I\'ve used it to complete 40+ PortSwigger labs covering the OWASP Top 10."',
+    day:'Days 6–7, then every day from Day 8 onward'
+  },
+  {
+    icon:'🦈',name:'Wireshark',type:'Network Packet Analyzer',
+    what:'A free, open-source tool that captures and analyzes network packets. It shows you exactly what data is flowing through your network at the binary level.',
+    how:'Wireshark puts your network card into "promiscuous mode" — instead of ignoring packets not addressed to you, it captures everything. It then dissects each packet using protocol parsers (called dissectors) that understand hundreds of protocols (TCP, HTTP, DNS, TLS, etc.) and present them in a human-readable tree.',
+    why:[
+      'See what your browser actually sends — beyond what DevTools shows',
+      'Verify HTTP traffic is unencrypted (password visible) vs HTTPS (scrambled)',
+      'Analyze DNS queries — see which domains your machine is contacting',
+      'Debug network issues — see if packets are reaching their destination',
+      'Understand how protocols actually work at the wire level'
+    ],
+    commands:['ip.addr == 192.168.1.1 — filter by IP','http — show only HTTP traffic','dns — show only DNS queries','tcp.port == 443 — filter by port','Follow TCP Stream — see full conversation','Export Objects — extract files transferred over HTTP'],
+    interview:'"Wireshark lets me analyze network traffic at the packet level. I use it to verify protocol behavior — for example, confirming that HTTP sends credentials in cleartext while HTTPS encrypts them. During security assessments I capture traffic to look for sensitive data in unencrypted protocols."',
+    day:'Days 3, 6, 10 — supplementary tool throughout'
+  },
+  {
+    icon:'🐉',name:'Kali Linux',type:'Security-Focused Linux Distribution',
+    what:'A Debian-based Linux distribution maintained by Offensive Security, pre-installed with 600+ security tools. The industry standard for penetration testers and security professionals.',
+    how:'Kali is a regular Linux system with a curated collection of security tools pre-installed and pre-configured. It runs in your VMware virtual machine — a complete isolated operating system sharing your Mac\'s hardware. Unlike Ubuntu (general purpose), Kali installs every tool you\'ll need: Burp Suite, nmap, sqlmap, Metasploit, Wireshark, gobuster, hashcat, aircrack-ng, and hundreds more.',
+    why:[
+      'All security tools pre-installed — no setup time when you need to use a tool',
+      'Separate from your Mac — attacks and exploits run in isolation',
+      'ARM64 native on Apple Silicon — no emulation overhead in VMware',
+      'Pre-configured for security work — kernel settings, tool paths, wordlists included',
+      'Industry standard — tutorials, courses, and job descriptions assume Kali'
+    ],
+    commands:['nmap — network scanner','sqlmap — SQL injection tool','burpsuite — web proxy','gobuster / ffuf — directory brute forcer','hydra — login brute forcer','john / hashcat — password cracker','metasploit — exploitation framework','aircrack-ng — WiFi security tools'],
+    interview:'"I run Kali Linux in VMware Fusion as my dedicated security testing environment. Having all security tools pre-installed and isolated from my main system means I can test payloads and exploits without risking my host machine. I use it for PortSwigger labs, recon with nmap, and SQL injection testing with sqlmap."',
+    day:'Day 2 (Linux practice), Days 8, 22, 33 — whenever you need security tools'
+  },
+  {
+    icon:'🗺️',name:'Nmap',type:'Network Scanner',
+    what:'Network Mapper — the world\'s most famous network scanner. Discovers hosts, open ports, running services, and OS information on a network.',
+    how:'Nmap sends crafted packets to target hosts and analyzes the responses. For a TCP SYN scan (-sS), it sends a SYN packet — if the target responds with SYN-ACK, the port is open. If RST, it\'s closed. If no response, it\'s filtered by a firewall. Nmap compares response timing, TTL values, and TCP options to fingerprint operating systems.',
+    why:[
+      'Discover attack surface — what services are running and on which ports',
+      'Identify security misconfigurations — databases exposed to internet, RDP open, etc.',
+      'OS and service version detection — find vulnerable software versions',
+      'First step of recon in every penetration test',
+      'Understand your own network — what are you exposing?'
+    ],
+    commands:['nmap target.com — basic scan (1000 common ports)','nmap -sV target.com — detect service versions','nmap -p- target.com — scan ALL 65535 ports','nmap -sC -sV target.com — default scripts + version','nmap -A target.com — aggressive (OS, versions, scripts, traceroute)','nmap -oN results.txt target.com — save to file','LEGAL: only scan systems you own or have permission'],
+    interview:'"Nmap is my first recon tool. I use it to discover open ports and running services on a target. Seeing port 3306 open to the internet immediately tells me MySQL is exposed — a high priority finding. I always document my nmap results as the first step of any security assessment."',
+    day:'Day 22 (Recon), Day 39 (Penetration Testing AWS)'
+  },
+  {
+    icon:'📮',name:'Postman',type:'API Testing Tool',
+    what:'A GUI application for making, testing, and organizing HTTP requests. Used by developers and security engineers to interact with APIs.',
+    how:'Postman provides a graphical interface for HTTP requests. You define the method (GET/POST/etc.), URL, headers, and body, then click Send. Responses appear in a structured pane. Collections let you save and organize groups of requests. Environments let you switch between dev/staging/prod with variables.',
+    why:[
+      'API security testing — test endpoints that aren\'t directly browsable',
+      'More control than browser — set any header, method, and body',
+      'Save collections — reuse test requests across sessions',
+      'Test authentication flows — set Bearer tokens, API keys, OAuth',
+      'Visual response formatting — JSON responses are pretty-printed and searchable'
+    ],
+    commands:['Collections — organized groups of saved requests','Environments — variables for different setups (dev/prod)','Pre-request scripts — run code before requests','Tests — assert response values automatically','Import/Export — share API collections with teams'],
+    interview:'"I use Postman for API security testing when I need more control than a browser provides. It lets me set arbitrary headers, change HTTP methods, and test authentication bypasses by manipulating tokens. I save collections of test requests so I can replay them during regression testing."',
+    day:'Day 15 (API Security), Days 35, 52'
+  },
+  {
+    icon:'🦊',name:'Firefox + FoxyProxy',type:'Security Testing Browser',
+    what:'A dedicated browser configured exclusively for security testing. FoxyProxy is a browser extension that routes traffic through Burp Suite with one click.',
+    how:'Normal browsing and security testing should stay completely separate. Firefox dedicated to security testing has FoxyProxy installed, which can instantly switch from "no proxy" (normal) to "Burp Suite proxy" (all traffic routed through 127.0.0.1:8080). This way Burp sees and intercepts every request the testing browser makes.',
+    why:[
+      'Separation of contexts — no mixing personal cookies with test sessions',
+      'Easy proxy switching — FoxyProxy toggles Burp interception on/off in one click',
+      'No cached real-world credentials interfering with tests',
+      'Browser-specific extensions — FoxyProxy, Wappalyzer for tech fingerprinting',
+      'Clean environment for each test session'
+    ],
+    commands:['FoxyProxy: click icon → select Burp proxy pattern → all traffic goes through Burp','Wappalyzer: click icon → see what tech stack the site uses','Firefox: Ctrl+Shift+I → DevTools → Network tab for additional inspection'],
+    interview:'"I use a dedicated Firefox browser with FoxyProxy for security testing. One click switches all browser traffic through Burp Suite for interception. This keeps my security testing completely isolated from personal browsing, preventing cross-contamination of cookies and session data."',
+    day:'Days 6–7 setup, then every PortSwigger lab from Day 8 onward'
+  },
+  {
+    icon:'☁️',name:'AWS Free Tier',type:'Cloud Platform',
+    what:'Amazon Web Services — the world\'s largest cloud provider. Free tier gives you 12 months of free services plus always-free limits.',
+    how:'AWS runs physical data centers globally. When you create an EC2 instance, AWS allocates virtual CPU and RAM from physical servers, provisions storage, and assigns networking. The free tier gives you 750 hours/month of t2.micro (a tiny virtual server), 5GB S3 storage, and hundreds of other services within limits.',
+    why:[
+      'Hands-on cloud experience is required for Cloud Security roles',
+      'IAM, VPC, S3, EC2, CloudTrail — all needed for your roadmap',
+      'Real cloud environment — not a simulator',
+      'AWS certifications are more credible with real project experience',
+      'GuardDuty, Security Hub, KMS — security services you\'ll configure directly'
+    ],
+    commands:['AWS Console — web interface','aws cli — command line: aws s3 ls, aws ec2 describe-instances','Set billing alerts — CloudWatch → Billing → Create alarm → $1,$5,$10','MFA on root account — do this immediately after setup'],
+    interview:'"I have hands-on AWS experience from building and securing cloud infrastructure. I\'ve configured VPCs with public and private subnets, IAM roles following least-privilege principle, S3 bucket policies, and security services like GuardDuty and CloudTrail. I always enable MFA on root and set billing alerts."',
+    day:'Days 26–40 (Cloud Security phase), Days 41+ (AI projects using AWS Bedrock)'
+  },
+  {
+    icon:'🎯',name:'TryHackMe + HackTheBox',type:'Security Training Platforms',
+    what:'Gamified cybersecurity training platforms with hands-on labs. TryHackMe is beginner-friendly and guided. HackTheBox is more realistic and challenging.',
+    how:'Both platforms provide virtual machines and challenges in the cloud. TryHackMe connects you via browser-based terminal or VPN to lab environments. HackTheBox provides "machines" — retired or active boxes with intentional vulnerabilities that you find and exploit using your own Kali VM connected via VPN.',
+    why:[
+      'Legal, safe environment to practice offensive security techniques',
+      'Structured learning paths for beginners (TryHackMe Pre-Security path)',
+      'Real-world style challenges (HackTheBox matches OSCP-style pentesting)',
+      'Portfolio evidence — rank and completed rooms visible on profile',
+      'Active community — hints, writeups after box retires'
+    ],
+    commands:['TryHackMe: openvpn your.ovpn — connect via VPN','HackTheBox: openvpn starting_point.ovpn — connect','whoami && id — first command after getting shell access','Always keep notes — every technique you use in a challenge'],
+    interview:'"I practice security skills on TryHackMe and HackTheBox. These platforms provide legal, isolated environments where I can apply offensive techniques and build the intuition for finding vulnerabilities that I then use defensively in AppSec work."',
+    day:'Days 2, 18, 34, 40 — practice alongside roadmap labs'
+  },
+  {
+    icon:'🔬',name:'PortSwigger Web Security Academy',type:'AppSec Training Platform',
+    what:'A completely free, world-class web security training platform created by the makers of Burp Suite. Contains 100+ interactive labs covering every major web vulnerability.',
+    how:'PortSwigger provides a combination of written theory and live lab environments. Labs spin up a temporary vulnerable web application in the cloud. You interact with it using your local Burp Suite (proxied through your browser) to find and exploit the vulnerability. Labs automatically detect when you\'ve successfully exploited them.',
+    why:[
+      'Free — literally no cost, just create an account',
+      '100% hands-on — theory immediately followed by a real vulnerable app',
+      'Industry-recognized — referenced in AppSec job descriptions and interviews',
+      'Built by Burp Suite team — learns Burp and web security simultaneously',
+      'Covers every OWASP Top 10 vulnerability with multiple labs per category'
+    ],
+    commands:['portswigger.net/web-security — main site','Start with: SQL injection → Authentication → XSS (in that order)','Use Burp Community Edition (free) for all labs','Labs track completion — badge for each category completed'],
+    interview:'"I\'ve completed 40+ PortSwigger Web Security Academy labs covering OWASP Top 10 vulnerabilities. This is my primary hands-on AppSec training — each lab tests a specific vulnerability class using real techniques on live environments."',
+    day:'Days 6–25 (AppSec phase) — multiple labs per day'
+  }
+];
+
+// =========== QUESTIONS DATA ===========
+const questions = [
+  // TOOLS
+  {id:1,cat:'tools',diff:'easy',q:'What is Burp Suite and why is it called the AppSec engineer\'s hammer?',a:`<p>Burp Suite is an <strong>intercepting proxy</strong> — it sits between your browser and web servers, capturing all HTTP traffic so you can inspect, modify, and replay requests.</p><ul><li>Proxy tab: see all requests/responses in real time</li><li>Repeater: modify and resend individual requests manually</li><li>Intruder: automated attacks with payload lists (brute force, fuzzing)</li><li>Decoder: base64, URL encoding, hex conversions</li></ul><p>It's called the "hammer" because <strong>every AppSec task uses it</strong> — finding SQL injection, XSS, IDOR, auth bypass — all done by intercepting and modifying requests in Burp.</p>`,why:'AppSec interviews will always ask about tools. Burp Suite appears in 95% of AppSec job descriptions.',protip:'Say you\'ve completed PortSwigger labs using Burp. Mention a specific feature you use — "I rely on Repeater constantly for manual testing."'},
+  {id:2,cat:'tools',diff:'easy',q:'What is Docker and how is it different from a virtual machine?',a:`<p><strong>Docker</strong> runs applications in <strong>containers</strong> — lightweight isolated environments. A virtual machine (VM) runs a complete OS on virtual hardware. A container shares the host OS kernel but has its own filesystem and network.</p><table style="width:100%;border-collapse:collapse;font-size:13px;margin-top:10px;"><tr style="border-bottom:1px solid var(--border)"><th style="text-align:left;padding:6px;color:var(--text2)">VMs</th><th style="text-align:left;padding:6px;color:var(--text2)">Containers</th></tr><tr><td style="padding:6px;border-bottom:1px solid var(--border)">Full OS per VM (GB)</td><td style="padding:6px;border-bottom:1px solid var(--border)">Shared kernel (MB)</td></tr><tr><td style="padding:6px;border-bottom:1px solid var(--border)">Boot in minutes</td><td style="padding:6px;border-bottom:1px solid var(--border)">Start in seconds</td></tr><tr><td style="padding:6px">Strong isolation</td><td style="padding:6px">Process-level isolation</td></tr></table>`,why:'Cloud Security and DevSecOps roles heavily involve containers. Understanding the difference shows infrastructure literacy.',protip:'Mention your RADLab internship: "My internship platform uses Docker to provision user lab environments, so I understand it from a real implementation perspective."'},
+  {id:3,cat:'tools',diff:'medium',q:'Explain what happens when you set up FoxyProxy with Burp Suite. Why the separate Firefox?',a:`<p>The setup creates a <strong>traffic interception chain</strong>:</p><p><code>Firefox → FoxyProxy → Burp Suite proxy (127.0.0.1:8080) → Target website</code></p><ul><li>FoxyProxy is a Firefox extension that switches proxy settings with one click</li><li>When enabled, ALL Firefox traffic routes through Burp's proxy port</li><li>Burp receives every request, lets you inspect/modify before forwarding</li><li>Response comes back through Burp before reaching Firefox</li></ul><p>Separate Firefox because: no mixing of personal cookies with test sessions, isolated browsing history, clean slate for each test target, and personal browsing doesn't accidentally get intercepted.</p>`,why:'Shows you understand the complete testing setup, not just individual tools.',protip:'Say: "I keep a dedicated Firefox browser for testing so I never accidentally mix my authenticated personal sessions with test targets."'},
+  {id:4,cat:'tools',diff:'easy',q:'What is Wireshark and what does it reveal that browser DevTools doesn\'t?',a:`<p>Wireshark is a <strong>network packet analyzer</strong>. It captures raw network packets and decodes them into human-readable protocol data.</p><p>What Wireshark shows that DevTools misses:</p><ul><li>Traffic from ALL applications — not just your browser</li><li>Data at the raw protocol level — actual bytes, TCP segments</li><li>Whether TLS encryption is actually working (vs just assumed)</li><li>DNS queries your machine makes behind the scenes</li><li>Traffic from system processes, background services, etc.</li></ul><p>DevTools shows curated HTTP view. Wireshark shows everything at the wire level.</p>`,why:'Tests understanding of network analysis tools and the difference between application-layer and network-layer visibility.',protip:'Mention a real use: "I used Wireshark to confirm that HTTP sends credentials in cleartext — you can literally see the username and password in the packet."'},
+  {id:5,cat:'tools',diff:'medium',q:'What is Kali Linux and why do security professionals use it instead of regular Ubuntu?',a:`<p>Kali Linux is a <strong>Debian-based distribution specialized for penetration testing</strong>, maintained by Offensive Security.</p><p>Why Kali over Ubuntu:</p><ul><li><strong>600+ pre-installed tools</strong>: Burp Suite, nmap, sqlmap, Metasploit, Wireshark, hashcat, gobuster — all configured</li><li><strong>Wordlists included</strong>: /usr/share/wordlists/ has SecLists, rockyou.txt, etc.</li><li><strong>Security kernel settings</strong>: optimized for network scanning and exploitation</li><li><strong>Industry standard</strong>: tutorials, courses, job descriptions all reference Kali</li></ul><p>Ubuntu is general-purpose. Kali is specialized. You could install all these tools on Ubuntu, but Kali has it done for you.</p>`,why:'Shows you understand the security tooling ecosystem and why specialized distributions exist.',protip:'Add: "I run Kali in VMware Fusion — the ARM64 native version runs perfectly on Apple Silicon without emulation overhead."'},
+  {id:6,cat:'tools',diff:'medium',q:'What is nmap and what does a SYN scan (-sS) actually do?',a:`<p>Nmap is a <strong>network port scanner and host discovery tool</strong>. It's the first tool used in reconnaissance.</p><p>SYN scan (called "stealth scan" or "half-open scan"):</p><ol style="margin-left:16px;margin-top:8px;"><li>Send TCP SYN packet to target port</li><li>If <strong>SYN-ACK received</strong>: port is OPEN (complete the handshake? No — send RST)</li><li>If <strong>RST received</strong>: port is CLOSED</li><li>If <strong>no response</strong>: port is FILTERED (firewall dropping packets)</li></ol><p>It's "stealthy" because the 3-way handshake never completes — some older logging systems missed incomplete connections. Modern firewalls log SYN scans.</p>`,why:'Port scanning is foundational knowledge for AppSec and Cloud Security. Interviewers want to know you understand how discovery works.',protip:'"I always save nmap output with -oN results.txt and use -sV to identify service versions, since version numbers tell me if known vulnerabilities apply."'},
+  {id:7,cat:'tools',diff:'easy',q:'What is Git and how is it different from GitHub?',a:`<p><strong>Git</strong> is a version control system — a tool that lives on your computer and tracks changes to files over time.</p><p><strong>GitHub</strong> is a web platform that hosts Git repositories online — where you push your code so others can see it.</p><p>Analogy: Git is Microsoft Word's Track Changes feature. GitHub is Google Drive — the cloud storage where you share those documents.</p><ul><li>Git = the tool (command-line program)</li><li>GitHub = the hosting platform (website)</li><li>Others: GitLab, Bitbucket also host Git repos</li></ul>`,why:'Foundational question in every tech interview. Easy points — get this exactly right.',protip:'Follow with why it matters: "For my AppSec portfolio, GitHub is how hiring managers see my progress — 60 days of commits with descriptive messages prove consistent work."'},
+  {id:8,cat:'tools',diff:'hard',q:'You accidentally committed your AWS access keys to a public GitHub repo 5 minutes ago. What do you do?',a:`<p>This is an emergency. Act in this order:</p><ol style="margin-left:16px;"><li><strong>Immediately revoke the keys in AWS IAM</strong> — don't wait, bots scan GitHub in minutes</li><li>Check AWS CloudTrail for any API calls made with those keys since the commit</li><li>Remove the commit from git history: <code>git filter-branch</code> or <code>git rebase -i</code></li><li>Force push the cleaned history to GitHub</li><li>GitHub secret scanning may have already alerted — check security tab</li><li>Generate new AWS keys, configure them in ~/.aws/credentials</li><li>Add *.env and credentials to .gitignore immediately</li></ol><p>The most important step is #1. History rewriting is secondary — the keys must be revoked first.</p>`,why:'Tests security awareness and incident response thinking. Realistic scenario that happens to real engineers.',protip:'"Prevention: I always check git diff before committing, keep secrets in .env files that are in .gitignore, and use AWS IAM roles instead of long-term access keys where possible."'},
+  {id:9,cat:'tools',diff:'medium',q:'What is AWS Free Tier and what should you set up immediately after creating an account?',a:`<p>AWS Free Tier gives you access to AWS services within usage limits, primarily for 12 months after account creation.</p><p><strong>Immediately after account creation:</strong></p><ol style="margin-left:16px;"><li><strong>Enable MFA on root account</strong> — root has unlimited power. Compromised root = game over.</li><li><strong>Set billing alarms in CloudWatch</strong> — alarm at $1, $5, $10 so you're never surprised</li><li><strong>Create an IAM user for daily use</strong> — never use root account for regular work</li><li><strong>Never create root access keys</strong> — use IAM users or roles instead</li></ol><p>Free tier key limits: 750 hours/month EC2 t2.micro, 5GB S3, 1 million Lambda requests.</p>`,why:'Shows security-first mindset even with personal accounts. AWS misconfiguration is a major interview topic for cloud security roles.',protip:'"I treat my personal AWS account with the same security posture as a production account — MFA everywhere, least-privilege IAM, CloudTrail enabled, and billing alerts set."'},
+
+  // GIT
+  {id:10,cat:'git',diff:'easy',q:'Explain git add, git commit, and git push. What does each one do?',a:`<p>Three distinct steps that are commonly confused:</p><ul><li><strong>git add .</strong> — "Stage" changes. Moves modified files from "working directory" into the "staging area" — a buffer zone. Nothing is saved yet.</li><li><strong>git commit -m "message"</strong> — Save a permanent snapshot of staged files. Creates a commit in your <em>local</em> repository. Still not on GitHub.</li><li><strong>git push</strong> — Upload your local commits to GitHub. Now the world can see them.</li></ul><p>Analogy: add = put documents in envelope. commit = seal the envelope and label it. push = put envelope in the mailbox.</p>`,why:'Asked in virtually every developer interview. You will look very bad if you confuse these three.',protip:'"I commit often with descriptive messages. Looking at my git log should tell the story of my work — each commit message explains what changed and why."'},
+  {id:11,cat:'git',diff:'easy',q:'What is .gitignore and what should always be in it for security work?',a:`<p>.gitignore is a file listing patterns of files Git should never track or commit.</p><p><strong>Always include for security work:</strong></p><ul><li><code>.env</code> — environment variables (API keys, passwords)</li><li><code>*.pem, *.key</code> — private keys, certificates</li><li><code>.aws/credentials</code> — AWS access keys</li><li><code>config.json</code> — any file that might contain secrets</li><li><code>__pycache__/</code> — Python bytecode</li><li><code>.DS_Store</code> — Mac metadata files</li><li><code>*.log</code> — log files that may contain sensitive data</li></ul><p>If you commit a secret to GitHub, bots find it within minutes and abuse it.</p>`,why:'Security engineers must demonstrate awareness of credential hygiene. This question tests real-world security thinking.',protip:'"I put .gitignore in place before writing a single line of code, not as an afterthought. Secrets committed to public repos can\'t be truly erased — even if you delete them, they remain in git history."'},
+  {id:12,cat:'git',diff:'medium',q:'What is the difference between git pull and git fetch?',a:`<ul><li><strong>git fetch</strong> — Download changes from remote, but DON'T apply them to your working code. Updates remote-tracking branches only. Safe to run anytime.</li><li><strong>git pull</strong> — Download changes AND automatically merge them into your current branch. Equivalent to: git fetch + git merge.</li></ul><p>When to use each:</p><ul><li>git fetch: when you want to see what changed remotely before deciding to merge</li><li>git pull: when you're confident and want to update immediately</li></ul>`,why:'Shows understanding of Git internals beyond just the basic commands.',protip:'"I typically use git status and git log after fetching to understand what changed before pulling in a team environment."'},
+  {id:13,cat:'git',diff:'medium',q:'How do you undo the last commit? What\'s the difference between reset and revert?',a:`<p><strong>If not yet pushed (local only):</strong></p><ul><li><code>git reset HEAD~1</code> — undo last commit, keep changes in working directory</li><li><code>git reset --hard HEAD~1</code> — undo last commit AND delete the changes (dangerous)</li></ul><p><strong>If already pushed to shared branch:</strong></p><ul><li><code>git revert HEAD</code> — creates a NEW commit that undoes the last one. Safe for shared branches because it doesn't rewrite history.</li></ul><p>Key difference: reset rewrites history (dangerous on shared branches). revert adds a new commit (safe).</p>`,why:'Tests understanding of Git history manipulation. Also reveals whether candidate knows about safety concerns with shared branches.',protip:'"I use revert on shared branches to preserve history integrity. I only use reset on my own local branches before pushing."'},
+  {id:14,cat:'git',diff:'easy',q:'What is a branch and why would you use one?',a:`<p>A branch is a lightweight pointer to a specific commit — a parallel line of development.</p><p>Why use branches:</p><ul><li><strong>Safe experimentation</strong> — try something without breaking the main code</li><li><strong>Feature isolation</strong> — work on feature A without affecting feature B in progress</li><li><strong>Code review</strong> — branches become Pull Requests for team review before merging</li><li><strong>Release management</strong> — keep stable main branch, work in development branches</li></ul><div class="tool-code">git checkout -b my-feature  # create + switch to new branch<br>git checkout main           # switch back<br>git merge my-feature        # merge branch into main</div>`,why:'Branch workflows are fundamental to professional development. Hiring managers want developers who understand collaborative Git.',protip:'"Even for solo projects I use branches — main stays clean and deployable, I work in feature branches and only merge when something is tested and working."'},
+  {id:15,cat:'git',diff:'hard',q:'Explain what git rebase does and when you would use it versus git merge.',a:`<p><strong>git merge</strong> creates a "merge commit" — a new commit that combines two branch histories. History shows both branches existed.</p><p><strong>git rebase</strong> takes your commits and replays them on top of another branch, making history appear linear — as if you branched off the latest code.</p><p>When to use each:</p><ul><li><strong>Merge</strong>: when working on shared branches where preserving history matters</li><li><strong>Rebase</strong>: when you want a clean linear history on feature branches before merging. Also used to incorporate upstream changes: <code>git pull --rebase</code></li></ul><p><strong>Golden rule</strong>: Never rebase commits that have been pushed to a shared branch. It rewrites history, causing conflicts for everyone else.</p>`,why:'Senior interviews ask this. Shows deep Git understanding beyond basic commands.',protip:'"I use interactive rebase (git rebase -i) to clean up messy local commits before pushing — squash related commits and write clearer messages."'},
+  {id:16,cat:'git',diff:'medium',q:'What is git stash and when would you use it?',a:`<p><strong>git stash</strong> temporarily saves your uncommitted changes without committing them, giving you a clean working directory.</p><p>Use cases:</p><ul><li>Need to quickly switch branches but aren't ready to commit</li><li>Pull in changes from remote without committing half-done work</li><li>Try something quickly then restore your state</li></ul><div class="tool-code">git stash          # save current changes<br>git stash pop      # restore most recent stash<br>git stash list     # see all stashes<br>git stash apply stash@{2}  # restore specific stash</div>`,why:'Common practical Git knowledge. Shows real-world workflow experience.',protip:'"I use git stash when a colleague needs a quick review of something on a different branch — stash my work, switch branches, review, switch back, pop stash."'},
+  {id:17,cat:'git',diff:'easy',q:'What information does git log show and how can you find who introduced a specific bug?',a:`<p><strong>git log</strong> shows the commit history: commit hash, author, date, and commit message.</p><p>Finding who introduced a bug:</p><ul><li><code>git log --oneline</code> — compact view of all commits</li><li><code>git blame filename.py</code> — shows which commit and author last touched each line</li><li><code>git bisect</code> — binary search through commits to find when a bug was introduced</li></ul><p>In security context: git blame is used to find who committed sensitive data, when a vulnerable function was added, and who was responsible for a misconfiguration.</p>`,why:'Tests Git forensics knowledge — important for AppSec work where you investigate when vulnerabilities were introduced.',protip:'"Git history is like a security audit log. I use git log and git blame when reviewing code to understand the history of sensitive functions."'},
+  {id:18,cat:'git',diff:'medium',q:'What is a Pull Request (PR) and how does it relate to code review?',a:`<p>A Pull Request is a request to merge changes from one branch into another. On GitHub it creates a discussion interface where:</p><ul><li>Reviewers can see the diff (what changed)</li><li>Leave comments on specific lines</li><li>Approve or request changes</li><li>Automated checks (CI/CD) run tests before merging</li></ul><p>In security: PRs are where AppSec engineers do <strong>code review</strong> — looking at each changed line for vulnerabilities before it reaches production. This is a core part of the secure SDLC (Software Development Lifecycle).</p>`,why:'PRs are central to professional development workflows. AppSec engineers participate in code review via PRs.',protip:'"In my Day 20 roadmap work, I set up GitHub Actions security scans that run automatically on every PR — Semgrep for SAST, TruffleHog for secret scanning."'},
+  {id:19,cat:'git',diff:'easy',q:'What does git clone do and how is it different from git init?',a:`<ul><li><strong>git clone url</strong> — downloads an existing repository from a remote URL. Includes all history, branches, and sets up the remote origin automatically.</li><li><strong>git init</strong> — initializes a brand new repository in a local folder. No remote, no history, empty.</li></ul><p>Use clone when: you want to work with an existing repository (your GitHub repos, open source projects).</p><p>Use init when: starting a brand new project from scratch locally, then add remote later.</p>`,why:'Tests understanding of Git workflow starting points.',protip:'"I always clone using SSH URLs (git@github.com:user/repo.git) not HTTPS, since SSH key auth is more secure than password auth and doesn\'t prompt for credentials on every push."'},
+
+  // HTTP
+  {id:20,cat:'http',diff:'easy',q:'What are the 4 parts of an HTTP request?',a:`<ol style="margin-left:16px;"><li><strong>Method</strong> — what action to perform (GET, POST, PUT, DELETE, PATCH, HEAD)</li><li><strong>URL</strong> — where to perform the action (https://example.com/api/users?id=5)</li><li><strong>Headers</strong> — metadata about the request (User-Agent, Authorization, Content-Type, Cookie)</li><li><strong>Body</strong> — data being sent (only for POST/PUT/PATCH — empty for GET)</li></ol><p>And the 4 parts of an HTTP response: <strong>status code</strong>, <strong>headers</strong>, <strong>body</strong>, <strong>cookies</strong>.</p>`,why:'Foundational HTTP knowledge tested in every AppSec, web developer, and network engineer interview.',protip:'"Every web vulnerability is a manipulation of these 4 parts. SQL injection manipulates the body or URL parameters. XSS manipulates body output. CSRF forges the entire request."'},
+  {id:21,cat:'http',diff:'easy',q:'What is the difference between HTTP status codes 401 and 403?',a:`<ul><li><strong>401 Unauthorized</strong> = "I don't know who you are. Please authenticate first." The server is asking for credentials — log in and try again.</li><li><strong>403 Forbidden</strong> = "I know exactly who you are. You simply don't have permission." Authentication was successful but authorization failed.</li></ul><p>Security example: Visiting <code>/admin</code> as a logged-out user = 401. Visiting <code>/admin</code> as a logged-in regular user = 403.</p><p>Broken Access Control (OWASP A01) often involves getting 403 responses that can be bypassed by changing headers like <code>X-Original-URL</code>.</p>`,why:'The 401/403 distinction is a classic interview question and essential for understanding access control vulnerabilities.',protip:'"In AppSec, a 403 response is more interesting than 404. It means the resource exists but is restricted — worth attempting to bypass."'},
+  {id:22,cat:'http',diff:'easy',q:'Why should passwords never be sent in GET request query strings?',a:`<p>GET request URLs appear in multiple places:</p><ul><li><strong>Browser address bar</strong> — visible to anyone looking at your screen</li><li><strong>Browser history</strong> — stored locally</li><li><strong>Server access logs</strong> — logged by web servers and load balancers</li><li><strong>Referer header</strong> — sent to other websites when you click links</li><li><strong>Proxy logs</strong> — logged by corporate proxies, ISPs</li><li><strong>Shoulder surfing</strong> — visible to people around you</li></ul><p>Example of wrong: <code>https://bank.com/login?user=admin&password=secret123</code></p><p>Passwords in POST body avoid all these issues. This is OWASP A02 (Cryptographic Failures).</p>`,why:'Tests understanding of HTTP fundamentals and their security implications. Simple but important.',protip:'"Even with HTTPS encrypting the connection, the URL is typically still logged server-side. The body is usually not logged. That\'s the critical difference."'},
+  {id:23,cat:'http',diff:'medium',q:'What happens step-by-step when you type https://google.com in your browser?',a:`<ol style="margin-left:16px;font-size:14px;"><li><strong>DNS resolution</strong>: Browser checks cache → OS cache → DNS resolver → root nameservers → TLD → Google's NS → IP returned</li><li><strong>TCP connection</strong>: Browser opens TCP connection to port 443 (HTTPS) on Google's IP (3-way handshake: SYN → SYN-ACK → ACK)</li><li><strong>TLS handshake</strong>: Browser and server negotiate encryption, server presents certificate, keys exchanged, encrypted tunnel established</li><li><strong>HTTP request</strong>: Browser sends: GET / HTTP/2 with Host, User-Agent, Accept headers</li><li><strong>Server processes</strong>: Web server receives request, processes it, generates HTML response</li><li><strong>HTTP response</strong>: Server sends 200 OK with HTML body</li><li><strong>Rendering</strong>: Browser parses HTML, discovers resources, makes more requests for CSS/JS/images</li></ol>`,why:'This is THE classic networking/web interview question. Every level of the stack gets tested.',protip:'"I can map each step to a security concern: DNS = spoofing attacks, TLS = certificate validation, HTTP = injection vulnerabilities, rendering = XSS."'},
+  {id:24,cat:'http',diff:'medium',q:'What is a session cookie and what security flags should it have?',a:`<p>When you log in, the server creates a session ID (random string), stores it server-side, and sends <code>Set-Cookie: session=abc123</code> to your browser. Every subsequent request automatically includes <code>Cookie: session=abc123</code>.</p><p><strong>Security flags that should always be set:</strong></p><ul><li><code>HttpOnly</code> — JavaScript cannot access this cookie. Prevents XSS from stealing the session.</li><li><code>Secure</code> — Cookie only sent over HTTPS. Never over HTTP.</li><li><code>SameSite=Strict</code> (or Lax) — Prevents CSRF. Cookie not sent with cross-site requests.</li><li><code>Path=/</code> — Scope the cookie to appropriate path</li><li>Short expiry — Don't let sessions live forever</li></ul>`,why:'Cookie security flags are core AppSec knowledge — expected in junior AppSec interviews.',protip:'"Missing HttpOnly is why XSS is so dangerous — attacker runs <code>document.cookie</code> in injected script and steals your session. With HttpOnly, that doesn\'t work."'},
+  {id:25,cat:'http',diff:'easy',q:'What is the Content-Type header and why does it matter for security?',a:`<p>Content-Type tells the receiver what format the body data is in.</p><p><strong>In requests:</strong></p><ul><li><code>application/x-www-form-urlencoded</code> — HTML form data (key=value&key2=value2)</li><li><code>application/json</code> — JSON body data</li><li><code>multipart/form-data</code> — file uploads</li></ul><p><strong>In responses:</strong></p><ul><li><code>text/html</code> — render as HTML page</li><li><code>application/json</code> — data for JavaScript to process</li></ul><p><strong>Security importance:</strong> Missing <code>X-Content-Type-Options: nosniff</code> response header lets browsers "sniff" content type — a technique attackers use to make browsers execute uploaded files as HTML/JS.</p>`,why:'Content-Type appears in every HTTP interaction and has security implications around file uploads and MIME sniffing.',protip:'"I always check for X-Content-Type-Options: nosniff in security header assessments — its absence is a finding."'},
+  {id:26,cat:'http',diff:'medium',q:'Name 5 security response headers and what each prevents.',a:`<ul><li><code>X-Frame-Options: DENY</code> — prevents the page from being embedded in iframes. Blocks <strong>clickjacking</strong>.</li><li><code>Content-Security-Policy</code> — whitelist of allowed sources for scripts, styles, images. Blocks <strong>XSS</strong>.</li><li><code>Strict-Transport-Security</code> — tells browsers to always use HTTPS for this domain. Blocks <strong>SSL stripping</strong>.</li><li><code>X-Content-Type-Options: nosniff</code> — prevents MIME type sniffing. Blocks <strong>content-type attacks</strong>.</li><li><code>Referrer-Policy</code> — controls how much referrer info is sent. Prevents <strong>information leakage</strong>.</li></ul>`,why:'Security headers are a core AppSec assessment task. Knowing these by heart shows practical knowledge.',protip:'"These are the first thing I check on any new web application — my Day 10 Python web recon tool checks all of these automatically."'},
+  {id:27,cat:'http',diff:'hard',q:'What is HTTPS and what does it NOT protect against?',a:`<p>HTTPS = HTTP + TLS encryption. It provides:</p><ul><li><strong>Encryption in transit</strong>: data scrambled between client and server</li><li><strong>Authentication</strong>: certificate proves server identity (not impersonation)</li><li><strong>Integrity</strong>: data cannot be modified in transit without detection</li></ul><p><strong>What HTTPS does NOT protect:</strong></p><ul><li>Vulnerabilities in the application itself (SQLi, XSS, IDOR still work)</li><li>Compromised server (attacker inside the server sees plaintext)</li><li>Malicious website — a phishing site can have valid HTTPS</li><li>Client-side storage — cookies/localStorage after they arrive</li><li>Server logs — server logs the plaintext request</li></ul><p>The padlock means "encrypted connection to this site" — not "this site is safe."</p>`,why:'HTTPS misconceptions are common. This tests deeper understanding of what TLS actually provides.',protip:'"I explain to stakeholders: HTTPS protects the channel, not the application. A site with HTTPS can still have SQL injection. You need both."'},
+
+  // LINUX
+  {id:28,cat:'linux',diff:'easy',q:'What does ls -la show that plain ls doesn\'t, and why does this matter for security?',a:`<p><strong>ls</strong> shows basic file listing.</p><p><strong>ls -la</strong> adds:</p><ul><li><code>-l</code>: long format — permissions, owner, group, file size, date modified</li><li><code>-a</code>: all files including hidden (starting with dot)</li></ul><p>Hidden files like <code>.bash_history</code>, <code>.ssh/</code>, <code>.env</code>, <code>.aws/</code> are invisible to plain <code>ls</code>.</p><p><strong>Security relevance:</strong> After gaining access to a system, <code>ls -la</code> on home directories reveals: SSH private keys, environment files with credentials, shell history with commands that may contain passwords, and configuration files.</p>`,why:'Tests Linux proficiency and security mindset simultaneously.',protip:'"The first thing I do after getting a shell: ls -la ~ and ls -la /home/*. Hidden files are where secrets hide."'},
+  {id:29,cat:'linux',diff:'easy',q:'What command do you run immediately after gaining shell access to a server?',a:`<p><strong>whoami</strong> — tells you which user you're running as.</p><p>This determines everything:</p><ul><li>Are you <strong>root</strong>? You have full system access.</li><li>Are you <strong>www-data</strong>? You're running as the web server process — limited.</li><li>Are you a regular user? You'll likely need privilege escalation.</li></ul><p>Follow with:</p><div class="tool-code">whoami          # who am I?<br>id              # user ID, group memberships<br>uname -a        # kernel version (for kernel exploits)<br>ls -la ~        # hidden files in home<br>env             # environment variables (credentials?)<br>cat /etc/passwd # all users on system</div>`,why:'Classic pentesting interview question. Shows you know the post-exploitation workflow.',protip:'"Context: am I root? Do I need privilege escalation? What can I access? Whoami is the question that drives every next step."'},
+  {id:30,cat:'linux',diff:'easy',q:'Explain the pipe operator | with a real security example.',a:`<p>The pipe <code>|</code> sends the <strong>output of the left command as input to the right command</strong>.</p><p>Without pipes, each command works alone. With pipes, you build data processing pipelines.</p><p>Real security example — find top IPs causing failed SSH logins:</p><div class="tool-code">grep "Failed" /var/log/auth.log | awk '{print $11}' | sort | uniq -c | sort -rn | head -10</div><p>Step by step:</p><ol style="margin-left:16px;font-size:14px;"><li>grep filters only "Failed" lines</li><li>awk extracts the IP field</li><li>sort groups same IPs together</li><li>uniq -c counts each unique IP</li><li>sort -rn sorts by count, highest first</li><li>head -10 shows top 10 offenders</li></ol>`,why:'Pipes are fundamental Linux power. Security log analysis relies on them constantly.',protip:'"This exact pipeline is real incident response work — I can see which IPs are brute-forcing SSH and block them."'},
+  {id:31,cat:'linux',diff:'medium',q:'What does chmod 755 mean? How do you read Linux permissions?',a:`<p>Permission string: <code>rwxr-xr-x</code> (which is 755)</p><p>Read as three groups of three:</p><ul><li><strong>rwx</strong> = owner: read(4) + write(2) + execute(1) = <strong>7</strong></li><li><strong>r-x</strong> = group: read(4) + execute(1) = <strong>5</strong></li><li><strong>r-x</strong> = others: read(4) + execute(1) = <strong>5</strong></li></ul><p>Common values: 600 (SSH keys), 644 (regular files), 700 (private scripts), 755 (executables/directories)</p><p><strong>Security note:</strong> chmod 777 = everyone can read, write, execute. Never in production — any attacker with any access can overwrite your script.</p>`,why:'Permission questions appear in every Linux and security interview.',protip:'"chmod 777 is immediately suspicious in any security review. Finding world-writable files (find / -perm -o+w) is a standard privilege escalation check."'},
+  {id:32,cat:'linux',diff:'medium',q:'How do you find files that might contain secrets on a Linux system?',a:`<p>Multiple techniques:</p><div class="tool-code"># Search file CONTENTS for secrets<br>grep -rE "(password|api_key|secret|token|AWS)" /etc/ 2>/dev/null<br>grep -rE "(password|api_key|secret)" /var/www/ 2>/dev/null<br><br># Find .env files<br>find / -name ".env" 2>/dev/null<br>find / -name "*.key" 2>/dev/null<br>find / -name "id_rsa" 2>/dev/null<br><br># Find world-writable files (misconfigs)<br>find / -perm -o+w -type f 2>/dev/null<br><br># Command history (often contains passwords)<br>cat ~/.bash_history | grep -i "password\|secret\|key"<br><br># Environment variables<br>env | grep -iE "pass|key|secret|token"</div>`,why:'Directly maps to AppSec and pentesting work. Shows real enumeration technique knowledge.',protip:'"I packaged these commands into find_secrets.sh on Day 2 — a reusable script. This is exactly what commercial tools like TruffleHog automate at scale."'},
+  {id:33,cat:'linux',diff:'easy',q:'What is sudo and what is the security principle behind restricting it?',a:`<p><strong>sudo</strong> = "superuser do" — runs a command with root (administrator) privileges.</p><p><strong>Principle of Least Privilege:</strong> Users should only have the minimum permissions needed to do their job. Not everyone should be able to sudo.</p><p>Security implications:</p><ul><li>sudo access = ability to read any file, modify system configs, add backdoors</li><li><code>sudo -l</code> shows what current user can run with sudo (privilege escalation research)</li><li>SUID files (<code>find / -perm -4000</code>) run as their owner (often root) — common privilege escalation vector</li><li>Misconfigured sudoers file is a classic CTF/pentest finding</li></ul>`,why:'Privilege escalation is central to both offense and defense. Understanding sudo is fundamental.',protip:'"In any security audit, I check the sudoers file and SUID binaries. These are the most common paths from regular user to root access."'},
+  {id:34,cat:'linux',diff:'medium',q:'What does tail -f do and why is it valuable during incident response?',a:`<p><code>tail -f filename</code> shows the last lines of a file AND continues printing new lines as they\'re added in real time. Ctrl+C to stop.</p><p><strong>Incident response value:</strong></p><ul><li>Watch authentication attempts live: <code>tail -f /var/log/auth.log</code></li><li>Monitor web server access in real time: <code>tail -f /var/log/nginx/access.log</code></li><li>Watch application errors as they happen</li><li>Combine with grep: <code>tail -f auth.log | grep "Failed"</code></li></ul><p>During an active attack, tail -f shows the attacker's activity in real time — which IPs, which usernames they're trying, which endpoints they're hitting.</p>`,why:'Tests log monitoring knowledge — core to SOC and security operations work.',protip:'"If I suspect an active brute force attack: tail -f /var/log/auth.log | grep Failed shows me the IPs in real time. I can block them immediately in the firewall."'},
+
+  // NETWORKING
+  {id:35,cat:'networking',diff:'easy',q:'What is the difference between a private IP and public IP? Give examples of each.',a:`<p><strong>Private IPs</strong> — used inside local networks (home, office). Not routable on the public internet.</p><ul><li>10.0.0.0 – 10.255.255.255 (10.x.x.x)</li><li>172.16.0.0 – 172.31.255.255</li><li>192.168.0.0 – 192.168.255.255 (most home networks)</li></ul><p><strong>Public IPs</strong> — globally unique, routable on the internet. Examples: 8.8.8.8 (Google DNS), 1.1.1.1 (Cloudflare DNS).</p><p><strong>How they connect:</strong> Your router performs NAT — your devices use private IPs internally, but outgoing traffic appears to use your router's public IP. Inbound traffic is forwarded to the right internal device.</p>`,why:'Private vs public IP is fundamental. Interviewers test this across every network/cloud/security role.',protip:'"Special case: 169.254.169.254 is the AWS instance metadata service. SSRF attacks target this IP to steal EC2 instance credentials — a critical cloud security concept."'},
+  {id:36,cat:'networking',diff:'easy',q:'You run nmap and see port 3389 is open on a server. What does this tell you and why is it a concern?',a:`<p>Port 3389 = <strong>RDP (Remote Desktop Protocol)</strong> = Windows remote graphical desktop access.</p><p><strong>Security concerns:</strong></p><ul><li>Internet-exposed RDP is one of the most attacked services in the world</li><li><strong>BlueKeep (CVE-2019-0708)</strong>: critical RDP vulnerability allowing remote code execution without credentials</li><li>Brute force attacks: automated tools try millions of username/password combinations</li><li>Password spraying: try common passwords across all RDP accounts</li></ul><p><strong>Best practice:</strong> RDP should never be exposed directly to the internet. Use VPN first, then RDP. Or use jump boxes (bastion hosts).</p>`,why:'Port knowledge with security context is expected in AppSec/cloud security interviews.',protip:'"This is an automatic High finding in any security assessment — RDP on the internet means report it, escalate it, recommend VPN gating or complete removal."'},
+  {id:37,cat:'networking',diff:'easy',q:'What is the difference between TCP and UDP? Which does HTTP use?',a:`<p><strong>TCP (Transmission Control Protocol):</strong></p><ul><li>Reliable — guarantees delivery, retransmits lost packets</li><li>Ordered — packets arrive in sequence</li><li>Connection-oriented — 3-way handshake before data</li><li>Slower — overhead from acknowledgments</li><li>Used by: HTTP, HTTPS, SSH, FTP, databases</li></ul><p><strong>UDP (User Datagram Protocol):</strong></p><ul><li>Unreliable — no delivery guarantee, packets can be lost</li><li>Fast — no handshake, no acknowledgments</li><li>Connectionless — just send and hope</li><li>Used by: DNS, video streaming, gaming, VoIP</li></ul><p>HTTP uses <strong>TCP</strong> — every byte of your web page must arrive intact.</p>`,why:'TCP vs UDP is asked in every networking interview and most security interviews.',protip:'"DNS uses UDP for queries (fast, small packets) but falls back to TCP for large responses (zone transfers). DNS over TCP is also a security concern — zone transfers can reveal all DNS records."'},
+  {id:38,cat:'networking',diff:'medium',q:'Explain how DNS resolution works from start to finish.',a:`<ol style="margin-left:16px;font-size:14px;"><li><strong>Browser cache</strong>: check if recently resolved. Hit → done.</li><li><strong>OS cache + /etc/hosts</strong>: check local. Hit → done.</li><li><strong>Recursive resolver</strong>: ask your configured DNS (8.8.8.8, 1.1.1.1). It does the work.</li><li><strong>Root nameservers</strong>: 13 clusters worldwide. Tell resolver who handles ".com".</li><li><strong>TLD nameservers</strong>: .com servers tell resolver who handles "google.com".</li><li><strong>Authoritative nameservers</strong>: Google's own DNS servers return the actual IP.</li><li><strong>Response + cache</strong>: IP returned, cached for TTL period.</li></ol><p>Use <code>dig google.com +trace</code> to watch all steps in real time.</p>`,why:'DNS is tested across networking, cloud, and security interviews. Understanding it enables DNS-related attack/defense knowledge.',protip:'"DNS monitoring matters for security — malware uses DNS for C2 communication (command and control). GuardDuty analyzes DNS logs to detect unusual domain queries."'},
+  {id:39,cat:'networking',diff:'medium',q:'What is TLS and what does the padlock icon in a browser actually prove?',a:`<p><strong>TLS (Transport Layer Security)</strong> provides three things:</p><ul><li><strong>Encryption</strong>: data between client and server is scrambled — ISP, WiFi owner, etc. can't read it</li><li><strong>Authentication</strong>: certificate proves the server is who it claims to be (validated by a Certificate Authority)</li><li><strong>Integrity</strong>: data can't be modified in transit without detection</li></ul><p><strong>What the padlock DOESN'T prove:</strong></p><ul><li>The website is safe or legitimate</li><li>There are no vulnerabilities in the application</li><li>The company is trustworthy</li></ul><p>A phishing site like "paypa1.com" can have a valid TLS certificate. The padlock just means "your connection to this server is encrypted."</p>`,why:'TLS misconceptions are common. This tests whether candidates understand what HTTPS actually guarantees.',protip:'"I explain to non-technical stakeholders: HTTPS protects the pipe, not the water. The data travels safely, but the destination might still be malicious."'},
+  {id:40,cat:'networking',diff:'hard',q:'What is DNS tunneling and how is it used for data exfiltration?',a:`<p>DNS tunneling encodes data inside DNS queries and responses to exfiltrate information or communicate with malware C2 (command and control) servers.</p><p><strong>How it works:</strong></p><ol style="margin-left:16px;font-size:14px;"><li>Attacker controls a domain (evil.com) and its nameserver</li><li>Malware on compromised machine encodes stolen data in DNS queries: <code>c3RvbGVuZGF0YQ==.evil.com</code></li><li>Query reaches attacker's nameserver (normal DNS routing)</li><li>Attacker decodes the base64 in the subdomain</li><li>Commands encoded in DNS response back to malware</li></ol><p><strong>Why it works:</strong> DNS port 53 is almost never blocked by firewalls — machines must be able to resolve names. Attackers abuse this necessity.</p><p><strong>Detection:</strong> Unusual DNS patterns — high volume, very long subdomains, queries to new domains, base64-like strings in subdomains.</p>`,why:'Advanced concept that separates candidates with real security depth.',protip:'"This is why AWS GuardDuty analyzes DNS logs — unusual DNS patterns are a strong indicator of malware activity."'},
+  {id:41,cat:'networking',diff:'easy',q:'Name 5 port numbers, their services, and a one-line security note for each.',a:`<ul><li><strong>22/SSH</strong>: remote command-line access. Brute force target — use key auth only.</li><li><strong>80/HTTP</strong>: unencrypted web. All data visible — should redirect to 443.</li><li><strong>443/HTTPS</strong>: encrypted web. Standard for all production web traffic.</li><li><strong>3306/MySQL</strong>: database. Never expose to internet — attacker accesses raw data.</li><li><strong>3389/RDP</strong>: Windows remote desktop. Critical brute force and exploit target.</li></ul><p>Bonus: 53=DNS, 25=SMTP, 443=HTTPS, 6379=Redis (no auth by default), 27017=MongoDB (frequent exposure)</p>`,why:'Port knowledge is tested in every security interview. You should know 15+ ports from memory.',protip:'"I know ports by thinking of what I\'d check first in an nmap scan. Open 3306? Database exposed. Open 22? Try default credentials. Open 6379? Redis often has no auth."'},
+
+  // PYTHON
+  {id:42,cat:'python',diff:'easy',q:'Why use requests.Session() instead of requests.get() when testing a login flow?',a:`<p><code>requests.get()</code> is stateless — each call knows nothing about previous calls. No cookies are stored or sent.</p><p><code>requests.Session()</code> acts like a browser — it persists cookies, headers, and connection pooling across multiple requests.</p><div class="tool-code">session = requests.Session()<br># Login — server sends Set-Cookie<br>session.post(url + "/login", data={"user":"admin","pass":"123"})<br># Now authenticated — cookie automatically sent<br>session.get(url + "/admin-panel")<br>session.get(url + "/profile")</div><p>Without Session, every requests.get() starts fresh — no cookie, no authentication, you can't test protected pages.</p>`,why:'Python requests is tested in web security and automation roles. Session management shows real understanding.',protip:'"Session is essential for testing authenticated features — IDOR, privilege escalation, and most auth vulnerabilities require you to be logged in as different users."'},
+  {id:43,cat:'python',diff:'easy',q:'Why must you always set timeout=N in security scanning scripts?',a:`<p>Without timeout, <code>requests.get()</code> or <code>sock.connect_ex()</code> waits <strong>forever</strong> for a response that might never come.</p><p>Security scanners hit many targets:</p><ul><li>Some servers are firewalled and simply drop packets (no response ever)</li><li>Some servers are overloaded and respond very slowly</li><li>Without timeout, one unresponsive target freezes the entire scan</li></ul><div class="tool-code">requests.get(url, timeout=5)         # 5s total<br>requests.get(url, timeout=(3, 10))   # 3s connect, 10s read<br>sock.settimeout(1)                   # 1s per port in scanner</div><p>Professional scanners always timeout. It's not optional — it's what separates working tools from broken ones.</p>`,why:'Practical Python knowledge that shows real scripting experience, not just tutorial-following.',protip:'"I set different timeouts for different scenarios: 1s for fast internal network scanning, 5s for internet targets, 30s for slow APIs."'},
+  {id:44,cat:'python',diff:'medium',q:'What does sock.connect_ex() return and how does a port scanner use this value?',a:`<p><code>connect_ex()</code> attempts a TCP connection and returns an error code integer:</p><ul><li><strong>0</strong> = connection succeeded = port is OPEN</li><li><strong>111</strong> = connection refused = port is CLOSED (nothing listening)</li><li><strong>110</strong> = connection timed out = port is FILTERED (firewall dropping packets)</li><li>Other values = various other errors</li></ul><div class="tool-code">sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)<br>sock.settimeout(1)<br>result = sock.connect_ex((target_ip, port))<br>if result == 0:<br>    print(f"[OPEN] Port {port}")<br>sock.close()</div><p>The regular <code>connect()</code> raises an exception on failure. <code>connect_ex()</code> returns an error code instead — cleaner for loops.</p>`,why:'Port scanner code is a common Python interview coding challenge for security roles.',protip:'"I use connect_ex() over connect() in scanners because I can handle all results with a simple integer check rather than try/except blocks per port."'},
+  {id:45,cat:'python',diff:'easy',q:'What is the difference between open("file","w") and open("file","a")?',a:`<ul><li><code>"w"</code> (write mode): <strong>overwrites</strong> the file. If it exists, all previous content is erased. Creates the file if it doesn't exist.</li><li><code>"a"</code> (append mode): <strong>adds to the end</strong> of the file. Previous content preserved. Creates the file if it doesn't exist.</li></ul><p>When to use each in security tools:</p><ul><li><code>"w"</code>: fresh scan report each run — you want clean output</li><li><code>"a"</code>: building up a log over time — add findings without losing previous ones</li></ul><p>Same concept as Linux redirection: <code>></code> overwrites, <code>>></code> appends.</p>`,why:'Basic but frequently asked. Shows attention to detail in tool design.',protip:'"Security tools should almost always use \'w\' — you want reproducible, clean reports per scan run, not accidentally combined reports from different targets."'},
+  {id:46,cat:'python',diff:'medium',q:'Write a regex pattern to find AWS access keys in source code.',a:`<p>AWS access keys always follow the pattern: <code>AKIA</code> followed by exactly 16 uppercase letters or digits.</p><div class="tool-code">import re<br><br>pattern = r'AKIA[A-Z0-9]{16}'<br><br>code = '''<br>aws_key = "AKIAIOSFODNN7EXAMPLE"<br>api_url = "https://api.example.com"<br>'''<br><br>found = re.findall(pattern, code)<br>print(found)  # ['AKIAIOSFODNN7EXAMPLE']</div><p>Breaking down the pattern:</p><ul><li><code>AKIA</code> — literal prefix, all AWS access keys start with this</li><li><code>[A-Z0-9]</code> — character class: uppercase letters OR digits</li><li><code>{16}</code> — exactly 16 of the previous character class</li></ul>`,why:'Regex for secret detection is directly relevant to AppSec/DevSecOps work and shows practical Python security knowledge.',protip:'"This pattern is used by TruffleHog and GitLeaks — the commercial secret scanning tools. Understanding it helps me tune those tools and write custom patterns."'},
+  {id:47,cat:'python',diff:'medium',q:'What is the difference between re.search(), re.findall(), and re.match()?',a:`<ul><li><code>re.search(pattern, text)</code>: finds the <strong>first</strong> match anywhere in the string. Returns a match object or None.</li><li><code>re.findall(pattern, text)</code>: finds <strong>all</strong> matches, returns them as a list of strings.</li><li><code>re.match(pattern, text)</code>: only matches at the <strong>beginning</strong> of the string.</li></ul><div class="tool-code">text = "emails: a@x.com and b@y.com"<br>pattern = r"[\w.]+@[\w.]+\.\w+"<br><br>re.search(pattern, text).group()  # 'a@x.com' (first only)<br>re.findall(pattern, text)          # ['a@x.com', 'b@y.com'] (all)<br>re.match(r"emails", text)          # Match (starts at beginning)</div><p>For security scanning, <code>findall()</code> is most common — you want ALL occurrences, not just the first.</p>`,why:'Regex methods are standard Python interview territory. Security context makes it more relevant.',protip:'"I always use re.compile() for patterns used in loops — it compiles once and runs faster: pattern = re.compile(r\'regex\'); for line in log: pattern.findall(line)"'},
+  {id:48,cat:'python',diff:'hard',q:'How would you build a Python script that checks 100 URLs for missing security headers and saves a report?',a:`<div class="tool-code">import requests<br>import json<br>from datetime import datetime<br><br>HEADERS_TO_CHECK = {<br>    "X-Frame-Options": "Clickjacking protection",<br>    "Content-Security-Policy": "XSS prevention",<br>    "Strict-Transport-Security": "HTTPS enforcement",<br>}<br><br>def check_url(url):<br>    try:<br>        r = requests.get(url, timeout=10)<br>        missing = [h for h in HEADERS_TO_CHECK if h not in r.headers]<br>        return {"url": url, "status": r.status_code,<br>                "missing": missing}<br>    except requests.Timeout:<br>        return {"url": url, "status": "TIMEOUT", "missing": []}<br>    except Exception as e:<br>        return {"url": url, "status": "ERROR", "missing": []}<br><br>with open("targets.txt") as f:<br>    urls = [l.strip() for l in f if l.strip()]<br><br>results = [check_url(u) for u in urls]<br><br>with open(f"report_{datetime.now():%Y%m%d}.json","w") as f:<br>    json.dump(results, f, indent=2)</div>`,why:'Architecture question — tests whether you can design a complete tool, not just write individual functions.',protip:'"I\'d add threading.ThreadPoolExecutor to run 10 requests in parallel — goes from 100 sequential requests (500s) to 10 parallel batches (50s). Huge improvement for scanners."'},
+  {id:49,cat:'python',diff:'medium',q:'Why use "with open()" instead of just open() and close()?',a:`<p>The <code>with</code> statement (context manager) <strong>guarantees the file is closed even if an exception occurs</strong>.</p><div class="tool-code"># WRONG approach:<br>f = open("results.txt", "w")<br>f.write(data)    # if exception here...<br>f.close()        # ...this never runs → file handle leak<br><br># CORRECT approach:<br>with open("results.txt", "w") as f:<br>    f.write(data)  # if exception here...<br># ...file closes automatically anyway</div><p>Without proper closing: the OS has a limit on open file handles (~1024 by default). Leaked handles accumulate until you hit "Too many open files" error — your scanner crashes after scanning a few hundred targets.</p>`,why:'Shows Python best practices knowledge. File handle management is a real production concern in scanners.',protip:'"I use this as a code review check — any open() without a with statement is a finding. In long-running security tools, unclosed file handles cause mysterious crashes hours into a scan."'},
+  {id:50,cat:'python',diff:'easy',q:'What does r.raise_for_status() do and when would you use it?',a:`<p><code>raise_for_status()</code> checks the HTTP response status code. If it's a 4xx or 5xx error, it raises an <code>HTTPError</code> exception.</p><div class="tool-code">r = requests.get(url, timeout=5)<br>r.raise_for_status()  # raises if 400-599<br># only reaches here if 2xx or 3xx</div><p>Without it: requests succeeds even for 404 Not Found or 500 Server Error — you'd have to manually check <code>r.status_code</code>.</p><p>When to use: when a non-200 response means the operation failed and you want to stop processing. When NOT to use: when you want to inspect all status codes (scanning for 403s, looking at error responses for info disclosure).</p>`,why:'Tests nuanced requests library knowledge and shows understanding of error handling design.',protip:'"In security scanning, I often DON\'T use raise_for_status because 403 and 500 responses are interesting security findings — I want to inspect them, not skip them."'},
+  {id:51,cat:'python',diff:'medium',q:'What is AF_INET and SOCK_STREAM in socket.socket() and what would you change for UDP?',a:`<p>The two arguments define the socket type:</p><ul><li><code>socket.AF_INET</code>: Address Family Internet — IPv4 protocol. (Use AF_INET6 for IPv6)</li><li><code>socket.SOCK_STREAM</code>: Stream socket — TCP connection (reliable, ordered)</li></ul><p><strong>For UDP:</strong> Change SOCK_STREAM to SOCK_DGRAM (Datagram):</p><div class="tool-code"># TCP socket (most common)<br>tcp_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)<br><br># UDP socket<br>udp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)<br>udp_sock.sendto(data, (target, port))  # no connect(), just sendto()</div><p>UDP sockets don't use connect_ex() — they just send datagrams. DNS clients use UDP sockets to query DNS servers.</p>`,why:'Shows socket programming depth beyond tutorial-level copying.',protip:'"For port scanning, TCP is standard. For service-specific testing (DNS enumeration), you need UDP sockets. Knowing the difference shows you understand what you\'re building."'},
+  {id:52,cat:'python',diff:'hard',q:'How would you make your port scanner 10x faster?',a:`<p>The basic scanner runs ports <strong>sequentially</strong> — waits for each timeout before moving to the next port. With 1-second timeout and 13 ports: up to 13 seconds.</p><p><strong>Solution: Threading</strong></p><div class="tool-code">from concurrent.futures import ThreadPoolExecutor<br>import socket<br><br>def check_port(args):<br>    target_ip, port = args<br>    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)<br>    sock.settimeout(1)<br>    result = sock.connect_ex((target_ip, port))<br>    sock.close()<br>    return port if result == 0 else None<br><br>with ThreadPoolExecutor(max_workers=100) as ex:<br>    args = [(target_ip, p) for p in ports]<br>    results = list(ex.map(check_port, args))<br><br>open_ports = [p for p in results if p]</div><p>100 ports scan simultaneously instead of one at a time. 13 seconds → under 2 seconds.</p>`,why:'Threading in Python is a real interview question for security engineering roles. Shows you think about performance.',protip:'"Be careful with max_workers — too high and you trigger firewall rate limiting or overwhelm the target. 100 is reasonable; 1000 might get you blocked."'},
+
+  // HTTP - a few more
+  {id:53,cat:'http',diff:'medium',q:'What is a query string and why is it the most common source of web vulnerabilities?',a:`<p>A query string is data appended to a URL after a <code>?</code>, formatted as <code>key=value</code> pairs separated by <code>&</code>:</p><p><code>https://shop.com/search?category=electronics&id=5&sort=price</code></p><p>Why it's the most targeted input:</p><ul><li>Visible to attackers — anyone can see and modify URL parameters</li><li>No server-side validation assumed — parameters often passed directly to database or HTML</li><li>Easy to test — just modify the URL in the browser bar</li><li>IDOR: changing id=5 to id=6 might show another user's data</li><li>SQLi: changing id=5 to id=5' OR '1'='1 might bypass authentication</li><li>XSS: injecting &lt;script&gt; into a search parameter that reflects in HTML</li></ul>`,why:'Tests understanding of attack surface and why URL parameters are dangerous.',protip:'"Every parameter in a query string is user-controlled input. Until validated and sanitized server-side, it\'s an attack vector."'},
+  {id:54,cat:'http',diff:'easy',q:'What HTTP status code means the server created a new resource, and which one means the request succeeded with existing data?',a:`<ul><li><strong>200 OK</strong> — request succeeded and returned existing data (GET, or successful PUT)</li><li><strong>201 Created</strong> — request succeeded and a new resource was created (successful POST creating a new user, record, etc.)</li></ul><p>Additional useful ones:</p><ul><li><strong>204 No Content</strong> — success but no body returned (DELETE operations)</li><li><strong>202 Accepted</strong> — request accepted but processing hasn't completed yet (async operations)</li></ul><p>In security: creating test accounts or resources returns 201. Checking for 201 vs 200 tells you if the operation changed server state.</p>`,why:'Status code knowledge tests HTTP literacy.',protip:'"Security relevance: a registration endpoint returning 200 when a username exists (instead of 409 Conflict) enables username enumeration."'},
+
+  // Linux extra
+  {id:55,cat:'linux',diff:'hard',q:'Explain this command: grep "Failed" /var/log/auth.log | awk \'{print $11}\' | sort | uniq -c | sort -rn | head -10',a:`<p>This is a security incident response pipeline that finds the top 10 IPs causing failed SSH logins:</p><ol style="margin-left:16px;"><li><code>grep "Failed" /var/log/auth.log</code> — filter auth.log for lines containing "Failed" (failed login attempts)</li><li><code>awk '{print $11}'</code> — extract field 11 from each line (the source IP address in auth.log format)</li><li><code>sort</code> — alphabetically sort the IPs to group identical ones together</li><li><code>uniq -c</code> — count consecutive identical lines (how many times each IP appeared)</li><li><code>sort -rn</code> — sort numerically (-n) in reverse (-r) order, putting highest counts first</li><li><code>head -10</code> — show only the top 10 results</li></ol><p>Result: a ranked list of which IPs have made the most failed login attempts — your brute force attack sources.</p>`,why:'Classic Linux security interview question. Shows pipeline thinking and incident response capability.',protip:'"This is real SOC work. After identifying the top IPs, next step: iptables -A INPUT -s [ip] -j DROP to block them."'},
+  {id:56,cat:'linux',diff:'medium',q:'What is /etc/passwd and /etc/shadow? Why are the hashes in shadow, not passwd?',a:`<p><strong>/etc/passwd</strong>: contains user account information — username, user ID, group ID, home directory, shell. Readable by all users (world-readable) — applications need user info.</p><p><strong>/etc/shadow</strong>: contains password hashes — readable only by root.</p><p>Historically, password hashes were in /etc/passwd (world-readable). This let anyone grab the hashes and crack them offline. Shadow file was introduced to separate readable account info from sensitive hashes.</p><p>Security note: <code>cat /etc/shadow</code> with root access gives you all password hashes. Run through hashcat or john to crack them.</p>`,why:'Tests Linux security fundamentals. Understanding shadow file is part of privilege escalation knowledge.',protip:'"In pentesting: if I have root access, cat /etc/shadow gives all hashes. Weak passwords in real environments are shockingly common."'},
+
+  // Networking extra
+  {id:57,cat:'networking',diff:'medium',q:'What is the TCP 3-way handshake and how is it used in a SYN flood attack?',a:`<p><strong>3-way handshake establishes TCP connection:</strong></p><ol style="margin-left:16px;"><li>Client → Server: <strong>SYN</strong> "I want to connect"</li><li>Server → Client: <strong>SYN-ACK</strong> "Okay, connecting" (server reserves memory for this half-open connection)</li><li>Client → Server: <strong>ACK</strong> "Connected, let's talk"</li></ol><p><strong>SYN Flood attack:</strong></p><ul><li>Attacker sends thousands of SYN packets (step 1) with spoofed source IPs</li><li>Server sends SYN-ACK to fake IPs (no reply ever comes)</li><li>Server holds half-open connections in memory, waiting for ACK</li><li>Memory fills up → legitimate connections refused → denial of service</li></ul><p>Countermeasure: SYN cookies — server doesn't allocate memory until ACK received.</p>`,why:'SYN flood is a classic DoS attack. Shows depth of networking knowledge.',protip:'"SYN cookies are enabled by default on modern Linux. Check: sysctl net.ipv4.tcp_syncookies should return 1."'},
+  {id:58,cat:'networking',diff:'easy',q:'What is localhost and what IP address does it resolve to?',a:`<p><strong>localhost</strong> = a hostname that always refers to the current machine itself. It resolves to <strong>127.0.0.1</strong> (IPv4) or <code>::1</code> (IPv6).</p><p>Traffic to 127.0.0.1 never leaves the machine — it loops back through the OS networking stack.</p><p>Common uses:</p><ul><li>Local development servers: <code>http://localhost:5000</code> (your Flask app)</li><li>Database connections: <code>localhost:5432</code> (local PostgreSQL)</li><li>Testing services before exposing to network</li></ul><p>Security relevance: <code>http://localhost/admin</code> from inside a containerized app might bypass external firewall rules — a common SSRF target after compromising an application.</p>`,why:'Basic but important — every developer interview includes this.',protip:'"SSRF attacks often use localhost to access internal services: attacker gets web app to request http://localhost/admin, bypassing external firewall."'},
+
+  // Python extra
+  {id:59,cat:'python',diff:'medium',q:'What is a list comprehension and write a security-relevant example?',a:`<p>A list comprehension creates a new list by applying an expression to each item in an iterable, optionally with a filter.</p><p>Syntax: <code>[expression for item in iterable if condition]</code></p><p>Security examples:</p><div class="tool-code"># Filter only open ports from scan results<br>open_ports = [p for p in ports if scan_port(target, p)]<br><br># Extract URLs from list of log lines<br>urls = [line.split()[6] for line in access_log if len(line.split()) > 6]<br><br># Clean target list (strip whitespace, skip empty)<br>targets = [line.strip() for line in file if line.strip()]<br><br># Find missing security headers<br>missing = [h for h in required_headers if h not in response.headers]</div>`,why:'List comprehensions are expected Python knowledge in any role.',protip:'"I prefer list comprehensions over for loops for readability, but only for simple cases. If the logic gets complex, I use a regular for loop — clarity matters more than brevity."'},
+  {id:60,cat:'python',diff:'easy',q:'How do you handle exceptions properly in a Python security script that scans multiple targets?',a:`<div class="tool-code">import requests<br><br>def scan_target(url):<br>    try:<br>        r = requests.get(url, timeout=5)<br>        return {"url": url, "status": r.status_code,<br>                "server": r.headers.get("Server", "hidden")}<br><br>    except requests.Timeout:<br>        return {"url": url, "status": "TIMEOUT"}<br>    except requests.ConnectionError:<br>        return {"url": url, "status": "DOWN"}<br>    except requests.HTTPError as e:<br>        return {"url": url, "status": f"HTTP_{e.response.status_code}"}<br>    except Exception as e:<br>        return {"url": url, "status": f"ERROR: {e}"}</div><p>Key principles:</p><ul><li>Catch <strong>specific</strong> exceptions — not just bare <code>except:</code></li><li>Never let one failed target crash the whole scan</li><li>Return structured data even for errors — log, don't silent-fail</li></ul>`,why:'Exception handling in tools is real engineering skill. Shows production-ready thinking.',protip:'"I treat exceptions as scan results, not failures. A timeout is interesting data — that server exists but is slow. A ConnectionError means it\'s down or firewalled."'},
+  {id:61,cat:'python',diff:'hard',q:'What is the difference between requests.post(url, data={}) and requests.post(url, json={})?',a:`<ul><li><code>data={}</code> encodes the body as <strong>application/x-www-form-urlencoded</strong>: <code>username=admin&password=123</code>. This is how HTML forms submit.</li><li><code>json={}</code> encodes the body as <strong>application/json</strong>: <code>{"username":"admin","password":"123"}</code>. Also automatically sets Content-Type header.</li></ul><p>Security relevance: many modern APIs accept only JSON. Sending form-encoded data to a JSON API returns 400 Bad Request or doesn't process your payload. If testing for injection in a JSON API, you must use <code>json=</code>.</p><div class="tool-code"># HTML form login<br>requests.post(url, data={"user":"admin","pass":"' OR 1=1--"})<br><br># JSON API login<br>requests.post(url, json={"user":"admin","pass":"' OR 1=1--"})</div>`,why:'Content-Type awareness matters for API security testing. Shows understanding of serialization formats.',protip:'"SQL injection payloads can work in JSON bodies too. The data format is different but the server still parses the value and (if vulnerable) passes it to SQL."'},
+  {id:62,cat:'python',diff:'medium',q:'How would you add your port scanner to accept a target file as a command-line argument?',a:`<div class="tool-code">import sys<br>import socket<br><br>def main():<br>    # Check argument provided<br>    if len(sys.argv) < 2:<br>        print(f"Usage: {sys.argv[0]} <target_or_file>")<br>        sys.exit(1)<br><br>    arg = sys.argv[1]<br><br>    # Determine if file or single target<br>    try:<br>        with open(arg) as f:<br>            targets = [l.strip() for l in f if l.strip()]<br>    except FileNotFoundError:<br>        targets = [arg]  # treat as single target<br><br>    for target in targets:<br>        print(f"\nScanning {target}...")<br>        ip = socket.gethostbyname(target)<br>        # ... scan ports ...<br><br>if __name__ == "__main__":<br>    main()</div>`,why:'Professional Python tools use command-line arguments, not hardcoded values. Shows tool design thinking.',protip:'"I always add a --help option and use argparse for more complex tools: import argparse; parser = argparse.ArgumentParser(description=\'Port Scanner\')"'},
+];
+
+// =========== STATE MGMT ===========
+let currentIdx = 0;
+let filteredQ = [...questions];
+let currentCat = 'all';
+let currentDiff = 'all';
+let timerOn = false;
+let timerInterval = null;
+let timerSeconds = 30;
+
+function getRating(id) { return S[`q_${id}`]; }
+function setRating(id, rating) { S[`q_${id}`] = rating; save(); updateStats(); }
+
+// =========== STATS ===========
+function updateStats(){
+  const rated = questions.map(q => getRating(q.id)).filter(Boolean);
+  const got = rated.filter(r => r === 'got').length;
+  const almost = rated.filter(r => r === 'almost').length;
+  const miss = rated.filter(r => r === 'miss').length;
+  const total = questions.length;
+  const pct = Math.round(got / total * 100);
+  document.getElementById('totalQ').textContent = total;
+  document.getElementById('masteredQ').textContent = got;
+  document.getElementById('almostQ').textContent = almost;
+  document.getElementById('missedQ').textContent = miss;
+  document.getElementById('pctQ').textContent = pct + '%';
+  document.getElementById('ringPct').textContent = pct + '%';
+  const circumference = 264;
+  const offset = circumference - (pct / 100) * circumference;
+  document.getElementById('ringFill').style.strokeDashoffset = offset;
+}
+
+// =========== FILTERS ===========
+function setCat(cat, btn){
+  currentCat = cat;
+  document.querySelectorAll('[data-cat]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  applyFilters();
+}
+function setDiff(diff, btn){
+  currentDiff = diff;
+  document.querySelectorAll('[data-diff]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  applyFilters();
+}
+function applyFilters(){
+  const q = document.getElementById('fcSearch').value.toLowerCase();
+  filteredQ = questions.filter(item => {
+    const catMatch = currentCat === 'all' || item.cat === currentCat;
+    const diffMatch = currentDiff === 'all' || item.diff === currentDiff;
+    const textMatch = !q || item.q.toLowerCase().includes(q) || item.a.toLowerCase().includes(q);
+    return catMatch && diffMatch && textMatch;
+  });
+  currentIdx = 0;
+  renderCard();
+}
+
+// =========== CARD RENDER ===========
+const catColors = {tools:'var(--cyan)',git:'#f97316',http:'var(--purple)',linux:'var(--green)',networking:'var(--blue)',python:'var(--gold)'};
+const catLabels = {tools:'TOOLS',git:'GIT',http:'HTTP',linux:'LINUX',networking:'NETWORKING',python:'PYTHON'};
+
+function renderCard(){
+  const noRes = document.getElementById('noResults');
+  const stage = document.getElementById('cardStage');
+  const nav = document.querySelector('.card-nav');
+  if(filteredQ.length === 0){
+    noRes.style.display='block';stage.style.display='none';nav.style.display='none';
+    document.getElementById('cardCounter').textContent = 'No results';
+    return;
+  }
+  noRes.style.display='none';stage.style.display='block';nav.style.display='flex';
+  const q = filteredQ[currentIdx];
+  const color = catColors[q.cat];
+  const rating = getRating(q.id);
+  // Unflip
+  stage.classList.remove('flipped');
+  document.getElementById('cardCounter').textContent = `Card ${currentIdx+1} of ${filteredQ.length}`;
+  // Front
+  document.getElementById('frontBadge').innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+      <span class="card-cat-badge cat-${q.cat}" style="color:${color};border-color:${color}">${catLabels[q.cat]}</span>
+      <span class="card-diff diff-${q.diff}">${q.diff.toUpperCase()}</span>
+      ${rating ? `<span style="margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:10px;color:${rating==='got'?'var(--green)':rating==='almost'?'var(--amber)':'var(--red)'}">${rating==='got'?'✓ GOT IT':rating==='almost'?'~ ALMOST':'✗ MISSED'}</span>` : ''}
+    </div>`;
+  document.getElementById('cardQuestion').textContent = q.q;
+  // Back
+  document.getElementById('backBadge').innerHTML = `<span class="card-cat-badge cat-${q.cat}" style="color:${color};border-color:${color};margin-bottom:14px;">${catLabels[q.cat]} // ANSWER</span>`;
+  document.getElementById('cardAnswer').innerHTML = q.a +
+    `<div class="card-why"><strong>WHY THIS IS ASKED</strong>${q.why}</div>` +
+    `<div class="card-protip"><strong>★ PRO TIP</strong>${q.protip}</div>`;
+  // Rating buttons state
+  document.querySelectorAll('.rate-btn').forEach(b => b.classList.remove('selected'));
+  if(rating){
+    const sel = document.querySelector(`.rate-btn.${rating==='got'?'got':rating==='almost'?'almost':'miss'}`);
+    if(sel) sel.classList.add('selected');
+  }
+  // Timer
+  if(timerOn) startTimer();
+}
+
+function flipCard(){
+  const stage = document.getElementById('cardStage');
+  stage.classList.toggle('flipped');
+  if(timerOn) stopTimer();
+}
+function nextCard(){
+  if(filteredQ.length === 0) return;
+  currentIdx = (currentIdx + 1) % filteredQ.length;
+  renderCard();
+}
+function prevCard(){
+  if(filteredQ.length === 0) return;
+  currentIdx = (currentIdx - 1 + filteredQ.length) % filteredQ.length;
+  renderCard();
+}
+function randomCard(){
+  if(filteredQ.length === 0) return;
+  currentIdx = Math.floor(Math.random() * filteredQ.length);
+  renderCard();
+}
+function shuffleDeck(){
+  filteredQ = filteredQ.sort(() => Math.random() - 0.5);
+  currentIdx = 0;
+  renderCard();
+}
+function rate(rating, e){
+  e.stopPropagation();
+  const q = filteredQ[currentIdx];
+  setRating(q.id, rating);
+  document.querySelectorAll('.rate-btn').forEach(b => b.classList.remove('selected'));
+  const map = {got:'got',almost:'almost',miss:'miss'};
+  document.querySelector(`.rate-btn.${map[rating]}`).classList.add('selected');
+  // Auto-advance after 800ms
+  setTimeout(()=>{ if(currentIdx < filteredQ.length - 1) nextCard(); }, 800);
+}
+
+// Timer
+function toggleTimer(){
+  timerOn = !timerOn;
+  document.getElementById('timerBtn').textContent = timerOn ? '⏱ Timer ON' : '⏱ Timer OFF';
+  document.getElementById('timerBtn').classList.toggle('active', timerOn);
+  if(!timerOn) stopTimer();
+  else renderCard();
+}
+function startTimer(){
+  stopTimer();
+  let remaining = timerSeconds;
+  const bar = document.getElementById('timerBar');
+  bar.style.width = '100%';
+  bar.classList.remove('urgent');
+  timerInterval = setInterval(()=>{
+    remaining--;
+    bar.style.width = (remaining/timerSeconds*100)+'%';
+    if(remaining <= 8) bar.classList.add('urgent');
+    if(remaining <= 0){
+      stopTimer();
+      document.getElementById('cardStage').classList.add('flipped');
+    }
+  }, 1000);
+}
+function stopTimer(){
+  clearInterval(timerInterval);
+  timerInterval = null;
+  document.getElementById('timerBar').style.width = '100%';
+  document.getElementById('timerBar').classList.remove('urgent');
+}
+function resetAll(){
+  if(!confirm('Reset all ratings? This cannot be undone.')) return;
+  questions.forEach(q => { delete S[`q_${q.id}`]; });
+  save();
+  updateStats();
+  renderCard();
+}
+
+// Keyboard
+document.addEventListener('keydown', e => {
+  if(e.target.tagName === 'INPUT') return;
+  if(e.key === ' ' || e.key === 'Enter') { e.preventDefault(); flipCard(); }
+  else if(e.key === 'ArrowRight' || e.key === 'j') nextCard();
+  else if(e.key === 'ArrowLeft' || e.key === 'k') prevCard();
+  else if(e.key === '1') { const q=filteredQ[currentIdx]; if(q) rate('got',{stopPropagation:()=>{}}); }
+  else if(e.key === '2') { const q=filteredQ[currentIdx]; if(q) rate('almost',{stopPropagation:()=>{}}); }
+  else if(e.key === '3') { const q=filteredQ[currentIdx]; if(q) rate('miss',{stopPropagation:()=>{}}); }
+});
+
+// =========== TOOLS ===========
+function buildTools(){
+  const grid = document.getElementById('toolGrid');
+  tools.forEach((t,i) => {
+    const card = document.createElement('div');
+    card.className = 'tool-card';
+    card.innerHTML = `
+      <div class="tool-header" onclick="toggleTool(this.parentElement)">
+        <div class="tool-icon">${t.icon}</div>
+        <div><div class="tool-name">${t.name}</div><div class="tool-type">${t.type}</div></div>
+        <div class="tool-chevron">▶</div>
+      </div>
+      <div class="tool-body">
+        <div class="tool-section">
+          <div class="tool-section-title">WHAT IT IS</div>
+          <p>${t.what}</p>
+        </div>
+        <div class="tool-section">
+          <div class="tool-section-title">HOW IT WORKS</div>
+          <p>${t.how}</p>
+        </div>
+        <div class="tool-section">
+          <div class="tool-section-title">WHY SECURITY PROFESSIONALS USE IT</div>
+          <ul>${t.why.map(w=>`<li>${w}</li>`).join('')}</ul>
+        </div>
+        <div class="tool-section">
+          <div class="tool-section-title">KEY COMMANDS / FEATURES</div>
+          <div class="tool-code">${t.commands.join('\n')}</div>
+        </div>
+        <div class="interview-angle">${t.interview}</div>
+        <div class="roadmap-day">▸ ROADMAP: ${t.day}</div>
+      </div>`;
+    if(S[`tool-${i}`]) card.classList.add('open');
+    grid.appendChild(card);
+  });
+}
+
+function toggleTool(card){
+  card.classList.toggle('open');
+  const idx = [...document.querySelectorAll('.tool-card')].indexOf(card);
+  S[`tool-${idx}`] = card.classList.contains('open');
+  save();
+}
+
+// =========== INIT ===========
+buildTools();
+updateStats();
+renderCard();
+
+// Restore filter state
+if(S.cat){
+  currentCat = S.cat;
+  const btn = document.querySelector(`[data-cat="${S.cat}"]`);
+  if(btn){ document.querySelectorAll('[data-cat]').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); }
+  applyFilters();
+}
+if(S.idx) currentIdx = Math.min(S.idx, filteredQ.length-1);
+renderCard();
+
+// Save position on navigation
+['nextCard','prevCard','randomCard'].forEach(fn => {
+  const orig = window[fn];
+  window[fn] = function(){ orig(); S.idx = currentIdx; save(); };
+});
+
+console.log('%c▸ INTERVIEW WAR ROOM // DAYS 0–4 // 62 QUESTIONS','font-family:monospace;font-weight:bold;color:#ff6b1a;font-size:14px');
+console.log('%cKeyboard: Space=flip | ←→=navigate | 1=got | 2=almost | 3=missed','color:#666;font-family:monospace');
+</script>
+</body>
+</html>

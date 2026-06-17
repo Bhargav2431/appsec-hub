@@ -1,0 +1,1380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1a1814">
+<title>Case File 01 — HTTP: The Web's Secret Language</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Crimson+Pro:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --paper:       #f3ebd9;
+    --paper-dark:  #e8dfc9;
+    --paper-darker:#d8cdb2;
+    --ink:         #1a1814;
+    --ink-soft:    #3d2f1f;
+    --ink-faded:   #6b5d4a;
+    --stamp-red:   #a82828;
+    --stamp-red-dim:#8a1f1f;
+    --teal:        #2c5560;
+    --teal-soft:   #4a7c8a;
+    --gold:        #8a6f1f;
+    --shadow-warm: rgba(61, 47, 31, 0.15);
+    --shadow-strong:rgba(26, 24, 20, 0.35);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Crimson Pro', 'Georgia', serif;
+    font-size: 18px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+    position: relative;
+    min-height: 100vh;
+  }
+
+  /* Paper texture overlay */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(ellipse at top left, rgba(168, 40, 40, 0.04) 0%, transparent 60%),
+      radial-gradient(ellipse at bottom right, rgba(44, 85, 96, 0.04) 0%, transparent 60%),
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence baseFrequency='0.85' numOctaves='2' /><feColorMatrix values='0 0 0 0 0.1 0 0 0 0 0.08 0 0 0 0 0.06 0 0 0 0.08 0'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>");
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* Subtle paper edges */
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    box-shadow: inset 0 0 200px rgba(61, 47, 31, 0.15);
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  main {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 60px 32px 200px;
+    position: relative;
+    z-index: 5;
+  }
+
+  /* ============ COVER ============ */
+  .cover {
+    text-align: center;
+    padding: 80px 0 60px;
+    border-bottom: 2px solid var(--ink);
+    margin-bottom: 60px;
+    position: relative;
+  }
+
+  .classification {
+    display: inline-block;
+    font-family: 'Special Elite', monospace;
+    font-size: 12px;
+    letter-spacing: 0.3em;
+    border: 1px solid var(--stamp-red);
+    color: var(--stamp-red);
+    padding: 4px 12px;
+    margin-bottom: 24px;
+    transform: rotate(-1deg);
+  }
+
+  .case-number {
+    font-family: 'Special Elite', monospace;
+    font-size: 14px;
+    letter-spacing: 0.2em;
+    color: var(--ink-faded);
+    margin-bottom: 16px;
+  }
+
+  h1.title {
+    font-family: 'Special Elite', monospace;
+    font-size: clamp(36px, 6vw, 64px);
+    line-height: 1.05;
+    color: var(--ink);
+    margin-bottom: 20px;
+    font-weight: normal;
+    letter-spacing: -0.01em;
+  }
+
+  .subtitle {
+    font-family: 'Crimson Pro', serif;
+    font-style: italic;
+    font-size: clamp(18px, 2.5vw, 22px);
+    color: var(--ink-soft);
+    margin-bottom: 32px;
+  }
+
+  .briefing-box {
+    text-align: left;
+    background: var(--paper-dark);
+    padding: 24px 32px;
+    border: 1px solid var(--ink);
+    box-shadow: 6px 6px 0 var(--shadow-warm);
+    position: relative;
+    margin-top: 40px;
+  }
+
+  .briefing-box::before {
+    content: "BRIEFING";
+    position: absolute;
+    top: -12px;
+    left: 24px;
+    background: var(--paper);
+    padding: 0 12px;
+    font-family: 'Special Elite', monospace;
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    color: var(--stamp-red);
+  }
+
+  .briefing-box p { margin: 0; font-size: 17px; }
+
+  /* Stamps */
+  .stamp {
+    position: absolute;
+    font-family: 'Special Elite', monospace;
+    border: 3px double currentColor;
+    padding: 8px 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    font-size: 14px;
+    transform: rotate(-8deg);
+    opacity: 0.85;
+    pointer-events: none;
+  }
+
+  .stamp.confidential {
+    color: var(--stamp-red);
+    top: 20px;
+    right: 0;
+  }
+
+  /* ============ CASE FILES ============ */
+  .case-file {
+    margin: 80px 0;
+    position: relative;
+  }
+
+  .case-header {
+    margin-bottom: 32px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--ink-soft);
+  }
+
+  .case-number-tag {
+    font-family: 'Special Elite', monospace;
+    font-size: 13px;
+    letter-spacing: 0.25em;
+    color: var(--stamp-red);
+    margin-bottom: 8px;
+  }
+
+  .case-title {
+    font-family: 'Special Elite', monospace;
+    font-size: clamp(28px, 4vw, 38px);
+    line-height: 1.15;
+    color: var(--ink);
+    font-weight: normal;
+  }
+
+  .case-mission {
+    font-style: italic;
+    font-size: 18px;
+    color: var(--ink-soft);
+    margin-top: 8px;
+    padding-left: 16px;
+    border-left: 3px solid var(--gold);
+  }
+
+  /* Story narrative */
+  .narrative {
+    margin: 24px 0;
+    font-size: 19px;
+    line-height: 1.75;
+  }
+
+  .narrative p { margin-bottom: 18px; }
+
+  .narrative strong {
+    background: linear-gradient(transparent 60%, rgba(168, 40, 40, 0.15) 60%);
+    font-weight: 600;
+    padding: 0 2px;
+  }
+
+  /* Action commands - typewriter style boxes */
+  .action {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 18px 22px;
+    margin: 24px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    box-shadow: 4px 4px 0 var(--ink-soft);
+    position: relative;
+    overflow-x: auto;
+  }
+
+  .action::before {
+    content: "ACTION";
+    position: absolute;
+    top: -10px;
+    left: 16px;
+    background: var(--stamp-red);
+    color: var(--paper);
+    padding: 1px 10px;
+    font-family: 'Special Elite', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+  }
+
+  .action .comment { color: #888; }
+  .action .prompt { color: var(--gold); }
+
+  /* Reveal cards */
+  .reveal {
+    background: var(--paper-dark);
+    border: 2px solid var(--ink);
+    margin: 24px 0;
+    transition: all 0.3s ease;
+    box-shadow: 5px 5px 0 var(--shadow-warm);
+  }
+
+  .reveal-button {
+    width: 100%;
+    background: transparent;
+    border: none;
+    padding: 20px 28px;
+    font-family: 'Special Elite', monospace;
+    font-size: 15px;
+    color: var(--ink);
+    text-align: left;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .reveal-button:hover {
+    background: var(--paper-darker);
+  }
+
+  .reveal-button .arrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px;
+    color: var(--stamp-red);
+    transition: transform 0.3s ease;
+  }
+
+  .reveal.open .reveal-button .arrow {
+    transform: rotate(90deg);
+  }
+
+  .reveal-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease;
+    padding: 0 28px;
+  }
+
+  .reveal.open .reveal-content {
+    max-height: 5000px;
+    padding: 0 28px 28px;
+  }
+
+  .reveal-content > *:first-child {
+    margin-top: 0;
+    padding-top: 16px;
+    border-top: 1px dashed var(--ink-faded);
+  }
+
+  /* Response output */
+  .response {
+    background: var(--paper);
+    border: 1px solid var(--ink-soft);
+    padding: 16px 20px;
+    margin: 16px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    overflow-x: auto;
+    box-shadow: inset 0 0 12px var(--shadow-warm);
+  }
+
+  .response .key { color: var(--stamp-red); }
+  .response .val { color: var(--teal); }
+  .response .highlight { background: rgba(138, 111, 31, 0.25); padding: 0 4px; }
+
+  /* Annotated observation */
+  .observation {
+    background: rgba(168, 40, 40, 0.05);
+    border-left: 4px solid var(--stamp-red);
+    padding: 14px 20px;
+    margin: 16px 0;
+    font-family: 'Crimson Pro', serif;
+    font-style: italic;
+    font-size: 16px;
+  }
+  .observation::before {
+    content: "OBSERVATION ▸ ";
+    font-style: normal;
+    font-family: 'Special Elite', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--stamp-red);
+    font-weight: bold;
+  }
+
+  /* Memory hook - the WHY */
+  .memory-hook {
+    background: var(--paper-darker);
+    border: 2px solid var(--gold);
+    padding: 20px 24px;
+    margin: 28px 0;
+    position: relative;
+    box-shadow: 4px 4px 0 var(--shadow-warm);
+  }
+  .memory-hook::before {
+    content: "★ MEMORY HOOK";
+    position: absolute;
+    top: -12px;
+    left: 20px;
+    background: var(--gold);
+    color: var(--paper);
+    padding: 2px 14px;
+    font-family: 'Special Elite', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+  }
+  .memory-hook p { margin: 0; }
+
+  /* Connection to AppSec */
+  .connection {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 20px 24px;
+    margin: 28px 0;
+    position: relative;
+  }
+  .connection::before {
+    content: "→ WHY THIS MATTERS FOR APPSEC";
+    position: absolute;
+    top: -10px;
+    left: 16px;
+    background: var(--stamp-red);
+    color: var(--paper);
+    padding: 2px 12px;
+    font-family: 'Special Elite', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+  }
+  .connection p { margin: 0; font-size: 16px; line-height: 1.6; }
+  .connection strong { color: var(--paper); background: linear-gradient(transparent 60%, var(--stamp-red-dim) 60%); }
+
+  /* ============ STATUS CODES VAULT ============ */
+  .vault {
+    margin: 80px 0;
+    text-align: center;
+  }
+
+  .vault-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 20px;
+    margin-top: 40px;
+    text-align: left;
+  }
+
+  .code-card {
+    background: var(--paper-dark);
+    border: 2px solid var(--ink);
+    padding: 24px;
+    box-shadow: 4px 4px 0 var(--shadow-warm);
+    position: relative;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .code-card:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0 var(--shadow-warm);
+  }
+
+  .code-num {
+    font-family: 'Special Elite', monospace;
+    font-size: 48px;
+    line-height: 1;
+    color: var(--stamp-red);
+    margin-bottom: 8px;
+    font-weight: normal;
+  }
+
+  .code-name {
+    font-family: 'Special Elite', monospace;
+    font-size: 13px;
+    letter-spacing: 0.15em;
+    color: var(--ink);
+    margin-bottom: 12px;
+    border-bottom: 1px solid var(--ink-faded);
+    padding-bottom: 8px;
+  }
+
+  .code-emoji {
+    font-size: 28px;
+    margin: 8px 0;
+  }
+
+  .code-meaning {
+    font-style: italic;
+    color: var(--ink-soft);
+    font-size: 16px;
+    margin-bottom: 8px;
+  }
+
+  .code-hook {
+    font-size: 14px;
+    color: var(--ink-faded);
+    font-family: 'Special Elite', monospace;
+    line-height: 1.4;
+  }
+
+  .code-card[data-cat="success"] .code-num { color: #5a7c2a; }
+  .code-card[data-cat="redirect"] .code-num { color: var(--gold); }
+  .code-card[data-cat="client"] .code-num { color: var(--stamp-red); }
+  .code-card[data-cat="server"] .code-num { color: #6c2a7c; }
+
+  /* ============ QUIZ ============ */
+  .quiz-section {
+    margin: 80px 0;
+    background: var(--paper-dark);
+    border: 2px solid var(--ink);
+    padding: 40px 32px;
+    box-shadow: 8px 8px 0 var(--shadow-warm);
+    position: relative;
+  }
+
+  .quiz-section::before {
+    content: "EXAMINATION";
+    position: absolute;
+    top: -14px;
+    left: 32px;
+    background: var(--ink);
+    color: var(--paper);
+    padding: 4px 16px;
+    font-family: 'Special Elite', monospace;
+    font-size: 12px;
+    letter-spacing: 0.3em;
+  }
+
+  .quiz-question {
+    margin-bottom: 36px;
+  }
+  .quiz-question:last-child { margin-bottom: 0; }
+
+  .q-num {
+    font-family: 'Special Elite', monospace;
+    font-size: 12px;
+    letter-spacing: 0.2em;
+    color: var(--stamp-red);
+    margin-bottom: 8px;
+  }
+
+  .q-text {
+    font-size: 19px;
+    line-height: 1.5;
+    margin-bottom: 16px;
+    color: var(--ink);
+  }
+
+  .q-text code {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--ink);
+    color: var(--paper);
+    padding: 2px 8px;
+    font-size: 14px;
+  }
+
+  .q-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .q-option {
+    background: var(--paper);
+    border: 1px solid var(--ink);
+    padding: 12px 18px;
+    cursor: pointer;
+    font-family: 'Crimson Pro', serif;
+    font-size: 16px;
+    text-align: left;
+    color: var(--ink);
+    transition: all 0.15s;
+    position: relative;
+  }
+
+  .q-option:hover:not(.locked) {
+    background: var(--paper-darker);
+    transform: translateX(4px);
+  }
+
+  .q-option.correct {
+    background: rgba(90, 124, 42, 0.2);
+    border-color: #5a7c2a;
+    border-width: 2px;
+  }
+  .q-option.correct::after {
+    content: "✓ CORRECT";
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: 'Special Elite', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    color: #5a7c2a;
+  }
+
+  .q-option.wrong {
+    background: rgba(168, 40, 40, 0.1);
+    border-color: var(--stamp-red);
+    border-width: 2px;
+  }
+  .q-option.wrong::after {
+    content: "✗ INCORRECT";
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: 'Special Elite', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    color: var(--stamp-red);
+  }
+
+  .q-option.locked { cursor: not-allowed; }
+  .q-option.locked:not(.correct):not(.wrong) { opacity: 0.5; }
+
+  .q-feedback {
+    margin-top: 12px;
+    padding: 14px 18px;
+    background: var(--ink);
+    color: var(--paper);
+    font-style: italic;
+    font-size: 15px;
+    display: none;
+  }
+  .q-feedback.show { display: block; }
+  .q-feedback strong { color: var(--gold); font-style: normal; font-family: 'Special Elite', monospace; font-size: 12px; letter-spacing: 0.15em; }
+
+  /* ============ FIELD NOTES ============ */
+  .field-notes {
+    margin: 80px 0 40px;
+    background: var(--paper-darker);
+    border: 2px dashed var(--ink-soft);
+    padding: 40px 32px;
+    position: relative;
+  }
+
+  .field-notes::before {
+    content: "📓 FIELD NOTES — YOUR TURN";
+    position: absolute;
+    top: -14px;
+    left: 32px;
+    background: var(--paper-darker);
+    padding: 0 16px;
+    font-family: 'Special Elite', monospace;
+    font-size: 13px;
+    letter-spacing: 0.2em;
+    color: var(--ink);
+  }
+
+  .field-notes h3 {
+    font-family: 'Special Elite', monospace;
+    font-size: 18px;
+    margin: 20px 0 12px;
+    color: var(--stamp-red);
+  }
+  .field-notes h3:first-of-type { margin-top: 0; }
+
+  .field-notes p, .field-notes li {
+    font-size: 17px;
+    line-height: 1.7;
+  }
+
+  .field-notes ul {
+    margin-left: 24px;
+    margin-bottom: 16px;
+  }
+
+  .field-notes li::marker {
+    color: var(--stamp-red);
+  }
+
+  /* ============ FOOTER ============ */
+  .closing {
+    margin-top: 100px;
+    text-align: center;
+    padding-top: 40px;
+    border-top: 2px solid var(--ink);
+  }
+
+  .closing p {
+    font-style: italic;
+    color: var(--ink-soft);
+    margin-bottom: 8px;
+  }
+
+  .signature {
+    font-family: 'Special Elite', monospace;
+    font-size: 14px;
+    letter-spacing: 0.2em;
+    color: var(--stamp-red);
+    margin-top: 20px;
+  }
+
+  /* ============ INTERACTIVE TERMINAL ============ */
+  .terminal-play {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 24px;
+    margin: 24px 0;
+    box-shadow: 6px 6px 0 var(--shadow-warm);
+    border: 2px solid var(--ink);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    position: relative;
+  }
+  .terminal-play::before {
+    content: "▸ TRY IT LIVE";
+    position: absolute;
+    top: -12px;
+    left: 20px;
+    background: var(--stamp-red);
+    color: var(--paper);
+    padding: 3px 14px;
+    font-family: 'Special Elite', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+  }
+
+  .terminal-input {
+    width: 100%;
+    background: transparent;
+    color: var(--paper);
+    border: 1px solid var(--paper-dark);
+    padding: 8px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    margin: 8px 0;
+    outline: none;
+  }
+  .terminal-input:focus {
+    border-color: var(--gold);
+  }
+
+  .terminal-run {
+    background: var(--gold);
+    color: var(--ink);
+    border: none;
+    padding: 8px 18px;
+    font-family: 'Special Elite', monospace;
+    font-size: 12px;
+    letter-spacing: 0.15em;
+    cursor: pointer;
+    margin: 4px 0;
+  }
+  .terminal-run:hover { background: var(--paper-dark); }
+
+  .terminal-output {
+    background: rgba(0,0,0,0.3);
+    padding: 12px;
+    margin-top: 12px;
+    min-height: 60px;
+    max-height: 300px;
+    overflow-y: auto;
+    border-left: 3px solid var(--gold);
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+
+  /* Mobile */
+  @media (max-width: 700px) {
+    main { padding: 32px 18px 120px; }
+    .cover { padding: 40px 0 32px; }
+    .briefing-box { padding: 20px; }
+    .case-file { margin: 50px 0; }
+    .vault-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+    .code-card { padding: 16px; }
+    .code-num { font-size: 36px; }
+    .quiz-section { padding: 28px 20px; }
+    .stamp.confidential { font-size: 11px; padding: 5px 10px; }
+  }
+
+  /* Progress saved indicator */
+  .saved-pill {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: var(--ink);
+    color: var(--paper);
+    padding: 6px 14px;
+    font-family: 'Special Elite', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    opacity: 0;
+    transition: opacity 0.3s;
+    z-index: 100;
+    box-shadow: 3px 3px 0 var(--shadow-warm);
+  }
+  .saved-pill.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<div class="saved-pill" id="savedPill">✓ PROGRESS SAVED</div>
+
+<main>
+
+<!-- COVER -->
+<div class="cover">
+  <div class="classification">CLASSIFIED · INTERNAL TRAINING</div>
+  <div class="case-number">CASE FILE №01 // DAY 1 OF 60</div>
+  <h1 class="title">HTTP<br>The Web's<br>Secret Language</h1>
+  <p class="subtitle">Every web app you'll ever attack speaks this language. Today you learn to read it.</p>
+
+  <div class="briefing-box">
+    <p><strong>Your assignment:</strong> Investigate <code>httpbin.org</code>, a server that confesses its observations back to you. Through 4 case files, you'll learn how HTTP works — not by reading about it, but by interrogating a real server and analyzing what it reveals. By the end, you'll understand the foundation that 90% of web vulnerabilities live on.</p>
+  </div>
+</div>
+
+<!-- ========== CASE FILE 01 ========== -->
+<section class="case-file">
+  <div class="case-header">
+    <div class="case-number-tag">CASE FILE 01.A</div>
+    <h2 class="case-title">First Contact</h2>
+    <p class="case-mission">Establish communication. Learn what a server reveals about itself.</p>
+  </div>
+
+  <div class="narrative">
+    <p>Picture this: you knock on a stranger's door. They open it, hand you a folder of information about themselves, and close the door. They didn't have to give you anything, but you asked nicely. That's an <strong>HTTP request and response</strong>.</p>
+
+    <p>The browser does this thousands of times a day. You just never see it. Time to see it.</p>
+  </div>
+
+  <div class="action">
+    <span class="comment"># Open Terminal on your Mac. Type this:</span><br>
+    <span class="prompt">$</span> curl https://httpbin.org/get
+  </div>
+
+  <p style="font-style: italic; color: var(--ink-soft);">Run it. Look at the output. Don't worry about understanding everything — just look.</p>
+
+  <div class="reveal">
+    <button class="reveal-button" onclick="toggleReveal(this)">
+      <span>▸ I ran it. Show me what the output means.</span>
+      <span class="arrow">→</span>
+    </button>
+    <div class="reveal-content">
+      <p>What you saw is a <strong>response</strong>. The server (httpbin.org) is an honest one — it tells you exactly what it observed about your request. Here's a typical response, annotated:</p>
+
+      <div class="response">
+{<br>
+&nbsp;&nbsp;<span class="key">"args"</span>: {},<br>
+&nbsp;&nbsp;<span class="key">"headers"</span>: {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"Accept"</span>: <span class="val">"*/*"</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"Host"</span>: <span class="val">"httpbin.org"</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"User-Agent"</span>: <span class="val highlight">"curl/8.4.0"</span><br>
+&nbsp;&nbsp;},<br>
+&nbsp;&nbsp;<span class="key">"origin"</span>: <span class="val highlight">"73.123.45.67"</span>,<br>
+&nbsp;&nbsp;<span class="key">"url"</span>: <span class="val">"https://httpbin.org/get"</span><br>
+}
+      </div>
+
+      <div class="observation">Notice the server saw YOUR public IP address (the <code>origin</code> field). It also saw that "curl" knocked on its door, not a normal browser.</div>
+
+      <div class="memory-hook">
+        <p><strong>The Witness Analogy.</strong> Every server is a witness. When you make a request, you leave fingerprints: your IP, your software ("User-Agent"), the language you speak, what you accept. A server can refuse to talk to you, lie to you, or report you — all based on what you reveal in your request. <em>You are never anonymous on the web.</em></p>
+      </div>
+
+      <div class="connection">
+        <p>The <strong>User-Agent</strong> header is one of the first things attackers change. A site may block curl but accept Chrome. Switch the User-Agent → bypass the block. You'll do this on Day 7 in Burp Suite.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== CASE FILE 01.B ========== -->
+<section class="case-file">
+  <div class="case-header">
+    <div class="case-number-tag">CASE FILE 01.B</div>
+    <h2 class="case-title">Hidden Messages</h2>
+    <p class="case-mission">Pass secret information to the server through the URL itself.</p>
+  </div>
+
+  <div class="narrative">
+    <p>The URL isn't just an address. It can carry <strong>messages</strong>. Watch:</p>
+  </div>
+
+  <div class="action">
+    <span class="prompt">$</span> curl "https://httpbin.org/get?name=bhargav&role=student"
+  </div>
+
+  <div class="reveal">
+    <button class="reveal-button" onclick="toggleReveal(this)">
+      <span>▸ Why are there quotes around the URL? What does this prove?</span>
+      <span class="arrow">→</span>
+    </button>
+    <div class="reveal-content">
+      <p>The part after <code>?</code> is called a <strong>query string</strong>. It carries data to the server. Parameters are written as <code>key=value</code>, separated by <code>&</code>.</p>
+
+      <p>The quotes are critical: your shell (Bash/Zsh) sees <code>&</code> as "run in the background." Without quotes, your command breaks. <strong>Always quote URLs that contain special characters.</strong></p>
+
+      <div class="response">
+{<br>
+&nbsp;&nbsp;<span class="key">"args"</span>: {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"name"</span>: <span class="val">"bhargav"</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"role"</span>: <span class="val">"student"</span><br>
+&nbsp;&nbsp;},<br>
+&nbsp;&nbsp;...<br>
+}
+      </div>
+
+      <div class="observation">The server parsed your input and echoed it back. <strong>Every query parameter is user-controllable input.</strong> Remember this. It's the most important sentence in this entire document.</div>
+
+      <div class="memory-hook">
+        <p><strong>The Note Under The Door.</strong> Think of <code>?key=value</code> as slipping a note under the door before knocking. The server reads your note, then decides how to respond. If the server trusts the note blindly... what could you write to manipulate it?</p>
+      </div>
+
+      <div class="connection">
+        <p>This is where <strong>SQL injection</strong> lives. Imagine <code>?user=admin</code>. What if you sent <code>?user=admin' OR '1'='1</code>? On Day 8, you'll do exactly this and watch a login bypass happen. The principle starts right here.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="terminal-play">
+    Try changing the values yourself. What happens with weird inputs?<br><br>
+    <input type="text" class="terminal-input" id="urlInput" value="https://httpbin.org/get?name=YOUR_NAME&role=hacker" />
+    <button class="terminal-run" onclick="runURL()">▸ EXECUTE</button>
+    <div class="terminal-output" id="urlOutput">Output appears here...</div>
+  </div>
+</section>
+
+<!-- ========== CASE FILE 01.C ========== -->
+<section class="case-file">
+  <div class="case-header">
+    <div class="case-number-tag">CASE FILE 01.C</div>
+    <h2 class="case-title">The Sealed Envelope</h2>
+    <p class="case-mission">Send sensitive data without putting it in the URL.</p>
+  </div>
+
+  <div class="narrative">
+    <p>What if you have to send a password? Putting it in the URL is bad — URLs end up in browser history, server logs, proxy caches, and screenshots. The fix: send data in the <strong>request body</strong>, hidden from the URL.</p>
+
+    <p>This is a <strong>POST request</strong>. GET asks. POST submits.</p>
+  </div>
+
+  <div class="action">
+    <span class="prompt">$</span> curl -X POST -d "username=admin&password=test123" \<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;https://httpbin.org/post
+  </div>
+
+  <div class="reveal">
+    <button class="reveal-button" onclick="toggleReveal(this)">
+      <span>▸ What's the actual difference between GET and POST?</span>
+      <span class="arrow">→</span>
+    </button>
+    <div class="reveal-content">
+      <div style="background: var(--paper); border: 1px solid var(--ink); padding: 20px; margin: 12px 0;">
+        <table style="width:100%; border-collapse: collapse;">
+          <tr style="border-bottom: 2px solid var(--ink);">
+            <th style="text-align:left; padding: 8px; font-family: 'Special Elite', monospace; font-size: 12px; letter-spacing: 0.15em;">ASPECT</th>
+            <th style="text-align:left; padding: 8px; font-family: 'Special Elite', monospace; font-size: 12px; letter-spacing: 0.15em; color: var(--teal);">GET</th>
+            <th style="text-align:left; padding: 8px; font-family: 'Special Elite', monospace; font-size: 12px; letter-spacing: 0.15em; color: var(--stamp-red);">POST</th>
+          </tr>
+          <tr style="border-bottom: 1px dashed var(--ink-faded);">
+            <td style="padding: 8px;"><em>Data lives where?</em></td>
+            <td style="padding: 8px;">In the URL</td>
+            <td style="padding: 8px;">In the body (hidden)</td>
+          </tr>
+          <tr style="border-bottom: 1px dashed var(--ink-faded);">
+            <td style="padding: 8px;"><em>Use for?</em></td>
+            <td style="padding: 8px;">Reading data</td>
+            <td style="padding: 8px;">Creating, changing, submitting</td>
+          </tr>
+          <tr style="border-bottom: 1px dashed var(--ink-faded);">
+            <td style="padding: 8px;"><em>Cached?</em></td>
+            <td style="padding: 8px;">Yes (by browsers)</td>
+            <td style="padding: 8px;">No</td>
+          </tr>
+          <tr style="border-bottom: 1px dashed var(--ink-faded);">
+            <td style="padding: 8px;"><em>Length limit?</em></td>
+            <td style="padding: 8px;">~2000 chars</td>
+            <td style="padding: 8px;">Effectively unlimited</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px;"><em>In server logs?</em></td>
+            <td style="padding: 8px;">URL is logged</td>
+            <td style="padding: 8px;">Body usually not</td>
+          </tr>
+        </table>
+      </div>
+
+      <div class="observation">When you log into any site (Gmail, your bank, Instagram), your username and password go in a POST body — never the URL. This is the same pattern.</div>
+
+      <div class="memory-hook">
+        <p><strong>The Postcard vs The Envelope.</strong><br>
+        GET = a postcard. Anyone in the mail chain can read it. Use for stuff you don't mind people seeing.<br>
+        POST = a sealed envelope. Mostly private. Use for secrets, passwords, anything that changes things.<br>
+        <em>Sending a password by postcard?</em> That's the same vibe as putting it in a URL.</p>
+      </div>
+
+      <div class="connection">
+        <p>On Day 11 you'll attack login forms. Every login uses POST. You'll change the body to bypass authentication. The skill starts here — knowing the body exists and is manipulable.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== CASE FILE 01.D ========== -->
+<section class="case-file">
+  <div class="case-header">
+    <div class="case-number-tag">CASE FILE 01.D</div>
+    <h2 class="case-title">The Full Confession</h2>
+    <p class="case-mission">See the complete HTTP conversation — every byte sent, every byte received.</p>
+  </div>
+
+  <div class="narrative">
+    <p>Time to look behind the curtain. The <code>-v</code> flag stands for "verbose" — curl will show you literally everything that happens.</p>
+  </div>
+
+  <div class="action">
+    <span class="prompt">$</span> curl -v https://httpbin.org/get
+  </div>
+
+  <div class="reveal">
+    <button class="reveal-button" onclick="toggleReveal(this)">
+      <span>▸ Read this annotated output carefully — it's the most important thing on this page</span>
+      <span class="arrow">→</span>
+    </button>
+    <div class="reveal-content">
+      <div class="response">
+<span style="color: var(--gold);">*</span> Trying 54.196.x.x:443...<br>
+<span style="color: var(--gold);">*</span> Connected to httpbin.org port 443<br>
+<span style="color: var(--gold);">*</span> TLS handshake (HTTPS encryption)<br>
+<br>
+<span class="key">&gt;</span> GET /get HTTP/2 <span class="comment">← YOUR REQUEST starts here</span><br>
+<span class="key">&gt;</span> Host: httpbin.org<br>
+<span class="key">&gt;</span> User-Agent: curl/8.4.0<br>
+<span class="key">&gt;</span> Accept: */*<br>
+<br>
+<span class="val">&lt;</span> HTTP/2 200 <span class="comment">← THEIR RESPONSE starts here</span><br>
+<span class="val">&lt;</span> server: <span class="highlight">gunicorn/19.9.0</span><br>
+<span class="val">&lt;</span> content-type: application/json<br>
+<br>
+{<br>
+&nbsp;&nbsp;...response body...<br>
+}
+      </div>
+
+      <div class="observation">Lines starting with <code>&gt;</code> = YOU sent that. Lines starting with <code>&lt;</code> = SERVER sent that back. This is HTTP, exposed.</div>
+
+      <div class="memory-hook">
+        <p><strong>The Interview Transcript.</strong> Imagine HTTP as a transcript between two people: you (<code>&gt;</code>) and the server (<code>&lt;</code>). They take turns speaking. Headers are like the credentials each person flashes before talking. The body is what they actually say.<br><br>
+        When you debug ANY web problem in the future, the first question is always: <em>"Show me the request and the response."</em> That's what <code>-v</code> reveals.</p>
+      </div>
+
+      <div class="connection">
+        <p>See that <code>server: gunicorn/19.9.0</code> header? <strong>That's a vulnerability already.</strong> The server is announcing its exact software version. Attackers Google "gunicorn 19.9.0 CVE" and find known exploits. This is called <strong>information disclosure</strong>, OWASP A05. You'll find these in real apps on Day 10.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== STATUS CODES VAULT ========== -->
+<section class="vault">
+  <h2 style="font-family: 'Special Elite', monospace; font-size: 32px; font-weight: normal; color: var(--ink);">The Status Code Vault</h2>
+  <p style="font-style: italic; color: var(--ink-soft); margin-top: 8px;">Every response carries a 3-digit verdict. Interviewers will test you on these. Don't memorize — visualize.</p>
+
+  <div class="vault-grid">
+
+    <div class="code-card" data-cat="success">
+      <div class="code-num">200</div>
+      <div class="code-name">OK</div>
+      <div class="code-emoji">✅</div>
+      <div class="code-meaning">"Yes, here you go."</div>
+      <div class="code-hook">Like ordering a coffee and getting your coffee. The default success.</div>
+    </div>
+
+    <div class="code-card" data-cat="success">
+      <div class="code-num">201</div>
+      <div class="code-name">CREATED</div>
+      <div class="code-emoji">📦</div>
+      <div class="code-meaning">"Made the thing you asked for."</div>
+      <div class="code-hook">You submitted a form to create an account. Account exists now. 201.</div>
+    </div>
+
+    <div class="code-card" data-cat="redirect">
+      <div class="code-num">301</div>
+      <div class="code-name">MOVED</div>
+      <div class="code-emoji">↪️</div>
+      <div class="code-meaning">"It's permanently at a new address."</div>
+      <div class="code-hook">Old URL is dead. Use the new one. Search engines update.</div>
+    </div>
+
+    <div class="code-card" data-cat="redirect">
+      <div class="code-num">302</div>
+      <div class="code-name">FOUND</div>
+      <div class="code-emoji">↩️</div>
+      <div class="code-meaning">"Go here for now."</div>
+      <div class="code-hook">Temporary redirect. Used after login to send you to dashboard.</div>
+    </div>
+
+    <div class="code-card" data-cat="client">
+      <div class="code-num">400</div>
+      <div class="code-name">BAD REQUEST</div>
+      <div class="code-emoji">🤷</div>
+      <div class="code-meaning">"I can't even understand what you're asking."</div>
+      <div class="code-hook">Your fault. Malformed input. Missing required field.</div>
+    </div>
+
+    <div class="code-card" data-cat="client">
+      <div class="code-num">401</div>
+      <div class="code-name">UNAUTHORIZED</div>
+      <div class="code-emoji">🚪</div>
+      <div class="code-meaning">"Who ARE you? Show ID."</div>
+      <div class="code-hook">The bouncer's first question. You haven't proven who you are.</div>
+    </div>
+
+    <div class="code-card" data-cat="client">
+      <div class="code-num">403</div>
+      <div class="code-name">FORBIDDEN</div>
+      <div class="code-emoji">🚫</div>
+      <div class="code-meaning">"I know who you are. You're not allowed in."</div>
+      <div class="code-hook">The bouncer's second answer. ID checked. You're not on the list. <em>Different from 401.</em></div>
+    </div>
+
+    <div class="code-card" data-cat="client">
+      <div class="code-num">404</div>
+      <div class="code-name">NOT FOUND</div>
+      <div class="code-emoji">👻</div>
+      <div class="code-meaning">"That page doesn't exist here."</div>
+      <div class="code-hook">The famous one. Wrong URL, deleted page, or hidden resource.</div>
+    </div>
+
+    <div class="code-card" data-cat="client">
+      <div class="code-num">429</div>
+      <div class="code-name">TOO MANY</div>
+      <div class="code-emoji">🛑</div>
+      <div class="code-meaning">"Slow down. You're hammering me."</div>
+      <div class="code-hook">Rate limit hit. The server is protecting itself. Common in brute-force defenses.</div>
+    </div>
+
+    <div class="code-card" data-cat="server">
+      <div class="code-num">500</div>
+      <div class="code-name">SERVER ERROR</div>
+      <div class="code-emoji">🔥</div>
+      <div class="code-meaning">"I broke. Not your fault."</div>
+      <div class="code-hook">Their bug. AppSec gold — server errors leak stack traces and code paths.</div>
+    </div>
+
+    <div class="code-card" data-cat="server">
+      <div class="code-num">502</div>
+      <div class="code-name">BAD GATEWAY</div>
+      <div class="code-emoji">📡</div>
+      <div class="code-meaning">"My upstream friend isn't responding."</div>
+      <div class="code-hook">Server's server is down. Common in microservice meltdowns.</div>
+    </div>
+
+    <div class="code-card" data-cat="server">
+      <div class="code-num">503</div>
+      <div class="code-name">UNAVAILABLE</div>
+      <div class="code-emoji">⏰</div>
+      <div class="code-meaning">"Service is temporarily down."</div>
+      <div class="code-hook">Maintenance, overload, or temporary failure. Try later.</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ========== QUIZ ========== -->
+<section class="quiz-section">
+  <h2 style="font-family: 'Special Elite', monospace; font-size: 28px; font-weight: normal; margin-bottom: 8px;">Prove You Were Paying Attention</h2>
+  <p style="font-style: italic; color: var(--ink-soft); margin-bottom: 32px;">No grades. Just feedback. Click an answer to find out if you got it.</p>
+
+  <div class="quiz-question">
+    <div class="q-num">QUESTION 1</div>
+    <div class="q-text">You see <code>403 Forbidden</code> after logging in. What does this likely mean?</div>
+    <div class="q-options" data-q="1">
+      <button class="q-option" data-correct="false" data-fb="That's 401. Difference matters: 401 = haven't proven who you are. 403 = proven, but blocked.">Your password is wrong</button>
+      <button class="q-option" data-correct="true" data-fb="Exactly. The server knows who you are (you logged in) but you don't have permission to access this resource. Common when a regular user tries to access /admin.">You're logged in, but this resource isn't allowed for your account</button>
+      <button class="q-option" data-correct="false" data-fb="That's 404. 'Forbidden' specifically means 'access denied,' not 'doesn't exist.'">The page doesn't exist</button>
+      <button class="q-option" data-correct="false" data-fb="That's 503. 403 is about permissions.">The server is down</button>
+    </div>
+    <div class="q-feedback"></div>
+  </div>
+
+  <div class="quiz-question">
+    <div class="q-num">QUESTION 2</div>
+    <div class="q-text">A login form sends your password via GET request like <code>?user=admin&password=hunter2</code>. Why is this a security failure?</div>
+    <div class="q-options" data-q="2">
+      <button class="q-option" data-correct="false" data-fb="Almost — GET data is technically less limited than people think (~2000 chars). The real issue is something worse.">Passwords are too long for GET requests</button>
+      <button class="q-option" data-correct="true" data-fb="Correct. URLs end up in server logs, browser history, proxy caches, Referer headers sent to other sites, and screenshots. A password in a URL leaks everywhere. This is OWASP A02 (Cryptographic Failures) territory.">The password appears in URLs, which get logged everywhere</button>
+      <button class="q-option" data-correct="false" data-fb="GET requests CAN be encrypted (HTTPS). The problem isn't encryption — it's that URLs leak to too many places regardless of encryption.">GET requests aren't encrypted</button>
+      <button class="q-option" data-correct="false" data-fb="GET works fine with special characters when URL-encoded. The real issue is exposure of the URL itself.">GET can't send special characters</button>
+    </div>
+    <div class="q-feedback"></div>
+  </div>
+
+  <div class="quiz-question">
+    <div class="q-num">QUESTION 3</div>
+    <div class="q-text">In <code>curl -v</code> output, what do lines starting with <code>&gt;</code> represent?</div>
+    <div class="q-options" data-q="3">
+      <button class="q-option" data-correct="true" data-fb="Yes. > = your outbound request. < = the server's response. Critical to remember when reading verbose output.">Data YOU are sending to the server</button>
+      <button class="q-option" data-correct="false" data-fb="No. Server responses use < (less-than). Reverse of what you said.">Data the server is sending to you</button>
+      <button class="q-option" data-correct="false" data-fb="Internal curl debug info uses * (asterisk), not >.">Curl's internal debug messages</button>
+      <button class="q-option" data-correct="false" data-fb="HTTPS encryption is invisible to you — curl shows the decrypted content.">Encrypted data in transit</button>
+    </div>
+    <div class="q-feedback"></div>
+  </div>
+
+  <div class="quiz-question">
+    <div class="q-num">QUESTION 4</div>
+    <div class="q-text">You're testing a website. The response header shows <code>Server: Apache/2.2.15</code>. From an AppSec perspective, what's the issue?</div>
+    <div class="q-options" data-q="4">
+      <button class="q-option" data-correct="false" data-fb="Apache 2.2 is very old, but the BIGGER issue is something else about this header itself.">Apache is an outdated technology</button>
+      <button class="q-option" data-correct="true" data-fb="Right. This is information disclosure (OWASP A05). The server tells attackers exactly what software and version it's running. Attackers Google known vulnerabilities for that version. Best practice: hide version info.">The server is leaking its exact version, helping attackers find known exploits</button>
+      <button class="q-option" data-correct="false" data-fb="Apache version doesn't determine HTTP method support. The real issue is leaking the version at all.">Apache 2.2 doesn't support POST requests</button>
+      <button class="q-option" data-correct="false" data-fb="2.2.15 is a real version. The issue isn't whether it's real — it's that it's being disclosed.">The version number is fake/spoofed</button>
+    </div>
+    <div class="q-feedback"></div>
+  </div>
+
+  <div class="quiz-question">
+    <div class="q-num">QUESTION 5</div>
+    <div class="q-text">An attacker sends 1000 login attempts in 10 seconds. What status code is the server LIKELY using to stop them?</div>
+    <div class="q-options" data-q="5">
+      <button class="q-option" data-correct="false" data-fb="403 = forbidden access. Possible but not the standard response for rate limiting.">403 Forbidden</button>
+      <button class="q-option" data-correct="false" data-fb="404 = not found. Wrong category.">404 Not Found</button>
+      <button class="q-option" data-correct="true" data-fb="Correct. 429 means 'Too Many Requests.' The server is rate-limiting the attacker. Lack of 429 (or equivalent) is a brute-force vulnerability — covered in Day 11.">429 Too Many Requests</button>
+      <button class="q-option" data-correct="false" data-fb="500 = server error. The server isn't broken, it's choosing to refuse.">500 Internal Server Error</button>
+    </div>
+    <div class="q-feedback"></div>
+  </div>
+
+  <div class="quiz-question">
+    <div class="q-num">QUESTION 6</div>
+    <div class="q-text">Which HTTP header does the server send to store data in your browser?</div>
+    <div class="q-options" data-q="6">
+      <button class="q-option" data-correct="false" data-fb="Content-Type describes the format of the response body (JSON, HTML, etc.). It doesn't set cookies.">Content-Type</button>
+      <button class="q-option" data-correct="false" data-fb="Authorization is a REQUEST header the client sends to prove identity. Not for setting cookies.">Authorization</button>
+      <button class="q-option" data-correct="true" data-fb="Correct. Set-Cookie is a RESPONSE header the server sends to store data in your browser. Your browser then automatically includes that cookie in all future requests to the same domain via the Cookie header.">Set-Cookie</button>
+      <button class="q-option" data-correct="false" data-fb="User-Agent is a request header identifying your browser. The server doesn't set it.">User-Agent</button>
+    </div>
+    <div class="q-feedback"></div>
+  </div>
+
+  <div class="quiz-question">
+    <div class="q-num">QUESTION 7</div>
+    <div class="q-text">What does HTTPS provide that plain HTTP doesn't?</div>
+    <div class="q-options" data-q="7">
+      <button class="q-option" data-correct="false" data-fb="HTTPS doesn't make the server faster. TLS encryption actually adds a tiny overhead.">Faster server responses</button>
+      <button class="q-option" data-correct="false" data-fb="Sending files is possible over both HTTP and HTTPS. Protocol doesn't determine this.">The ability to send files</button>
+      <button class="q-option" data-correct="true" data-fb="Exactly. HTTPS = HTTP + TLS encryption. TLS encrypts all traffic between client and server so anyone intercepting the connection (ISP, airport WiFi attacker, etc.) sees only scrambled data. Without it, everything you type is visible to anyone on the same network.">Encryption of all traffic between client and server</button>
+      <button class="q-option" data-correct="false" data-fb="POST works on both HTTP and HTTPS. The protocol doesn't determine which methods are available.">Ability to use POST requests</button>
+    </div>
+    <div class="q-feedback"></div>
+  </div>
+
+  <div class="quiz-question">
+    <div class="q-num">QUESTION 8</div>
+    <div class="q-text">A request has the header <code>Content-Type: application/json</code>. What does this tell the server?</div>
+    <div class="q-options" data-q="8">
+      <button class="q-option" data-correct="false" data-fb="Content-Type describes the body format, not the method. Methods are GET, POST, etc.">The request is using the JSON HTTP method</button>
+      <button class="q-option" data-correct="true" data-fb="Correct. Content-Type in a REQUEST tells the server how to parse the body. application/json means 'the body is JSON formatted data.' Without this header, the server might try to parse JSON as form data and fail. You'll use this constantly when writing Python security scripts and testing APIs.">The body is formatted as JSON data and the server should parse it as such</button>
+      <button class="q-option" data-correct="false" data-fb="Content-Type describes FORMAT, not security. Encryption is handled by TLS/HTTPS separately.">The connection is encrypted with JSON encoding</button>
+      <button class="q-option" data-correct="false" data-fb="Accept header tells the server what formats you can receive. Content-Type tells the server what you're sending.">The client wants a JSON response back</button>
+    </div>
+    <div class="q-feedback"></div>
+  </div>
+
+  <div class="quiz-question">
+    <div class="q-num">QUESTION 9</div>
+    <div class="q-text">An error page shows: <code>MySQLSyntaxErrorException: You have an error in your SQL syntax...</code>. From an AppSec perspective, what is the main problem?</div>
+    <div class="q-options" data-q="9">
+      <button class="q-option" data-correct="false" data-fb="The database error itself isn't the problem — errors happen in development. The problem is that the user can SEE it.">The database has a syntax error</button>
+      <button class="q-option" data-correct="false" data-fb="MySQL is a legitimate, common database. Its name appearing isn't itself the issue.">The application is using an illegal database</button>
+      <button class="q-option" data-correct="true" data-fb="Correct. This is information disclosure (OWASP A05 — Security Misconfiguration). By revealing the error, the server tells an attacker: what database is running (MySQL), that SQL injection may be possible (it responded to your input with a SQL error), and potentially the query structure. Production apps should NEVER show raw errors — show a generic message and log the real error internally.">The server is leaking database error details that reveal the tech stack and confirm SQL injection potential</button>
+      <button class="q-option" data-correct="false" data-fb="The syntax error is a consequence, not the core security problem. The real issue is revealing internal details publicly.">The SQL syntax error will crash the server</button>
+    </div>
+    <div class="q-feedback"></div>
+  </div>
+
+  <div class="quiz-question">
+    <div class="q-num">QUESTION 10</div>
+    <div class="q-text">You use Python's <code>requests.Session()</code> instead of <code>requests.get()</code>. What's the key difference?</div>
+    <div class="q-options" data-q="10">
+      <button class="q-option" data-correct="false" data-fb="Both support HTTPS equally. The difference is about state management, not encryption.">Session() uses HTTPS, get() uses HTTP</button>
+      <button class="q-option" data-correct="false" data-fb="Both support POST — requests.post() for single requests, session.post() for session-based. Speed isn't the main difference.">Session() is faster for single requests</button>
+      <button class="q-option" data-correct="true" data-fb="Exactly. Session() acts like a browser — it remembers cookies between requests. requests.get() is stateless: each call knows nothing about previous ones. For security testing, you almost always need Session: log in once (get your session cookie), then use that same session to access authenticated endpoints. Without it you'd need to manually pass cookies everywhere.">Session() persists cookies and headers across multiple requests (like a browser), get() is stateless</button>
+      <button class="q-option" data-correct="false" data-fb="Both can make parallel requests with the right setup. The difference is state persistence.">Session() can make multiple requests simultaneously</button>
+    </div>
+    <div class="q-feedback"></div>
+  </div>
+
+</section>
+
+<!-- ========== FIELD NOTES ========== -->
+<section class="field-notes">
+  <p style="margin-bottom: 24px; font-size: 16px;">You've done the reading. Now make it YOURS. Open VS Code, navigate to <code>~/Documents/appsec-roadmap/60-day-appsec-journey/</code>, and write your <code>day-01-http-basics.md</code> file using this structure:</p>
+
+  <h3>1. The 5 Things I Won't Forget</h3>
+  <p>Write 5 sentences in your own words. Examples:</p>
+  <ul>
+    <li>"GET puts data in the URL, POST puts data in the body."</li>
+    <li>"401 = no ID, 403 = ID checked but denied."</li>
+    <li>"Every query parameter is attacker-controllable input."</li>
+  </ul>
+
+  <h3>2. The 3 Status Codes I Find Tricky</h3>
+  <p>Pick 3 codes from the vault that confused you. For each, write the memory hook that helps you remember.</p>
+
+  <h3>3. One Question I Still Have</h3>
+  <p>Write down ONE thing about HTTP you don't fully understand. We'll address it on Day 5 (Web Architecture) when context fills in.</p>
+
+  <h3>4. AppSec Connection</h3>
+  <p>Write one sentence: "I learned X today. This matters for AppSec because Y."</p>
+
+  <h3>5. Commit and Push</h3>
+  <p>In Terminal:</p>
+  <div class="action" style="margin-top: 8px;">
+    <span class="prompt">$</span> cd ~/Documents/appsec-roadmap/60-day-appsec-journey<br>
+    <span class="prompt">$</span> git add .<br>
+    <span class="prompt">$</span> git commit -m "Day 1: HTTP fundamentals notes"<br>
+    <span class="prompt">$</span> git push
+  </div>
+  <p>Then open the main roadmap HTML and mark Day 1 as complete. That's your first green dot on GitHub. The first of 60.</p>
+</section>
+
+<!-- ========== CLOSING ========== -->
+<div class="closing">
+  <p>Day 1 closed. You now understand the language of every web app you'll attack.</p>
+  <p>Tomorrow: <strong>Day 2 — Linux command line.</strong> Boot Kali. We're going deeper.</p>
+  <div class="signature">— END CASE FILE 01 —</div>
+</div>
+
+</main>
+
+<script>
+// Persistent state
+const STATE_KEY = 'day1-state-v1';
+let state = {};
+try { state = JSON.parse(localStorage.getItem(STATE_KEY) || '{}'); } catch(e) {}
+
+function saveState() {
+  try { localStorage.setItem(STATE_KEY, JSON.stringify(state)); } catch(e) {}
+  showSaved();
+}
+
+function showSaved() {
+  const pill = document.getElementById('savedPill');
+  pill.classList.add('show');
+  clearTimeout(window._savedTimer);
+  window._savedTimer = setTimeout(() => pill.classList.remove('show'), 1500);
+}
+
+// Reveal toggle
+function toggleReveal(btn) {
+  const reveal = btn.closest('.reveal');
+  reveal.classList.toggle('open');
+  const id = btn.querySelector('span').textContent.slice(0, 30);
+  state[`reveal-${id}`] = reveal.classList.contains('open');
+  saveState();
+}
+
+// Restore reveals
+document.querySelectorAll('.reveal-button').forEach(btn => {
+  const id = btn.querySelector('span').textContent.slice(0, 30);
+  if (state[`reveal-${id}`]) {
+    btn.closest('.reveal').classList.add('open');
+  }
+});
+
+// Quiz interactions
+document.querySelectorAll('.q-options').forEach(opts => {
+  const qid = opts.getAttribute('data-q');
+  if (state[`q-${qid}`] !== undefined) {
+    // Restore answered state
+    opts.querySelectorAll('.q-option').forEach((opt, i) => {
+      opt.classList.add('locked');
+      if (opt.getAttribute('data-correct') === 'true') opt.classList.add('correct');
+      if (i === state[`q-${qid}`] && opt.getAttribute('data-correct') !== 'true') opt.classList.add('wrong');
+    });
+    const fb = opts.parentElement.querySelector('.q-feedback');
+    const fbText = opts.querySelectorAll('.q-option')[state[`q-${qid}`]].getAttribute('data-fb');
+    const isCorrect = opts.querySelectorAll('.q-option')[state[`q-${qid}`]].getAttribute('data-correct') === 'true';
+    fb.innerHTML = `<strong>${isCorrect ? 'CORRECT.' : 'NOT QUITE.'}</strong> ${fbText}`;
+    fb.classList.add('show');
+  }
+
+  opts.querySelectorAll('.q-option').forEach((opt, i) => {
+    opt.addEventListener('click', () => {
+      if (opt.classList.contains('locked')) return;
+      const isCorrect = opt.getAttribute('data-correct') === 'true';
+      opts.querySelectorAll('.q-option').forEach(o => {
+        o.classList.add('locked');
+        if (o.getAttribute('data-correct') === 'true') o.classList.add('correct');
+      });
+      if (!isCorrect) opt.classList.add('wrong');
+
+      const fb = opts.parentElement.querySelector('.q-feedback');
+      fb.innerHTML = `<strong>${isCorrect ? 'CORRECT.' : 'NOT QUITE.'}</strong> ${opt.getAttribute('data-fb')}`;
+      fb.classList.add('show');
+
+      state[`q-${qid}`] = i;
+      saveState();
+    });
+  });
+});
+
+// Live URL tester
+async function runURL() {
+  const url = document.getElementById('urlInput').value.trim();
+  const out = document.getElementById('urlOutput');
+  out.textContent = 'Requesting...';
+  if (!url.startsWith('http')) {
+    out.textContent = '⚠ URL must start with http:// or https://';
+    return;
+  }
+  try {
+    const response = await fetch(url);
+    const text = await response.text();
+    let body = text;
+    try { body = JSON.stringify(JSON.parse(text), null, 2); } catch(e) {}
+    out.textContent = `STATUS: ${response.status} ${response.statusText}\n\n--- BODY ---\n${body.slice(0, 2000)}`;
+  } catch(e) {
+    out.textContent = `ERROR: ${e.message}\n\n(This often means CORS blocked the request. The real httpbin.org allows it — try in your Terminal: curl "${url}")`;
+  }
+}
+
+console.log('%c▸ CASE FILE 01 — DAY 1 // HTTP FUNDAMENTALS', 'font-family: monospace; font-weight: bold; color: #a82828; font-size: 14px;');
+</script>
+
+</body>
+</html>

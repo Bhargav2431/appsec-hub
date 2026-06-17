@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#080412">
+<title>CODE LAB 04 — Python for Security</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&family=Rajdhani:wght@400;500;600;700&family=Exo+2:ital,wght@0,300;0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#080412;--bg-panel:#0d0820;--bg-card:#110b26;
+  --border:#1c1040;--border-hi:#2d1a6e;
+  --text:#ccc0e8;--text-soft:#7a68a8;--text-dim:#3d2f68;
+  --purple:#bf5af2;--purple-dim:#7030a0;--purple-glow:rgba(191,90,242,.12);
+  --green:#30d158;--green-dim:#1a7a32;--green-glow:rgba(48,209,88,.1);
+  --cyan:#64d2ff;--cyan-dim:#2a7aaa;
+  --yellow:#ffd60a;--red:#ff453a;
+  --shadow:rgba(0,0,0,.6);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:'Rajdhani',sans-serif;font-size:17px;line-height:1.7;
+  -webkit-font-smoothing:antialiased;overflow-x:hidden;
+}
+body::before{
+  content:"";position:fixed;inset:0;
+  background:radial-gradient(ellipse at 20% 0%,rgba(191,90,242,.07) 0%,transparent 55%),
+    radial-gradient(ellipse at 80% 80%,rgba(48,209,88,.04) 0%,transparent 50%);
+  pointer-events:none;z-index:0;
+}
+main{max-width:840px;margin:0 auto;padding:60px 28px 180px;position:relative;z-index:5;}
+
+/* code */
+code{font-family:'JetBrains Mono',monospace;background:var(--bg-card);color:var(--purple);padding:2px 7px;border:1px solid var(--border);font-size:.85em;}
+strong{color:#e8deff;font-weight:600;}
+em{color:var(--purple);font-style:normal;font-weight:600;}
+
+/* ======= HEADER ======= */
+.lab-hdr{
+  border:1px solid var(--border-hi);background:var(--bg-panel);
+  padding:44px;margin-bottom:60px;position:relative;overflow:hidden;
+  box-shadow:0 0 80px rgba(191,90,242,.06);
+}
+.lab-hdr::before{
+  content:"";position:absolute;top:0;left:0;width:100%;height:2px;
+  background:linear-gradient(to right,transparent,var(--purple),var(--cyan),transparent);
+}
+.lab-label{
+  font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.3em;
+  color:var(--purple);margin-bottom:14px;display:flex;align-items:center;gap:10px;
+}
+.lab-label::after{content:"";flex:1;height:1px;background:linear-gradient(to right,var(--purple-dim),transparent);}
+.blink{animation:blink 1.2s step-end infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0;}}
+h1.lab-title{
+  font-family:'JetBrains Mono',monospace;
+  font-size:clamp(28px,4.5vw,48px);
+  color:var(--purple);line-height:1.05;
+  font-weight:700;margin-bottom:16px;
+  text-shadow:0 0 40px var(--purple-glow);
+}
+.lab-sub{font-family:'Exo 2',sans-serif;font-style:italic;font-size:18px;color:var(--text-soft);margin-bottom:28px;}
+.lab-stats{
+  display:flex;gap:20px;flex-wrap:wrap;
+  border-top:1px solid var(--border);padding-top:16px;
+  font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.15em;color:var(--text-dim);
+}
+.lab-stats .sv{color:var(--green);}
+
+/* ======= MODULE ======= */
+.module{
+  margin:60px 0;background:var(--bg-panel);
+  border:1px solid var(--border);padding:32px;position:relative;
+}
+.module::before{content:"";position:absolute;top:0;left:0;width:3px;height:50px;background:var(--purple);}
+.mod-num{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.3em;color:var(--purple);margin-bottom:8px;}
+h2.mod-title{
+  font-family:'JetBrains Mono',monospace;font-size:clamp(20px,3vw,28px);
+  color:#e8deff;font-weight:700;margin-bottom:8px;
+}
+.mod-sub{font-style:italic;color:var(--text-soft);font-size:15px;margin-bottom:20px;}
+.narrative p{margin-bottom:14px;font-size:17px;line-height:1.75;}
+
+/* ======= BOXES ======= */
+.info-box,.hook-box,.threat-box,.tip-box{padding:16px 20px;margin:18px 0;position:relative;}
+.info-box{background:rgba(100,210,255,.06);border:1px solid var(--cyan-dim);border-left:4px solid var(--cyan);}
+.info-box::before{content:"◆ KEY CONCEPT";position:absolute;top:-10px;left:16px;background:var(--cyan);color:var(--bg);font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.2em;padding:1px 10px;}
+.hook-box{background:rgba(48,209,88,.06);border:1px solid var(--green-dim);border-left:4px solid var(--green);}
+.hook-box::before{content:"★ MEMORY HOOK";position:absolute;top:-10px;left:16px;background:var(--green);color:var(--bg);font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.2em;padding:1px 10px;}
+.threat-box{background:rgba(255,69,58,.06);border:1px solid var(--red);border-left:4px solid var(--red);}
+.threat-box::before{content:"⚡ APPSEC USE";position:absolute;top:-10px;left:16px;background:var(--red);color:#fff;font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.2em;padding:1px 10px;}
+.tip-box{background:rgba(191,90,242,.07);border:1px solid var(--purple-dim);border-left:4px solid var(--purple);}
+.tip-box::before{content:"▸ PRO TIP";position:absolute;top:-10px;left:16px;background:var(--purple);color:#fff;font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.2em;padding:1px 10px;}
+.info-box p,.hook-box p,.threat-box p,.tip-box p{margin:0;font-size:16px;}
+
+/* ======= ANNOTATED CODE ======= */
+.ann-code{
+  background:var(--bg);border:1px solid var(--border-hi);
+  margin:20px 0;overflow:hidden;
+}
+.ann-code-header{
+  background:var(--bg-card);padding:10px 16px;
+  font-family:'JetBrains Mono',monospace;font-size:11px;
+  letter-spacing:.15em;color:var(--text-soft);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:10px;
+}
+.ann-code-header::before{
+  content:"";width:10px;height:10px;border-radius:50%;
+  background:var(--purple);box-shadow:0 0 8px var(--purple-glow);
+  flex-shrink:0;
+}
+.ann-body{display:flex;}
+.ann-lines{
+  background:var(--bg-card);
+  padding:16px 12px;text-align:right;
+  font-family:'JetBrains Mono',monospace;font-size:12px;
+  color:var(--text-dim);line-height:1.7;
+  border-right:1px solid var(--border);
+  user-select:none;flex-shrink:0;
+}
+.ann-content{flex:1;padding:16px 20px;overflow-x:auto;}
+.code-line{
+  display:flex;align-items:flex-start;gap:0;
+  font-family:'JetBrains Mono',monospace;font-size:13px;
+  line-height:1.7;cursor:pointer;position:relative;
+  white-space:pre;
+  transition:background .15s;
+}
+.code-line:hover{background:rgba(191,90,242,.08);}
+.code-line.annotated:hover{background:rgba(191,90,242,.12);}
+.code-line.hl{background:rgba(191,90,242,.12);}
+.code-kw{color:var(--purple);}
+.code-str{color:var(--yellow);}
+.code-num{color:var(--cyan);}
+.code-fn{color:var(--green);}
+.code-cm{color:var(--text-dim);}
+.code-var{color:#d4bfff;}
+.ann-tooltip{
+  display:none;position:absolute;left:0;top:100%;
+  background:var(--bg-panel);border:1px solid var(--purple-dim);
+  padding:10px 14px;font-size:13px;font-family:'Rajdhani',sans-serif;
+  color:var(--text);z-index:10;min-width:280px;max-width:400px;
+  white-space:normal;box-shadow:0 8px 24px var(--shadow);
+  border-left:3px solid var(--purple);line-height:1.5;
+}
+.code-line.hl .ann-tooltip{display:block;}
+
+/* ======= REGEX TESTER ======= */
+.regex-tester{
+  background:var(--bg-card);border:1px solid var(--border-hi);
+  padding:24px;margin:20px 0;
+}
+.regex-title{
+  font-family:'JetBrains Mono',monospace;font-size:12px;
+  letter-spacing:.2em;color:var(--purple);margin-bottom:16px;
+}
+.regex-row{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;}
+.regex-input{
+  flex:1;min-width:200px;
+  background:var(--bg);border:1px solid var(--border-hi);
+  color:var(--yellow);padding:10px 14px;
+  font-family:'JetBrains Mono',monospace;font-size:15px;
+  outline:none;transition:border-color .2s;letter-spacing:.02em;
+}
+.regex-input:focus{border-color:var(--purple);}
+.regex-test-area{
+  background:var(--bg);border:1px solid var(--border);
+  padding:14px;font-family:'JetBrains Mono',monospace;font-size:13px;
+  color:var(--text);min-height:80px;outline:none;
+  transition:border-color .2s;white-space:pre-wrap;
+  line-height:1.7;
+}
+.regex-test-area:focus{border-color:var(--purple);}
+.regex-result{
+  background:var(--bg);border:1px solid var(--border);
+  padding:14px;font-family:'JetBrains Mono',monospace;font-size:13px;
+  min-height:60px;margin-top:10px;
+}
+.match{
+  background:rgba(191,90,242,.25);
+  border-bottom:2px solid var(--purple);
+  border-radius:2px;
+}
+.regex-meta{
+  font-family:'JetBrains Mono',monospace;font-size:11px;
+  color:var(--text-dim);margin-top:8px;letter-spacing:.1em;
+}
+.regex-presets{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;}
+.preset-btn{
+  font-family:'JetBrains Mono',monospace;font-size:10px;
+  padding:5px 10px;background:var(--bg);border:1px solid var(--border);
+  color:var(--text-soft);cursor:pointer;transition:all .15s;
+  letter-spacing:.05em;
+}
+.preset-btn:hover{border-color:var(--purple-dim);color:var(--purple);}
+
+/* ======= PATTERN CARDS ======= */
+.pattern-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+  gap:14px;margin:20px 0;
+}
+.pattern-card{
+  background:var(--bg-card);border:1px solid var(--border);
+  padding:18px;position:relative;
+  transition:border-color .2s,box-shadow .2s;cursor:pointer;
+}
+.pattern-card:hover{border-color:var(--purple-dim);box-shadow:0 0 20px var(--purple-glow);}
+.pattern-card.open{border-color:var(--purple);}
+.pc-title{
+  font-family:'JetBrains Mono',monospace;font-size:13px;
+  color:#e8deff;margin-bottom:8px;
+}
+.pc-code{
+  font-family:'JetBrains Mono',monospace;font-size:12px;
+  color:var(--green);background:var(--bg);
+  padding:8px 10px;border:1px solid var(--border);
+  margin-bottom:8px;white-space:pre;overflow-x:auto;
+}
+.pc-desc{font-size:14px;color:var(--text-soft);display:none;line-height:1.6;}
+.pattern-card.open .pc-desc{display:block;}
+.pc-tag{
+  position:absolute;top:12px;right:14px;
+  font-family:'JetBrains Mono',monospace;font-size:9px;
+  letter-spacing:.15em;padding:2px 8px;border:1px solid;
+}
+.pc-tag.essential{color:var(--green);border-color:var(--green-dim);}
+.pc-tag.security{color:var(--purple);border-color:var(--purple-dim);}
+
+/* ======= QUIZ ======= */
+.quiz-wrap{
+  margin:60px 0;background:var(--bg-panel);
+  border:1px solid var(--border-hi);
+  padding:36px 30px;position:relative;
+}
+.quiz-wrap::before{content:"";position:absolute;top:0;left:0;width:100%;height:2px;background:linear-gradient(to right,var(--purple),var(--green),transparent);}
+.quiz-wrap h2{font-family:'JetBrains Mono',monospace;font-size:18px;color:var(--purple);font-weight:700;margin-bottom:4px;}
+.q-block{margin:28px 0;padding-top:20px;border-top:1px solid var(--border);}
+.q-block:first-of-type{border-top:none;padding-top:0;margin-top:16px;}
+.q-tag{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.25em;color:var(--purple-dim);margin-bottom:8px;}
+.q-text{font-size:17px;color:#e8deff;margin-bottom:12px;line-height:1.5;}
+.q-opts{display:flex;flex-direction:column;gap:8px;}
+.q-opt{
+  font-family:'JetBrains Mono',monospace;font-size:12px;
+  text-align:left;padding:11px 14px;
+  background:var(--bg);border:1px solid var(--border);
+  color:var(--text);cursor:pointer;transition:all .15s;
+}
+.q-opt:hover:not(.locked){border-color:var(--purple-dim);color:var(--purple);transform:translateX(4px);}
+.q-opt.correct{background:rgba(48,209,88,.1);border-color:var(--green);color:var(--green);}
+.q-opt.wrong{background:rgba(255,69,58,.08);border-color:var(--red);color:var(--red);}
+.q-opt.locked{cursor:not-allowed;}
+.q-opt.locked:not(.correct):not(.wrong){opacity:.35;}
+.q-fb{margin-top:10px;padding:12px 14px;font-size:14px;font-style:italic;color:var(--text-soft);background:var(--bg-card);border-left:3px solid var(--border);display:none;}
+.q-fb.show{display:block;}
+.q-fb .vt{display:block;font-style:normal;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.2em;margin-bottom:4px;}
+.q-fb .vt.ok{color:var(--green);}
+.q-fb .vt.bad{color:var(--red);}
+
+/* ======= FIELD NOTES ======= */
+.field-notes{
+  margin:50px 0;background:var(--bg-panel);
+  border:1px dashed var(--border-hi);padding:32px 28px;position:relative;
+}
+.field-notes::before{
+  content:"📋 LAB DEBRIEF";position:absolute;top:-12px;left:24px;
+  background:var(--bg-panel);padding:0 12px;
+  font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.2em;color:var(--purple);
+}
+.field-notes h3{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.2em;color:var(--green);margin:20px 0 8px;}
+.field-notes h3:first-of-type{margin-top:0;}
+.field-notes p,.field-notes li{font-size:16px;line-height:1.7;}
+.field-notes ul{margin-left:20px;margin-bottom:12px;}
+.field-notes li::marker{color:var(--purple);}
+
+.closing{margin-top:70px;text-align:center;padding-top:28px;border-top:1px solid var(--border-hi);}
+.closing p{color:var(--text-soft);font-family:'Exo 2',sans-serif;font-style:italic;margin-bottom:6px;}
+.closing .sig{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.3em;color:var(--purple);margin-top:18px;}
+.saved{position:fixed;top:16px;right:16px;background:var(--purple);color:#fff;padding:5px 14px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.2em;opacity:0;transition:opacity .3s;z-index:100;}
+.saved.show{opacity:1;}
+.exec-block{background:var(--bg);border:1px solid var(--border-hi);border-left:3px solid var(--green);padding:16px 20px;margin:18px 0;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.7;overflow-x:auto;position:relative;}
+.exec-block::before{content:"RUN THIS";position:absolute;top:-10px;left:16px;background:var(--green);color:var(--bg);font-size:9px;letter-spacing:.2em;padding:1px 10px;}
+.ep{color:var(--green);}
+.ec{color:var(--text-dim);}
+@media(max-width:680px){
+  main{padding:28px 16px 100px;}
+  .lab-hdr{padding:24px 18px;}
+  .module{padding:22px 16px;}
+  .pattern-grid{grid-template-columns:1fr;}
+  .quiz-wrap{padding:24px 16px;}
+  .field-notes{padding:24px 16px;}
+  .ann-tooltip{min-width:220px;max-width:calc(100vw - 40px);}
+}
+</style>
+</head>
+<body>
+<div class="saved" id="sv">▸ SAVED</div>
+<main>
+
+<!-- HEADER -->
+<div class="lab-hdr">
+  <div class="lab-label"><span class="blink">█</span> CODE LAB №04 // DAY 4 OF 60</div>
+  <h1 class="lab-title">PYTHON<br>FOR SECURITY</h1>
+  <p class="lab-sub">You already know Python from your dev days. Today you rewire it for offense and defense.</p>
+  <div class="lab-stats">
+    <span>PHASE <span class="sv">FOUNDATIONS</span></span>
+    <span>ENV <span class="sv">MAC + VS CODE</span></span>
+    <span>TIME <span class="sv">5–6 HRS</span></span>
+    <span>TOOLS <span class="sv">REQUESTS · SOCKET · RE</span></span>
+  </div>
+</div>
+
+<!-- MODULE 01: requests library -->
+<section class="module">
+  <div class="mod-num">MODULE 01 // REQUESTS</div>
+  <h2 class="mod-title">HTTP from Python</h2>
+  <p class="mod-sub">The requests library is in 90% of Python security tools. You used it Day 1. Today you go deeper.</p>
+  <div class="narrative">
+    <p>You already know the basics from Day 1. This module focuses on the patterns you'll use in real security scripts: <strong>sessions</strong> for authenticated testing, <strong>custom headers</strong> for bypasses, and <strong>error handling</strong> because targets don't always respond cleanly.</p>
+  </div>
+
+  <p style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--purple);letter-spacing:.15em;margin:20px 0 8px;">▸ CLICK ANY HIGHLIGHTED LINE TO SEE WHAT IT DOES</p>
+
+  <!-- Annotated code: security scanner pattern -->
+  <div class="ann-code">
+    <div class="ann-code-header">security_scanner.py — full session pattern</div>
+    <div class="ann-body">
+      <div class="ann-lines" id="ln1"></div>
+      <div class="ann-content" id="ac1"></div>
+    </div>
+  </div>
+
+  <div class="threat-box"><p><strong>Security use cases for requests:</strong><br>
+  Day 10 (web recon) — check security headers on 50 URLs in seconds.<br>
+  Day 11 (auth attacks) — automated login attempts with session handling.<br>
+  Day 42 (AI projects) — call Claude/OpenAI API to analyze security findings.<br>
+  Day 52 (AWS auditor) — call AWS APIs to check misconfigurations.</p></div>
+
+  <div class="tip-box"><p>Always set <code>timeout=5</code> or <code>timeout=10</code>. Without it, your script hangs forever if a server stops responding. Security scanners hit hundreds of targets — one unresponsive server will freeze your whole script.</p></div>
+</section>
+
+<!-- MODULE 02: String Manipulation -->
+<section class="module">
+  <div class="mod-num">MODULE 02 // STRINGS</div>
+  <h2 class="mod-title">Parse Attack Data</h2>
+  <p class="mod-sub">Security work is mostly processing text. Logs, responses, payloads, URLs.</p>
+
+  <div class="narrative">
+    <p>You already know f-strings and split() from Java/Python. Today's focus: patterns specifically used in security tooling.</p>
+  </div>
+
+  <div class="pattern-grid" id="patternGrid"></div>
+
+  <div class="threat-box"><p><strong>Real example from Day 10 (web recon):</strong><br>
+  You get a response from a server. You need to: extract the domain from a URL, strip http/https, check if a security header exists, parse JSON error messages for info disclosure. All string operations. The cleaner your string code, the faster your tools run against 100+ targets.</p></div>
+</section>
+
+<!-- MODULE 03: Regex -->
+<section class="module">
+  <div class="mod-num">MODULE 03 // REGEX</div>
+  <h2 class="mod-title">Find Patterns in Chaos</h2>
+  <p class="mod-sub">Regex is a metal detector. Point it at text, it finds what matches.</p>
+
+  <div class="narrative">
+    <p><strong>Regex (Regular Expressions)</strong> is a pattern-matching language. You write a pattern. Python checks if text matches that pattern. Security engineers use it constantly to extract data from logs, responses, and source code.</p>
+  </div>
+
+  <div class="info-box"><p><strong>Essential regex patterns for security work:</strong><br>
+  <code>\d</code> — any digit (0–9)<br>
+  <code>\w</code> — any word character (a-z, A-Z, 0–9, _)<br>
+  <code>\s</code> — whitespace<br>
+  <code>.</code> — any character (except newline)<br>
+  <code>+</code> — one or more of previous<br>
+  <code>*</code> — zero or more<br>
+  <code>?</code> — zero or one (optional)<br>
+  <code>{3}</code> — exactly 3 of previous<br>
+  <code>^</code> — start of string &nbsp;|&nbsp; <code>$</code> — end of string<br>
+  <code>[]</code> — character class: <code>[a-z]</code> = any lowercase letter<br>
+  <code>()</code> — capture group: extract this part</p></div>
+
+  <!-- Live Regex Tester -->
+  <div class="regex-tester">
+    <div class="regex-title">▸ LIVE REGEX TESTER — TEST YOUR PATTERNS</div>
+    <div class="regex-presets" id="regexPresets"></div>
+    <div class="regex-row">
+      <input type="text" class="regex-input" id="regexPattern" placeholder="Enter regex pattern..." oninput="runRegex()">
+    </div>
+    <div class="regex-test-area" contenteditable="true" id="regexText" oninput="runRegex()">Email: bhargav@vcu.edu, Phone: 804-397-6005
+API Key: sk-proj-abc123XYZ789
+Server: Apache/2.4.51 (Ubuntu)
+Password: hunter2
+IP: 192.168.1.100 and 10.0.0.50
+Credit card: 4111-1111-1111-1111</div>
+    <div class="regex-result" id="regexResult">// Type a pattern above to test it</div>
+    <div class="regex-meta" id="regexMeta"></div>
+  </div>
+
+  <div class="threat-box"><p><strong>Day 22 (Recon) use case:</strong> You have 50,000 lines of JavaScript from a web app. Regex finds: API keys (<code>sk-[a-zA-Z0-9]{32,}</code>), internal IPs (<code>192\.168\.\d+\.\d+</code>), email addresses, AWS keys (<code>AKIA[A-Z0-9]{16}</code>). What would take hours manually takes 5 seconds.</p></div>
+</section>
+
+<!-- MODULE 04: File Operations -->
+<section class="module">
+  <div class="mod-num">MODULE 04 // FILE I/O</div>
+  <h2 class="mod-title">Read Targets. Save Results.</h2>
+  <p class="mod-sub">Every security tool reads input from files and saves output to files.</p>
+
+  <div class="narrative">
+    <p>You'll never type targets by hand when you have 500 of them. You'll never let results scroll off-screen. File I/O is the glue that makes tools scalable.</p>
+  </div>
+
+  <div class="ann-code">
+    <div class="ann-code-header">file_patterns.py — security tool I/O</div>
+    <div class="ann-body">
+      <div class="ann-lines" id="ln2"></div>
+      <div class="ann-content" id="ac2"></div>
+    </div>
+  </div>
+
+  <div class="hook-box"><p><strong>"w" vs "a" — when to use which:</strong><br>
+  <code>open("results.txt", "w")</code> = OVERWRITE. Fresh start every run. Good when you want clean output per scan.<br>
+  <code>open("results.txt", "a")</code> = APPEND. Keeps previous results. Good when you scan over time and don't want to lose history.<br>
+  Same choice as <code>></code> vs <code>>></code> in Linux (Day 2).</p></div>
+</section>
+
+<!-- MODULE 05: Port Scanner -->
+<section class="module">
+  <div class="mod-num">MODULE 05 // LAB BUILD</div>
+  <h2 class="mod-title">Build a Port Scanner</h2>
+  <p class="mod-sub">Combines everything: loops, sockets, file I/O, error handling. Your first real security tool.</p>
+
+  <div class="narrative">
+    <p>This is the big lab from Day 4 in your roadmap. Every line has a purpose. Click each annotated line to understand it. Then build it yourself.</p>
+  </div>
+
+  <div class="ann-code">
+    <div class="ann-code-header">port_scanner.py — your first security tool</div>
+    <div class="ann-body">
+      <div class="ann-lines" id="ln3"></div>
+      <div class="ann-content" id="ac3"></div>
+    </div>
+  </div>
+
+  <div class="exec-block">
+<span class="ec"># Run against the legal test target</span>
+<span class="ep">$</span> python3 port_scanner.py
+<span class="ec">Target IP or hostname: scanme.nmap.org</span>
+<span class="ec">Scanning scanme.nmap.org (45.33.32.156)</span>
+<span class="ec">Started: 2026-06-09 14:30:00</span>
+<span class="ec">[OPEN] Port 22: ssh</span>
+<span class="ec">[OPEN] Port 80: http</span>
+<span class="ec">Finished: 2026-06-09 14:30:14</span></div>
+
+  <div class="threat-box"><p><strong>LEGAL WARNING:</strong> Only scan systems you own or have written permission to scan. Unauthorized port scanning is illegal in most countries under computer crime laws. The legal target <code>scanme.nmap.org</code> is explicitly authorized for testing by nmap. For everything else: get explicit written permission first.</p></div>
+
+  <div class="tip-box"><p><strong>Upgrade challenge:</strong> Add <code>-oN results.txt</code>-style output saving to your scanner. Add threading to scan 10 ports simultaneously (10x faster). Add service banner grabbing with <code>sock.recv(1024)</code>. By Day 22, you'll have a tool as capable as basic nmap.</p></div>
+</section>
+
+<!-- QUIZ -->
+<section class="quiz-wrap">
+  <h2>// ASSESSMENT — DAY 4</h2>
+  <p style="color:var(--text-soft);font-style:italic;font-size:15px;margin-top:4px;">10 questions. Python security patterns you'll use for the next 56 days.</p>
+
+  <div class="q-block">
+    <div class="q-tag">Q.01</div>
+    <div class="q-text">Why use <code>requests.Session()</code> instead of <code>requests.get()</code> when testing a login flow?</div>
+    <div class="q-opts" data-q="d4-1">
+      <button class="q-opt" data-c="false" data-f="Session() doesn't affect speed significantly for a few requests.">Session() is much faster for single requests</button>
+      <button class="q-opt" data-c="true" data-f="Exactly. Session() acts like a browser — when the server sends Set-Cookie after login, Session stores it and sends it automatically on every subsequent request. Without Session, each requests.get() call is stateless — the server doesn't know you logged in. For security testing of authenticated features, Session is mandatory.">Session() persists cookies between requests — needed to stay logged in for subsequent requests</button>
+      <button class="q-opt" data-c="false" data-f="Both support HTTPS equally. Session doesn't change the encryption.">Session() uses HTTPS while get() uses HTTP</button>
+      <button class="q-opt" data-c="false" data-f="Session() doesn't provide retry logic by default (though you can add it).">Session() automatically retries failed requests</button>
+    </div>
+    <div class="q-fb"></div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-tag">Q.02</div>
+    <div class="q-text">Your port scanner hangs forever when it hits an unresponsive host. What's the fix?</div>
+    <div class="q-opts" data-q="d4-2">
+      <button class="q-opt" data-c="false" data-f="Restarting changes nothing — the problem is the script waits indefinitely for a response.">Restart the script</button>
+      <button class="q-opt" data-c="false" data-f="try/except catches errors but doesn't set a time limit. You need timeout + except together.">Add a try/except block</button>
+      <button class="q-opt" data-c="true" data-f="Correct. sock.settimeout(N) tells the socket to give up after N seconds if no response. Without it, connect_ex() blocks forever on filtered ports. Standard practice: 1-2 seconds for fast networks, 5 seconds if scanning over internet.">Add sock.settimeout(2) before connecting</button>
+      <button class="q-opt" data-c="false" data-f="Time.sleep() makes it slower, not faster. It doesn't set a timeout on the connection.">Add time.sleep(1) between ports</button>
+    </div>
+    <div class="q-fb"></div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-tag">Q.03</div>
+    <div class="q-text">You have a log file with 50,000 lines. You want to find all lines containing "Failed" and count them. Best approach?</div>
+    <div class="q-opts" data-q="d4-3">
+      <button class="q-opt" data-c="false" data-f="Reading all lines into a list works but wastes memory for huge files. A loop is more efficient.">Read all lines into a list with readlines(), then loop</button>
+      <button class="q-opt" data-c="true" data-f="Correct. Iterating directly over a file object reads one line at a time — memory efficient for huge files. Combine with grep-style logic and a counter. Professional Python always iterates line by line for large files rather than loading everything.">Iterate the file object directly with: for line in f: if 'Failed' in line: count += 1</button>
+      <button class="q-opt" data-c="false" data-f="f.read() loads the ENTIRE 50,000-line file into one giant string. Inefficient and may cause memory issues with very large logs.">Use f.read() to get all content, then call .split() on it</button>
+      <button class="q-opt" data-c="false" data-f="OS module doesn't have text search functions. You'd need subprocess to call grep — doable, but Python's built-in iteration is cleaner.">Use os.system() to run grep</button>
+    </div>
+    <div class="q-fb"></div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-tag">Q.04</div>
+    <div class="q-text">What does <code>re.findall(r'\d{3}-\d{3}-\d{4}', text)</code> do?</div>
+    <div class="q-opts" data-q="d4-4">
+      <button class="q-opt" data-c="false" data-f="re.search() returns the first match object. findall() returns ALL matches as a list.">Returns True if any phone number exists in the text</button>
+      <button class="q-opt" data-c="false" data-f="re.sub() does replacement. findall() just finds — it doesn't modify anything.">Replaces all phone numbers with asterisks</button>
+      <button class="q-opt" data-c="true" data-f="Exactly. findall() returns all non-overlapping matches as a list. The pattern \\d{3}-\\d{3}-\\d{4} matches exactly the format 804-397-6005 (3 digits, dash, 3 digits, dash, 4 digits). Real use: extract phone numbers from scraped web pages for OSINT.">Returns a list of all strings matching pattern NNN-NNN-NNNN</button>
+      <button class="q-opt" data-c="false" data-f="findall() returns matches, not their positions. re.finditer() gives you match objects with positions.">Returns the position (index) of each phone number</button>
+    </div>
+    <div class="q-fb"></div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-tag">Q.05</div>
+    <div class="q-text">Your web checker script gets a <code>requests.ConnectionError</code> on one URL. What should happen?</div>
+    <div class="q-opts" data-q="d4-5">
+      <button class="q-opt" data-c="false" data-f="If one URL fails and the script crashes, you lose results for all remaining URLs. Never crash on a single failure in scanning tools.">The script should crash and stop checking other URLs</button>
+      <button class="q-opt" data-c="true" data-f="Correct. Security scanners must be resilient. Wrap each request in try/except, log the error for that URL, and keep going. A good scanner reports 'ERROR: connection refused' for bad hosts and continues scanning the other 499 targets.">Catch the exception, log the error, and continue checking remaining URLs</button>
+      <button class="q-opt" data-c="false" data-f="Retrying immediately usually fails again — the server is down or unreachable. Retry logic should be a separate design decision, not the default first response.">Automatically retry the URL 3 times before moving on</button>
+      <button class="q-opt" data-c="false" data-f="Ignoring silently is worse — you'd have a gap in your results and not know why.">Silently ignore the error and move on</button>
+    </div>
+    <div class="q-fb"></div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-tag">Q.06</div>
+    <div class="q-text">You're writing a script to test 100 URLs for missing security headers. Which approach is best?</div>
+    <div class="q-opts" data-q="d4-6">
+      <button class="q-opt" data-c="false" data-f="One response at a time is fine for 3 URLs. For 100, it works but threading would be much faster.">requests.get() one at a time in a for loop</button>
+      <button class="q-opt" data-c="true" data-f="Exactly. Use a list of URLs, loop through them, handle exceptions per URL, accumulate findings in a list, and write a clean report at the end. Adding a requests.Session() saves time on repeated connections. This is the architecture of every professional scanner.">Loop through URL list with try/except per request, accumulate results, write report at end</button>
+      <button class="q-opt" data-c="false" data-f="Using different sessions per URL defeats the purpose of sessions and adds overhead. One session that's reused is more efficient.">Create a new requests.Session() for every URL</button>
+      <button class="q-opt" data-c="false" data-f="os.system('curl ...') works but you lose Python's clean response object — harder to process results.">Use os.system() to run curl for each URL</button>
+    </div>
+    <div class="q-fb"></div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-tag">Q.07</div>
+    <div class="q-text">What does <code>sock.connect_ex((target, port))</code> return when the port is OPEN?</div>
+    <div class="q-opts" data-q="d4-7">
+      <button class="q-opt" data-c="true" data-f="Correct. connect_ex() returns 0 on success (port open and accepting connections). Any non-zero value means failure: 111 = connection refused (port closed), 110 = connection timed out (firewall dropping packets). This is why the port scanner checks: if result == 0: port is open.">0 (success — connection established)</button>
+      <button class="q-opt" data-c="false" data-f="True is not an integer return. connect_ex() returns an error code integer.">True</button>
+      <button class="q-opt" data-c="false" data-f="connect_ex() returns 0 for open, not 1. It returns error codes (like 111 for refused) for closed/filtered.">1 (one connection made)</button>
+      <button class="q-opt" data-c="false" data-f="'open' is a string. connect_ex() returns an integer error code.">The string "open"</button>
+    </div>
+    <div class="q-fb"></div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-tag">Q.08</div>
+    <div class="q-text">What's the difference between <code>open("f.txt","w")</code> and <code>open("f.txt","a")</code>?</div>
+    <div class="q-opts" data-q="d4-8">
+      <button class="q-opt" data-c="false" data-f="Both can read if combined with 'r' (e.g. 'rw'), but by themselves 'w' and 'a' are both write modes.">w = read only, a = write only</button>
+      <button class="q-opt" data-c="false" data-f="'w' creates if not exists, but so does 'a'. The key difference is what happens to existing content.">w = creates new file, a = requires file to exist first</button>
+      <button class="q-opt" data-c="true" data-f="Correct. 'w' overwrites: if the file exists, all previous content is erased. 'a' appends: new content is added after existing content. For scan results: use 'w' for a fresh report each run, use 'a' if you're building up results across multiple runs.">w = overwrites existing content, a = appends after existing content</button>
+      <button class="q-opt" data-c="false" data-f="Neither mode controls encoding directly. Encoding is a separate parameter: open('f.txt', 'w', encoding='utf-8').">w = ASCII encoding, a = UTF-8 encoding</button>
+    </div>
+    <div class="q-fb"></div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-tag">Q.09</div>
+    <div class="q-text">Which regex pattern finds AWS API keys in source code? (AWS keys start with AKIA followed by 16 uppercase letters/digits)</div>
+    <div class="q-opts" data-q="d4-9">
+      <button class="q-opt" data-c="false" data-f="This matches any 'AKIA' but \\w+ allows lowercase and underscores too, and doesn't enforce exactly 16 characters.">AKIA\w+</button>
+      <button class="q-opt" data-c="false" data-f="This has the right prefix and character class but is missing the quantifier for exactly 16 characters.">AKIA[A-Z0-9]</button>
+      <button class="q-opt" data-c="true" data-f="Exactly right. AKIA = literal prefix. [A-Z0-9] = uppercase letters or digits. {16} = exactly 16 of them. Total: AKIA + 16 chars = 20 character AWS key format. This is a real pattern used in secret scanning tools like TruffleHog and GitLeaks.">AKIA[A-Z0-9]{16}</button>
+      <button class="q-opt" data-c="false" data-f="The dot . matches any character — too broad. It would match AKIA!!!!!!!!!!!!!!!! as well as real AWS keys.">AKIA.{16}</button>
+    </div>
+    <div class="q-fb"></div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-tag">Q.10</div>
+    <div class="q-text">You want to send a POST request with JSON data (not form data). What's the correct Python?</div>
+    <div class="q-opts" data-q="d4-10">
+      <button class="q-opt" data-c="false" data-f="data= sends form-encoded data (Content-Type: application/x-www-form-urlencoded). Correct for HTML forms, wrong for JSON APIs.">requests.post(url, data={"key":"value"})</button>
+      <button class="q-opt" data-c="true" data-f="Correct. json= automatically: converts the dict to a JSON string, sets Content-Type: application/json, encodes correctly. The server receives proper JSON. Using data= with a dict sends form-encoded data, which many APIs reject with 400 Bad Request.">requests.post(url, json={"key":"value"})</button>
+      <button class="q-opt" data-c="false" data-f="You'd need to manually json.dumps() the data and set the Content-Type header. The json= parameter does this automatically and is cleaner.">requests.post(url, body={"key":"value"})</button>
+      <button class="q-opt" data-c="false" data-f="There's no payload= parameter in requests. The options are data= (form), json= (JSON), files= (multipart), and content= (raw bytes for other cases).">requests.post(url, payload={"key":"value"})</button>
+    </div>
+    <div class="q-fb"></div>
+  </div>
+</section>
+
+<!-- FIELD NOTES -->
+<section class="field-notes">
+  <h3>1. BUILD BOTH SCRIPTS</h3>
+  <p>From your roadmap Day 4: build <code>port_scanner.py</code> and <code>web_checker.py</code>. Don't copy-paste. Type them by hand — your fingers learn too.</p>
+
+  <h3>2. RUN THE PORT SCANNER</h3>
+  <div class="exec-block" style="margin-top:8px;">
+<span class="ep">$</span> python3 port_scanner.py
+<span class="ec">Target: scanme.nmap.org   ← legal test target</span></div>
+  <p>Document which ports were open and what services they run.</p>
+
+  <h3>3. REGEX PRACTICE</h3>
+  <p>Use the live tester above. Find: all email addresses, all IP addresses, all "password" occurrences. Then write the patterns in your notes.</p>
+
+  <h3>4. PUSH TO GITHUB</h3>
+  <div class="exec-block" style="margin-top:8px;">
+<span class="ep">$</span> cd ~/Documents/appsec-roadmap/python-security-scripts
+<span class="ep">$</span> git add .
+<span class="ep">$</span> git commit -m "Day 4: port scanner + web checker security scripts"
+<span class="ep">$</span> git push</div>
+  <p>Both scripts in <code>python-security-scripts</code> repo. Each needs a docstring at the top explaining what it does.</p>
+</section>
+
+<div class="closing">
+  <p>Day 4 closed. You have your first real security tools.</p>
+  <p>Tomorrow: <strong>Day 5 — Web Application Architecture.</strong> How the apps you'll attack are built.</p>
+  <div class="sig">— END CODE LAB 04 —</div>
+</div>
+</main>
+
+<script>
+const SK='day4-v1';
+let S={};
+try{S=JSON.parse(localStorage.getItem(SK)||'{}')}catch(e){}
+function save(){try{localStorage.setItem(SK,JSON.stringify(S))}catch(e){}showSv();}
+function showSv(){const p=document.getElementById('sv');p.classList.add('show');clearTimeout(window._st);window._st=setTimeout(()=>p.classList.remove('show'),1500);}
+
+// Annotated code builder
+function buildAnnotated(lnId,acId,lines){
+  const ln=document.getElementById(lnId),ac=document.getElementById(acId);
+  lines.forEach((l,i)=>{
+    ln.innerHTML+=(i+1)+'<br>';
+    const d=document.createElement('div');
+    d.className='code-line'+(l.ann?' annotated':'');
+    d.innerHTML=l.code+(l.ann?`<div class="ann-tooltip">${l.ann}</div>`:'');
+    if(l.ann){
+      d.addEventListener('click',()=>{
+        d.classList.toggle('hl');
+        S[`ann-${lnId}-${i}`]=d.classList.contains('hl');save();
+      });
+      if(S[`ann-${lnId}-${i}`])d.classList.add('hl');
+    }
+    ac.appendChild(d);
+  });
+}
+
+const sc=s=>`<span class="code-${s[0]}">`+s.slice(1)+'</span>';
+const kw=s=>sc('kw '+s),str=s=>sc('str '+s),fn=s=>sc('fn '+s),cm=s=>sc('cm '+s),num=s=>sc('num '+s),vr=s=>sc('var '+s);
+
+buildAnnotated('ln1','ac1',[
+  {code:`${kw('import')} requests`,ann:'Load the requests library. Install once with: pip install requests'},
+  {code:'',ann:null},
+  {code:`${kw('def')} ${fn('test_target')}(url):`,ann:'Define a reusable function. Pass URL, get findings back. Functions make scanners modular.'},
+  {code:`    findings = []`,ann:'Empty list to collect security issues. Append findings, return at the end.'},
+  {code:'',ann:null},
+  {code:`    ${kw('try')}:`,ann:'Always wrap requests in try/except. Servers go down, connections time out, networks fail.'},
+  {code:`        session = requests.${fn('Session')}()`,ann:'Session() persists cookies across requests. Critical for testing authenticated pages — login once, session stays.'},
+  {code:`        r = session.${fn('get')}(url, timeout=${num('10')})`,ann:'timeout=10 means give up after 10 seconds. Without this, your script hangs forever on dead servers.'},
+  {code:'',ann:null},
+  {code:`        ${cm('# Check security headers')}`,ann:null},
+  {code:`        ${kw('for')} header ${kw('in')} [${str('"X-Frame-Options"')}, ${str('"Content-Security-Policy"')}]:`,ann:'Loop through headers you want to verify. Missing security headers = vulnerability.'},
+  {code:`            ${kw('if')} header ${kw('not')} ${kw('in')} r.headers:`,ann:'r.headers is a dict. "in" checks if the key exists. Missing = add to findings.'},
+  {code:`                findings.${fn('append')}(${str('f"MISSING: {header}"')})`,ann:'f-strings = f"text {variable}". Builds readable finding strings.'},
+  {code:'',ann:null},
+  {code:`        ${cm('# Check for info disclosure')}`,ann:null},
+  {code:`        ${kw('if')} ${str('"Server"')} ${kw('in')} r.headers:`,ann:'Server header reveals software and version. Attackers use this to find known CVEs.'},
+  {code:`            findings.${fn('append')}(${str('f"INFO DISCLOSURE: {r.headers[chr(39)]Server{chr(39)]}"')})`,ann:'Wrapping server header value in the finding string.'},
+  {code:'',ann:null},
+  {code:`        ${kw('return')} {${str('"status"')}: r.status_code, ${str('"findings"')}: findings}`,ann:'Return structured data — status code + list of issues. Caller decides how to display.'},
+  {code:'',ann:null},
+  {code:`    ${kw('except')} requests.exceptions.${fn('Timeout')}:`,ann:'Specific exception for timeout — server too slow or unreachable.'},
+  {code:`        ${kw('return')} {${str('"status"')}: ${str('"TIMEOUT"')}, ${str('"findings"')}: [${str('"Target unreachable"')}]}`,ann:'Return a structured error so the caller can log it and move to the next target.'},
+  {code:`    ${kw('except')} requests.exceptions.${fn('ConnectionError')}:`,ann:'Connection refused, DNS failed, network down. Handle separately from timeout.'},
+  {code:`        ${kw('return')} {${str('"status"')}: ${str('"ERROR"')}, ${str('"findings"')}: [${str('"Connection failed"')}]}`,ann:'Same pattern — structured error response.'},
+]);
+
+buildAnnotated('ln2','ac2',[
+  {code:`${cm('# Read targets from file')}`,ann:null},
+  {code:`${kw('with')} ${fn('open')}(${str('"targets.txt"')}) ${kw('as')} f:`,ann:'"with" automatically closes the file when done — even if an exception occurs. Always use "with open()" pattern.'},
+  {code:`    targets = [line.${fn('strip')}() ${kw('for')} line ${kw('in')} f ${kw('if')} line.${fn('strip')}()]`,ann:'List comprehension: reads every line, strips whitespace, skips empty lines. One elegant line replaces a 5-line loop.'},
+  {code:'',ann:null},
+  {code:`${cm('# Save results to file')}`,ann:null},
+  {code:`${kw('with')} ${fn('open')}(${str('"results.txt"')}, ${str('"w"')}) ${kw('as')} f:`,ann:'"w" = write mode. Creates the file if it doesn\'t exist. OVERWRITES if it does. Use "a" to append instead.'},
+  {code:`    ${kw('for')} target ${kw('in')} targets:`,ann:'Loop through each target from the file.'},
+  {code:`        result = ${fn('test_target')}(target)`,ann:'Call your scanner function for each target.'},
+  {code:`        f.${fn('write')}(${str('f"[{result[chr(39)]status{chr(39)]}] {target}\\n"')})`,ann:'Write one result per line. \\n = newline. Without it, all results run together.'},
+  {code:`        ${kw('for')} finding ${kw('in')} result[${str('"findings"')}]:`,ann:'Loop through each finding for this target.'},
+  {code:`            f.${fn('write')}(${str('f"  → {finding}\\n"')})`,ann:'Indent findings under their target for readability. Two spaces + arrow = clean visual hierarchy.'},
+]);
+
+buildAnnotated('ln3','ac3',[
+  {code:`${kw('import')} socket`,ann:'socket module = raw network connections. This is what requests uses under the hood.'},
+  {code:`${kw('import')} sys`,ann:'sys module for command-line arguments and exit().'},
+  {code:`${kw('from')} datetime ${kw('import')} datetime`,ann:'For timing the scan — shows how long it took.'},
+  {code:'',ann:null},
+  {code:`target = ${fn('input')}(${str('"Target IP or hostname: "')})`,ann:'Take input interactively. You could also use sys.argv[1] for command-line: python3 scanner.py target.com'},
+  {code:`target_ip = socket.${fn('gethostbyname')}(target)`,ann:'Resolve hostname to IP. "google.com" → "142.250.x.x". Fails with error if hostname doesn\'t exist.'},
+  {code:'',ann:null},
+  {code:`common_ports = [${num('21')},${num('22')},${num('25')},${num('53')},${num('80')},${num('110')},${num('143')},${num('443')},${num('3306')},${num('3389')},${num('5432')},${num('8080')}]`,ann:'Common ports to check. The Day 3 port directory told you what each means. More ports = slower scan.'},
+  {code:'',ann:null},
+  {code:`${kw('for')} port ${kw('in')} common_ports:`,ann:'Loop through each port to test.'},
+  {code:`    sock = socket.${fn('socket')}(socket.AF_INET, socket.SOCK_STREAM)`,ann:'Create a new TCP socket. AF_INET = IPv4. SOCK_STREAM = TCP (reliable). Create new one per port — cleaner.'},
+  {code:`    sock.${fn('settimeout')}(${num('1')})`,ann:'Give up after 1 second. Without this: hangs forever on filtered ports. Critical for scanner performance.'},
+  {code:`    result = sock.${fn('connect_ex')}((target_ip, port))`,ann:'Try to connect. Returns 0 if SUCCESS (port open), non-zero error code if failed (port closed/filtered).'},
+  {code:`    ${kw('if')} result == ${num('0')}:`,ann:'0 = connected = port is OPEN and accepting connections.'},
+  {code:`        ${kw('try')}:`,ann:'Try to get the service name from the port number.'},
+  {code:`            service = socket.${fn('getservbyport')}(port)`,ann:'Looks up port in /etc/services. Port 80 → "http". Port 22 → "ssh". Fails for uncommon ports.'},
+  {code:`        ${kw('except')}: service = ${str('"unknown"')}`,ann:'Unknown port number — just label it unknown and keep going.'},
+  {code:`        ${fn('print')}(${str('f"[OPEN] Port {port}: {service}"')})`,ann:'Report open port with service name. This is your scan output.'},
+  {code:`    sock.${fn('close')}()`,ann:'Always close sockets when done. If not closed: your OS runs out of file descriptors after ~1000 open sockets.'},
+]);
+
+// Pattern cards data
+const patterns=[
+  {title:'URL parameter extraction',code:`url = "https://site.com/user?id=5&role=admin"\nfrom urllib.parse import urlparse, parse_qs\nparsed = urlparse(url)\nparams = parse_qs(parsed.query)\nprint(params)  # {'id': ['5'], 'role': ['admin']}`,cat:'security',desc:'Extract query parameters from URLs. In AppSec, you enumerate parameters to find injectable ones. id=5 becomes id=1,2,3 to test IDOR. Role=admin checks for privilege escalation.'},
+  {title:'Header presence checker',code:`headers_to_check = [\n    "X-Frame-Options",\n    "Content-Security-Policy", \n    "Strict-Transport-Security"\n]\nfor h in headers_to_check:\n    status = "✓" if h in r.headers else "✗ MISSING"\n    print(f"{status} {h}")`,cat:'security',desc:'Check which security headers are present or missing. Missing X-Frame-Options = clickjacking risk. Missing CSP = XSS risk. You built this in Day 10\'s web recon tool.'},
+  {title:'String splitting for parsing',code:`# Parse HTTP response headers\nraw = "Content-Type: application/json; charset=utf-8"\nname, value = raw.split(": ", 1)  # maxsplit=1\nprint(name)   # Content-Type\nprint(value)  # application/json; charset=utf-8`,cat:'essential',desc:'split(sep, maxsplit) with maxsplit=1 splits only at the first occurrence — critical when the value itself contains the separator. Parsing HTTP, logs, CSV all use this pattern.'},
+  {title:'List comprehension filter',code:`# Filter only open ports from results\nresults = [(22,"ssh",0),(80,"http",0),(8080,"http",111)]\nopen_ports = [\n    (port,svc) \n    for port,svc,code in results \n    if code == 0\n]\n# [(22, 'ssh'), (80, 'http')]`,cat:'essential',desc:'One-line filter is cleaner than a for loop with if. The pattern: [expression for item in iterable if condition]. You\'ll use this to filter scan results, log entries, and API responses constantly.'},
+  {title:'Exception types matter',code:`import requests\ntry:\n    r = requests.get(url, timeout=5)\nexcept requests.Timeout:\n    print("Too slow")\nexcept requests.ConnectionError:\n    print("Down or unreachable")\nexcept requests.HTTPError as e:\n    print(f"HTTP error: {e}")`,cat:'essential',desc:'Catch specific exceptions, not generic Exception. Specific catches let you handle each failure differently: timeout = maybe retry, ConnectionError = skip and log, HTTPError = check status code and decide.'},
+  {title:'Context manager for files',code:`# The RIGHT way (with statement)\nwith open("results.txt", "w") as f:\n    f.write("scan results\\n")\n# File auto-closed here, even on error\n\n# WRONG (file might stay open)\nf = open("results.txt", "w")\nf.write("results\\n")\nf.close()  # forgotten? leak!`,cat:'essential',desc:'The "with" statement guarantees the file closes even if an exception occurs. Without it, if your script crashes mid-write, the file handle leaks — OS limits file handles, so this causes "Too many open files" errors after enough leaks.'},
+];
+
+function buildPatterns(){
+  const g=document.getElementById('patternGrid');
+  patterns.forEach((p,i)=>{
+    const d=document.createElement('div');
+    d.className='pattern-card'+(S[`pat-${i}`]?' open':'');
+    d.innerHTML=`<span class="pc-tag ${p.cat}">${p.cat.toUpperCase()}</span>
+      <div class="pc-title">${p.title}</div>
+      <pre class="pc-code">${p.code}</pre>
+      <div class="pc-desc">${p.desc}</div>`;
+    d.addEventListener('click',()=>{d.classList.toggle('open');S[`pat-${i}`]=d.classList.contains('open');save();});
+    g.appendChild(d);
+  });
+}
+
+// Regex tester
+const presets=[
+  {label:'Email',pattern:'[\\w.+-]+@[\\w-]+\\.[\\w.-]+'},
+  {label:'IP Address',pattern:'\\b\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\b'},
+  {label:'Phone (US)',pattern:'\\d{3}-\\d{3}-\\d{4}'},
+  {label:'AWS Key',pattern:'AKIA[A-Z0-9]{16}'},
+  {label:'"password"',pattern:'(?i)password[^\\n]{0,60}'},
+  {label:'Version number',pattern:'\\d+\\.\\d+\\.\\d+'},
+];
+
+function buildPresets(){
+  const c=document.getElementById('regexPresets');
+  presets.forEach(p=>{
+    const btn=document.createElement('button');
+    btn.className='preset-btn';
+    btn.textContent=p.label;
+    btn.addEventListener('click',()=>{
+      document.getElementById('regexPattern').value=p.pattern;
+      runRegex();
+    });
+    c.appendChild(btn);
+  });
+}
+
+function runRegex(){
+  const pattern=document.getElementById('regexPattern').value;
+  const text=document.getElementById('regexText').innerText;
+  const result=document.getElementById('regexResult');
+  const meta=document.getElementById('regexMeta');
+  if(!pattern){result.textContent='// Type a pattern above';meta.textContent='';return;}
+  try{
+    const re=new RegExp(pattern,'g');
+    const matches=[...text.matchAll(re)];
+    if(matches.length===0){
+      result.innerHTML=`<span style="color:var(--text-dim)">// No matches found</span>`;
+      meta.textContent=`PATTERN: /${pattern}/  |  MATCHES: 0`;
+      return;
+    }
+    const found=matches.map(m=>`<span style="color:var(--green)">${m[0].replace(/</g,'&lt;')}</span>`);
+    result.innerHTML=found.join('\n');
+    meta.textContent=`PATTERN: /${pattern}/  |  MATCHES: ${matches.length}`;
+    S[`regex-last`]=pattern;save();
+  }catch(e){
+    result.innerHTML=`<span style="color:var(--red)">// Invalid regex: ${e.message}</span>`;
+    meta.textContent='';
+  }
+}
+if(S['regex-last'])document.getElementById('regexPattern').value=S['regex-last'];
+
+// Quiz
+document.querySelectorAll('.q-opts').forEach(opts=>{
+  const qid=opts.dataset.q;
+  const saved=S[`q-${qid}`];
+  const btns=opts.querySelectorAll('.q-opt');
+  if(saved!==undefined){
+    btns.forEach((b,i)=>{
+      b.classList.add('locked');
+      if(b.dataset.c==='true')b.classList.add('correct');
+      if(i===saved&&b.dataset.c!=='true')b.classList.add('wrong');
+    });
+    const fb=opts.parentElement.querySelector('.q-fb');
+    const ok=btns[saved].dataset.c==='true';
+    fb.innerHTML=`<span class="vt ${ok?'ok':'bad'}">${ok?'CORRECT':'INCORRECT'}</span>${btns[saved].dataset.f}`;
+    fb.classList.add('show');
+  }
+  btns.forEach((btn,i)=>{
+    btn.addEventListener('click',()=>{
+      if(btn.classList.contains('locked'))return;
+      const ok=btn.dataset.c==='true';
+      btns.forEach(b=>{b.classList.add('locked');if(b.dataset.c==='true')b.classList.add('correct');});
+      if(!ok)btn.classList.add('wrong');
+      const fb=opts.parentElement.querySelector('.q-fb');
+      fb.innerHTML=`<span class="vt ${ok?'ok':'bad'}">${ok?'CORRECT':'INCORRECT'}</span>${btn.dataset.f}`;
+      fb.classList.add('show');
+      S[`q-${qid}`]=i;save();
+    });
+  });
+});
+
+buildPatterns();buildPresets();runRegex();
+console.log('%c▸ CODE LAB 04 — DAY 4 // PYTHON FOR SECURITY',`font-family:monospace;font-weight:bold;color:#bf5af2;font-size:14px`);
+</script>
+</body>
+</html>
