@@ -60,6 +60,8 @@ strong{color:#fff;font-weight:600;}
 .app-content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;position:relative;}
 .page{display:none;min-height:100%;padding-bottom:40px;}
 .page.active{display:block;}
+.page.no-scroll{position:absolute;inset:0;padding-bottom:0;display:none;}
+.page.no-scroll.active{display:flex;flex-direction:column;}
 
 .app-tabbar{
   flex-shrink:0;display:flex;
@@ -162,7 +164,7 @@ strong{color:#fff;font-weight:600;}
 .day-check{color:var(--green);font-size:16px;flex-shrink:0;}
 
 /* ============ CONTENT FRAME (for embedded lesson pages) ============ */
-.content-frame{width:100%;height:100%;border:none;background:var(--bg);}
+.content-frame{width:100%;flex:1;border:none;background:var(--bg);}
 
 /* ============ NOTES LIST PAGE ============ */
 .notes-search{
@@ -299,12 +301,12 @@ strong{color:#fff;font-weight:600;}
     </div>
 
     <!-- LESSON VIEWER (iframe-based, loads the actual interactive HTML) -->
-    <div class="page" id="page-lesson">
+    <div class="page no-scroll" id="page-lesson">
       <iframe class="content-frame" id="lessonFrame"></iframe>
     </div>
 
     <!-- INTERVIEW PREP -->
-    <div class="page" id="page-interview">
+    <div class="page no-scroll" id="page-interview">
       <iframe class="content-frame" id="interviewFrame"></iframe>
     </div>
 

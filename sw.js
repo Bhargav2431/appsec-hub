@@ -5,13 +5,16 @@
 // whenever you add new lesson/note files so the cache refreshes.
 // ============================================================
 
-const CACHE_VERSION = 'appsec-hub-v1';
+const CACHE_VERSION = 'appsec-hub-v2';
+
+// These are the app "shell" files — they change every time you ship an update.
+// We use network-first for these so a phone with an old cached version
+// always picks up new code on next load (as long as it has internet that moment).
+// Everything else (lessons, notes) uses cache-first since that content
+// is more static and you want instant offline loads.
+const SHELL_ASSETS = ['./', './index.html', './app.js', './data.js', './sw.js'];
 
 const CORE_ASSETS = [
-  './',
-  './index.html',
-  './app.js',
-  './data.js',
   './manifest.json',
   './icon.svg',
 ];
@@ -35,7 +38,7 @@ const NOTE_ASSETS = [
   './notes/github-push-guide.md',
 ];
 
-const ALL_ASSETS = [...CORE_ASSETS, ...LESSON_ASSETS, ...NOTE_ASSETS];
+const ALL_ASSETS = [...SHELL_ASSETS, ...CORE_ASSETS, ...LESSON_ASSETS, ...NOTE_ASSETS];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -50,6 +53,12 @@ self.addEventListener('install', (event) => {
     })
   );
   self.skipWaiting();
+});
+
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 self.addEventListener('activate', (event) => {
@@ -67,14 +76,39 @@ self.addEventListener('fetch', (event) => {
   // Only handle GET requests within our own origin
   if (event.request.method !== 'GET') return;
 
+  const url = new URL(event.request.url);
+  const path = url.pathname;
+  const isShellRequest =
+    path.endsWith('/') ||
+    path.endsWith('/index.html') ||
+    path.endsWith('/app.js') ||
+    path.endsWith('/data.js') ||
+    path.endsWith('/sw.js');
+
+  if (isShellRequest) {
+    // NETWORK-FIRST: always try to get the latest shell code.
+    // Falls back to cache only if genuinely offline.
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          if (response && response.status === 200) {
+            const clone = response.clone();
+            caches.open(CACHE_VERSION).then((cache) => cache.put(event.request, clone));
+          }
+          return response;
+        })
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  // CACHE-FIRST: lessons, notes, icons — static content, instant offline loads.
   event.respondWith(
     caches.match(event.request).then((cached) => {
       if (cached) return cached;
 
       return fetch(event.request)
         .then((response) => {
-          // Cache anything new we successfully fetch (e.g. a newly
-          // added lesson file) so it's available offline next time.
           if (response && response.status === 200) {
             const clone = response.clone();
             caches.open(CACHE_VERSION).then((cache) => cache.put(event.request, clone));
@@ -82,7 +116,6 @@ self.addEventListener('fetch', (event) => {
           return response;
         })
         .catch(() => {
-          // Offline and not cached — return a minimal fallback for HTML requests
           if (event.request.headers.get('accept')?.includes('text/html')) {
             return new Response(
               '<html><body style="background:#0a0a0f;color:#9a93b0;font-family:sans-serif;padding:40px;text-align:center;"><h2 style="color:#fff;">This page isn\'t cached yet</h2><p>Connect to the internet once to download it, then it\'ll work offline forever.</p></body></html>',
