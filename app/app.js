@@ -368,7 +368,7 @@ function renderMarkdown(md) {
   html = html.replace(/(?<!\*)\*([^*]+?)\*(?!\*)/g, '<em>$1</em>');
 
   // Inline code
-  html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+  html = html.replace(/`([^`]+)`/g, (m, code) => `<code>${code.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</code>`);
 
   // Tables (simple pipe-table support)
   html = html.replace(/^\|(.+)\|\s*\n\|[\s:|-]+\|\s*\n((?:\|.*\|\s*\n?)*)/gim, (m, header, body) => {

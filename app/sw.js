@@ -86,6 +86,14 @@ self.addEventListener('fetch', (event) => {
   // Only handle GET requests within our own origin
   if (event.request.method !== 'GET') return;
 
+  // The Cache API only supports http/https requests. Browser extensions
+  // (ad blockers, password managers, etc.) sometimes generate their own
+  // chrome-extension:// or other non-http requests that pass through this
+  // listener — caching those throws. Let the browser handle those normally.
+  if (!event.request.url.startsWith('http://') && !event.request.url.startsWith('https://')) {
+    return;
+  }
+
   const url = new URL(event.request.url);
   const path = url.pathname;
   const isShellRequest =

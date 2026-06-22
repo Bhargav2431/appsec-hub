@@ -141,7 +141,7 @@ function renderMarkdown(md){
   html=html.replace(/(<blockquote>.*<\/blockquote>\n?)+/g,m=>m.replace(/<\/blockquote>\n?<blockquote>/g,'<br>'));
   html=html.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
   html=html.replace(/(?<!\*)\*([^*]+?)\*(?!\*)/g,'<em>$1</em>');
-  html=html.replace(/`([^`]+)`/g,'<code>$1</code>');
+  html=html.replace(/`([^`]+)`/g,(m,code)=>`<code>${code.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</code>`);
   html=html.replace(/^\|(.+)\|\s*\n\|[\s:|-]+\|\s*\n((?:\|.*\|\s*\n?)*)/gim,(m,header,body)=>{
     const headers=header.split('|').map(h=>h.trim()).filter(Boolean);
     const rows=body.trim().split('\n').map(r=>r.split('|').map(c=>c.trim()).filter((c,i,a)=>!(i===0&&c==='')&&!(i===a.length-1&&c==='')));
