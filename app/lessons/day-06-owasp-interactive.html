@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Day 6 — The OWASP Top 10</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f0ead8;--bg1:#e8dfc8;--bg2:#dccfae;--card:#f7f1e1;
+  --line:#c4b48c;--line-hi:#9c8456;
+  --text:#2e2418;--text2:#5c4d36;--text3:#8a7a5c;
+  --burgundy:#5c1f2e;--burgundy-light:#7a2e40;
+  --gold:#9c7a3c;--gold-light:#b8985c;
+  --sage:#4d6655;--red:#8b2e2e;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  background:var(--bg);color:var(--text);font-family:'Source Serif 4',serif;
+  font-size:16px;line-height:1.7;-webkit-font-smoothing:antialiased;
+  background-image:radial-gradient(circle at 50% 0%, rgba(156,122,60,.06) 0%, transparent 50%);
+}
+main{max-width:760px;margin:0 auto;padding:0 0 100px;}
+strong{color:var(--burgundy);font-weight:700;}
+code{font-family:'JetBrains Mono',monospace;background:var(--bg2);color:var(--burgundy);padding:2px 7px;font-size:.82em;border:1px solid var(--line);}
+
+/* MUSEUM ENTRANCE / TITLE */
+.entrance{text-align:center;padding:48px 24px 36px;border-bottom:3px double var(--gold);}
+.wing-label{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.3em;color:var(--gold);margin-bottom:16px;}
+h1.exhibit-title{
+  font-family:'Source Serif 4',serif;font-weight:700;font-size:clamp(32px,6vw,52px);
+  color:var(--burgundy);line-height:1.1;letter-spacing:-.01em;margin-bottom:14px;
+}
+.exhibit-subtitle{font-size:16px;color:var(--text2);font-style:italic;max-width:480px;margin:0 auto 20px;}
+.curator-note{
+  display:inline-block;font-family:'JetBrains Mono',monospace;font-size:11px;
+  color:var(--text3);letter-spacing:.05em;border-top:1px solid var(--line);padding-top:12px;
+}
+
+.section-intro{padding:32px 24px 0;}
+.section-intro p{font-size:16px;line-height:1.8;color:var(--text2);}
+.section-intro p+p{margin-top:12px;}
+
+/* MNEMONIC PLAQUE */
+.mnemonic-plaque{
+  margin:28px 24px 0;background:var(--burgundy);color:var(--bg);
+  padding:22px 26px;text-align:center;position:relative;
+}
+.mnemonic-plaque::before,.mnemonic-plaque::after{
+  content:"";position:absolute;top:6px;bottom:6px;width:1px;background:rgba(240,234,216,.3);
+}
+.mnemonic-plaque::before{left:6px;}
+.mnemonic-plaque::after{right:6px;}
+.plaque-label{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.25em;color:var(--gold-light);margin-bottom:10px;}
+.plaque-text{font-size:17px;font-style:italic;line-height:1.6;}
+.plaque-text strong{color:#fff;}
+
+/* GALLERY WALL — the 10 exhibit cards */
+.gallery-wall{padding:32px 24px 0;display:flex;flex-direction:column;gap:14px;}
+.gallery-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px;}
+.gallery-title{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.2em;color:var(--gold);}
+.gallery-count{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);}
+
+.exhibit-card{
+  background:var(--card);border:1px solid var(--line);position:relative;
+  cursor:pointer;transition:box-shadow .2s,border-color .2s;
+}
+.exhibit-card:hover{border-color:var(--gold);box-shadow:0 2px 12px rgba(92,31,46,.08);}
+.exhibit-card.open{border-color:var(--burgundy);}
+.exhibit-header{padding:18px 20px;display:flex;align-items:center;gap:18px;}
+.exhibit-rank{
+  font-family:'Source Serif 4',serif;font-weight:700;font-size:30px;color:var(--gold);
+  line-height:1;width:62px;flex-shrink:0;text-align:center;
+}
+.exhibit-card.open .exhibit-rank{color:var(--burgundy);}
+.exhibit-name-block{flex:1;}
+.exhibit-name{font-family:'Source Serif 4',serif;font-weight:600;font-size:18px;color:var(--text);margin-bottom:3px;}
+.exhibit-short{font-size:13.5px;color:var(--text3);font-style:italic;}
+.exhibit-chevron{color:var(--text3);font-size:14px;transition:transform .2s;}
+.exhibit-card.open .exhibit-chevron{transform:rotate(90deg);color:var(--burgundy);}
+
+.exhibit-body{display:none;padding:0 20px 22px;border-top:1px dashed var(--line);}
+.exhibit-card.open .exhibit-body{display:block;}
+.exhibit-section{margin-top:16px;}
+.exhibit-label{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.2em;color:var(--gold);margin-bottom:6px;}
+.exhibit-section p{font-size:14.5px;line-height:1.7;color:var(--text2);}
+.specimen-box{
+  background:var(--bg1);border-left:3px solid var(--red);padding:10px 14px;margin-top:10px;
+  font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--text);
+}
+.remedy-box{
+  background:rgba(77,102,85,.08);border-left:3px solid var(--sage);padding:10px 14px;margin-top:8px;
+  font-size:13px;color:var(--text2);
+}
+.remedy-box strong{color:var(--sage);}
+
+/* AUDIO GUIDE / TIMELINE STRIP */
+.timeline-strip{
+  margin:36px 24px 0;background:var(--bg1);border:1px solid var(--line);padding:20px 22px;
+}
+.timeline-label{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.2em;color:var(--gold);margin-bottom:14px;}
+.timeline-track{display:flex;overflow-x:auto;gap:0;padding-bottom:6px;}
+.timeline-rank{
+  flex-shrink:0;width:54px;text-align:center;cursor:pointer;padding:6px 2px;border-bottom:3px solid var(--line);
+}
+.timeline-rank.active{border-bottom-color:var(--burgundy);}
+.timeline-rank-num{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13px;color:var(--text3);}
+.timeline-rank.active .timeline-rank-num{color:var(--burgundy);}
+
+/* QUIZ - "visitor survey" framing */
+.survey-box{margin:36px 24px 0;background:var(--card);border:2px solid var(--burgundy);padding:0;}
+.survey-head{
+  background:var(--burgundy);color:var(--bg);padding:14px 22px;
+  display:flex;justify-content:space-between;align-items:center;
+}
+.survey-title{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.15em;}
+.survey-progress{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--gold-light);}
+.survey-q{padding:22px;border-bottom:1px dashed var(--line);}
+.survey-q:last-child{border-bottom:none;}
+.survey-prompt{font-size:16px;color:var(--text);margin-bottom:14px;line-height:1.5;}
+.survey-opts{display:flex;flex-direction:column;gap:8px;}
+.survey-opt{
+  text-align:left;padding:11px 16px;background:var(--bg);border:1px solid var(--line);
+  color:var(--text2);font-family:'Source Serif 4',serif;font-size:14.5px;cursor:pointer;transition:all .15s;
+}
+.survey-opt:hover:not(.locked){border-color:var(--burgundy);color:var(--burgundy);}
+.survey-opt.correct{background:rgba(77,102,85,.1);border-color:var(--sage);color:var(--sage);font-weight:600;}
+.survey-opt.wrong{background:rgba(139,46,46,.08);border-color:var(--red);color:var(--red);}
+.survey-opt.locked{cursor:default;}
+.survey-opt.locked:not(.correct):not(.wrong){opacity:.45;}
+.survey-fb{margin-top:12px;padding:12px 16px;font-size:13.5px;color:var(--text2);background:var(--bg1);border-left:3px solid var(--gold);display:none;font-style:italic;}
+.survey-fb.show{display:block;}
+
+.exit-plaque{padding:32px 24px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);letter-spacing:.1em;border-top:1px solid var(--line);margin-top:24px;}
+
+@media(max-width:680px){
+  .entrance{padding:36px 18px 28px;}
+  .gallery-wall,.section-intro,.mnemonic-plaque,.timeline-strip,.survey-box{margin-left:16px;margin-right:16px;padding-left:16px;padding-right:16px;}
+  .section-intro{padding-left:18px;padding-right:18px;}
+  .gallery-wall{padding-left:18px;padding-right:18px;}
+}
+</style>
+</head>
+<body>
+<main>
+
+<div class="entrance">
+  <div class="wing-label">PERMANENT COLLECTION · WING 06</div>
+  <h1 class="exhibit-title">The OWASP<br>Top Ten</h1>
+  <p class="exhibit-subtitle">Ten specimens, catalogued and ranked by the field's own standards body. Every AppSec interview will ask you to name them from memory.</p>
+  <div class="curator-note">DAY 6 OF 60 — FOUNDATIONS PHASE</div>
+</div>
+
+<div class="section-intro">
+  <p>OWASP — the Open Worldwide Application Security Project — maintains the Top 10: a periodically-updated ranking of the most critical risks to web applications, built from real-world breach data and practitioner surveys. It is the closest thing the AppSec field has to a canonical reference text.</p>
+  <p>Walk through this gallery once. Then walk through it again from memory. By the end of today you should be able to recite all ten ranks cold, in order, without looking.</p>
+</div>
+
+<div class="mnemonic-plaque">
+  <div class="plaque-label">MEMORY AID — RECITE THIS UNTIL IT STICKS</div>
+  <div class="plaque-text">"<strong>B</strong>ecause <strong>C</strong>ode <strong>I</strong>s <strong>I</strong>nsecure, <strong>S</strong>ecurity <strong>V</strong>ulnerabilities <strong>I</strong>dentify <strong>S</strong>oftware <strong>L</strong>iability <strong>S</strong>eriously"<br>
+  <span style="font-size:13px;opacity:.85;">Broken · Crypto · Injection · Insecure Design · Security Misconfig · Vulnerable Components · Ident/Auth · Software Integrity · Logging · SSRF</span></div>
+</div>
+
+<div class="timeline-strip">
+  <div class="timeline-label">▸ JUMP TO A RANK</div>
+  <div class="timeline-track" id="timelineTrack"></div>
+</div>
+
+<div class="gallery-wall">
+  <div class="gallery-head">
+    <div class="gallery-title">EXHIBIT HALL — TAP ANY SPECIMEN</div>
+    <div class="gallery-count" id="openCount">0 / 10 VIEWED</div>
+  </div>
+  <div id="exhibitCards"></div>
+</div>
+
+<div class="survey-box">
+  <div class="survey-head">
+    <div class="survey-title">VISITOR SURVEY</div>
+    <div class="survey-progress" id="surveyProgress">0 / 5</div>
+  </div>
+  <div id="surveyItems"></div>
+</div>
+
+<div class="exit-plaque">END OF WING 06 — PROCEED TO DAY 7, BURP SUITE DEEP DIVE</div>
+
+</main>
+
+<script>
+const SK='day6-v1';
+let S={};
+try{S=JSON.parse(localStorage.getItem(SK)||'{}')}catch(e){}
+function save(){try{localStorage.setItem(SK,JSON.stringify(S))}catch(e){}}
+
+const owasp=[
+  {rank:'A01',name:'Broken Access Control',short:'Users doing things they shouldn\'t be able to do',desc:'The most commonly reported category. A user accesses, modifies, or deletes a resource that proper authorization checks should have blocked.',specimen:'GET /profile?id=42 → change to ?id=43 → see a stranger\'s private profile, no error',remedy:'Enforce authorization server-side on every single request. Never infer permission from a hidden field, a frontend route guard, or "the user wouldn\'t normally guess this ID."'},
+  {rank:'A02',name:'Cryptographic Failures',short:'Sensitive data exposed through weak or absent encryption',desc:'Covers data in transit and at rest. Includes outdated algorithms (MD5, SHA1, DES), missing HTTPS, hardcoded keys, and plaintext storage of anything sensitive.',specimen:'Database column "password_hash" actually contains MD5("password123") — reversible in seconds',remedy:'HTTPS everywhere with HSTS. bcrypt or argon2 for passwords specifically. AES-256 for data at rest. Never invent your own cipher.'},
+  {rank:'A03',name:'Injection',short:'Untrusted data sent straight into an interpreter',desc:'SQL, OS command, LDAP, and NoSQL injection all live here. The interpreter can\'t distinguish the attacker\'s payload from the developer\'s intended command.',specimen:'Login field accepts: admin\' OR \'1\'=\'1 — and the WHERE clause becomes permanently true',remedy:'Parameterized queries, always. Input validation as a second layer, never the only layer. Treat every interpreter call as hostile until proven otherwise.'},
+  {rank:'A04',name:'Insecure Design',short:'The blueprint itself was flawed before a line of code was written',desc:'Distinct from a coding mistake — this is a missing security requirement at the architecture stage. No amount of careful implementation fixes a fundamentally unsafe design.',specimen:'Password reset flow relies on "What is your mother\'s maiden name?" — answerable via public records or a five-minute social media search',remedy:'Threat modeling during design, not after launch. Build security requirements into user stories the same way you\'d build in a performance requirement.'},
+  {rank:'A05',name:'Security Misconfiguration',short:'The default settings were never hardened',desc:'Unnecessary features left enabled, default credentials never rotated, verbose error pages leaking stack traces, missing security headers — the gap between "works" and "deployed safely."',specimen:'Production server still answers on /admin with the factory-default admin:admin login',remedy:'Harden every config explicitly. Remove what you don\'t need. Treat "it came with defaults" as a finding, not an excuse.'},
+  {rank:'A06',name:'Vulnerable & Outdated Components',short:'Running a dependency with a publicly known CVE',desc:'Modern apps are assembled from hundreds of third-party packages. Each one is a piece of someone else\'s code running with your app\'s privileges — and each one can quietly fall out of date.',specimen:'Production still running Log4j 2.14.1 months after Log4Shell (CVE-2021-44228) made global news',remedy:'Automated dependency scanning — Snyk, Dependabot, OWASP Dependency-Check. Subscribe to CVE feeds for your stack. Patch on a schedule, not "eventually."'},
+  {rank:'A07',name:'Identification & Authentication Failures',short:'The login system itself can be broken into',desc:'Weak password policies, no rate limiting on login attempts, predictable session tokens, missing multi-factor authentication — the front door has a flimsy lock.',specimen:'Login endpoint accepts unlimited attempts per second with no lockout, no CAPTCHA, no delay',remedy:'Rate limiting and account lockout. MFA wherever the stakes justify it. Session tokens generated with a cryptographically secure random source, never sequential.'},
+  {rank:'A08',name:'Software & Data Integrity Failures',short:'Trusting an update or a serialized object you can\'t actually verify',desc:'Includes insecure deserialization — an attacker crafts a malicious serialized object that executes code when the application unpacks it — and unverified auto-updates from untrusted sources.',specimen:'Application auto-installs updates from a CDN with no signature check — compromise the CDN, compromise every installation',remedy:'Verify digital signatures before trusting any update. Use Subresource Integrity (SRI) for third-party scripts. Avoid deserializing data from untrusted sources entirely where possible.'},
+  {rank:'A09',name:'Security Logging & Monitoring Failures',short:'A breach nobody noticed because nobody was watching',desc:'Not a vulnerability that lets an attacker in — a vulnerability that lets them stay, undetected, for months. The 2021 average breach went undetected for nearly 200 days.',specimen:'A real incident: attackers had quiet access to a production database for 197 days before anyone noticed the exfiltration',remedy:'Comprehensive audit logging of security-relevant events. Real-time alerting, not log files nobody reads. A genuine incident response plan, rehearsed before you need it.'},
+  {rank:'A10',name:'Server-Side Request Forgery (SSRF)',short:'The server is tricked into making a request on the attacker\'s behalf',desc:'The newest addition to the list, and arguably the most dangerous in cloud environments — because the server itself has network access and credentials the attacker doesn\'t.',specimen:'A "fetch this image URL" feature is pointed at http://169.254.169.254/ — the AWS metadata service — and returns the instance\'s IAM credentials',remedy:'Whitelist allowed destination URLs explicitly. Block requests to private IP ranges and the cloud metadata address by default, not as an afterthought.'},
+];
+
+function buildTimeline(){
+  const track=document.getElementById('timelineTrack');
+  owasp.forEach((o,i)=>{
+    const el=document.createElement('div');
+    el.className='timeline-rank';
+    el.innerHTML=`<div class="timeline-rank-num">${o.rank}</div>`;
+    el.addEventListener('click',()=>{
+      document.getElementById(`exhibit-${i}`).scrollIntoView({behavior:'smooth',block:'center'});
+      openExhibit(i,true);
+    });
+    track.appendChild(el);
+  });
+}
+
+function buildExhibits(){
+  const container=document.getElementById('exhibitCards');
+  owasp.forEach((o,i)=>{
+    const card=document.createElement('div');
+    card.className='exhibit-card'+(S[`open-${i}`]?' open':'');
+    card.id=`exhibit-${i}`;
+    card.innerHTML=`
+      <div class="exhibit-header">
+        <div class="exhibit-rank">${o.rank}</div>
+        <div class="exhibit-name-block">
+          <div class="exhibit-name">${o.name}</div>
+          <div class="exhibit-short">${o.short}</div>
+        </div>
+        <div class="exhibit-chevron">▶</div>
+      </div>
+      <div class="exhibit-body">
+        <div class="exhibit-section">
+          <div class="exhibit-label">CATALOGUE DESCRIPTION</div>
+          <p>${o.desc}</p>
+        </div>
+        <div class="exhibit-section">
+          <div class="exhibit-label">SPECIMEN — A REAL EXAMPLE</div>
+          <div class="specimen-box">${o.specimen}</div>
+        </div>
+        <div class="exhibit-section">
+          <div class="exhibit-label">CONSERVATION — HOW IT'S FIXED</div>
+          <div class="remedy-box"><strong>Remedy:</strong> ${o.remedy}</div>
+        </div>
+      </div>
+    `;
+    card.querySelector('.exhibit-header').addEventListener('click',()=>{
+      openExhibit(i);
+    });
+    container.appendChild(card);
+  });
+  updateOpenCount();
+}
+
+function openExhibit(i,forceOpen){
+  const card=document.getElementById(`exhibit-${i}`);
+  if(forceOpen){
+    card.classList.add('open');
+  }else{
+    card.classList.toggle('open');
+  }
+  S[`open-${i}`]=card.classList.contains('open');
+  save();
+  document.querySelectorAll('.timeline-rank').forEach((t,ti)=>t.classList.toggle('active',ti===i));
+  updateOpenCount();
+}
+
+function updateOpenCount(){
+  const viewed=owasp.filter((_,i)=>S[`open-${i}`]).length;
+  document.getElementById('openCount').textContent=`${viewed} / 10 VIEWED`;
+}
+
+const survey=[
+  {q:'A web app lets any logged-in user view /invoice?id=N for any N, with no check that the invoice belongs to them. Which OWASP rank is this?',opts:['A01 — Broken Access Control','A03 — Injection','A07 — Authentication Failures','A09 — Logging Failures'],correct:0,fb:'This is the textbook IDOR pattern, and IDOR sits squarely under A01 Broken Access Control — the most frequently reported category in the entire Top 10.'},
+  {q:'A company discovers attackers had quiet access to their database for over six months before anyone noticed. Which rank failed them, even though it wasn\'t the original entry point?',opts:['A02 — Cryptographic Failures','A06 — Vulnerable Components','A09 — Logging & Monitoring Failures','A10 — SSRF'],correct:2,fb:'A09 isn\'t usually the way attackers get in — it\'s the reason they\'re able to stay once they\'re in. No logging, no alerting, no one watching the door after it\'s already open.'},
+  {q:'Which rank specifically covers a server being tricked into requesting the AWS internal metadata endpoint on an attacker\'s behalf?',opts:['A04 — Insecure Design','A08 — Software Integrity Failures','A10 — SSRF','A05 — Security Misconfiguration'],correct:2,fb:'This is the canonical SSRF (Server-Side Request Forgery) pattern — A10, and the newest addition to the list, added specifically because of how dangerous it became once everything moved to the cloud.'},
+  {q:'A password reset flow uses "What city were you born in?" as its only verification step. What\'s the most accurate classification?',opts:['A03 — Injection, because the answer could contain SQL syntax','A04 — Insecure Design, because the entire approach was unsafe from the blueprint stage','A07 — Authentication Failures, because passwords weren\'t used','This isn\'t a real vulnerability category'],correct:1,fb:'This is Insecure Design (A04) rather than a coding bug — the flaw exists in the very concept of the flow, before any code was written. No amount of careful implementation of "ask a security question" makes that approach safe.'},
+  {q:'Running a library version with a publicly disclosed CVE that you simply haven\'t patched yet falls under which rank?',opts:['A06 — Vulnerable and Outdated Components','A08 — Software & Data Integrity Failures','A02 — Cryptographic Failures','A01 — Broken Access Control'],correct:0,fb:'A06 exists specifically for this: known, disclosed vulnerabilities in dependencies you control the patching schedule for. The Log4Shell incident is the most famous real-world specimen of this exact category.'},
+];
+
+function buildSurvey(){
+  const c=document.getElementById('surveyItems');
+  survey.forEach((q,qi)=>{
+    const saved=S[`sv${qi}`];
+    const div=document.createElement('div');
+    div.className='survey-q';
+    div.innerHTML=`<div class="survey-prompt">${qi+1}. ${q.q}</div>
+    <div class="survey-opts">${q.opts.map((o,oi)=>`<button class="survey-opt ${saved!==undefined?'locked':''} ${saved!==undefined&&oi===q.correct?'correct':''} ${saved!==undefined&&oi===saved&&oi!==q.correct?'wrong':''}" data-oi="${oi}">${o}</button>`).join('')}</div>
+    <div class="survey-fb ${saved!==undefined?'show':''}" id="svfb${qi}">${saved!==undefined?q.fb:''}</div>`;
+    c.appendChild(div);
+    if(saved===undefined){
+      div.querySelectorAll('.survey-opt').forEach((btn,oi)=>{
+        btn.addEventListener('click',()=>{
+          div.querySelectorAll('.survey-opt').forEach((b,bi)=>{b.classList.add('locked');if(bi===q.correct)b.classList.add('correct');});
+          if(oi!==q.correct)btn.classList.add('wrong');
+          document.getElementById(`svfb${qi}`).textContent=q.fb;
+          document.getElementById(`svfb${qi}`).classList.add('show');
+          S[`sv${qi}`]=oi;save();
+          updateSurveyProgress();
+        });
+      });
+    }
+  });
+  updateSurveyProgress();
+}
+function updateSurveyProgress(){
+  const done=survey.filter((_,qi)=>S[`sv${qi}`]!==undefined).length;
+  document.getElementById('surveyProgress').textContent=`${done} / ${survey.length}`;
+}
+
+buildTimeline();
+buildExhibits();
+buildSurvey();
+</script>
+</body>
+</html>

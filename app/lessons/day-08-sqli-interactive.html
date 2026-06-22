@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Day 8 — SQL Injection Breach Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#020503;--bg1:#040a05;--bg2:#081208;--bg3:#0d1d0d;
+  --line:#0f3d12;--line-hi:#1a6620;
+  --text:#a8e8a8;--text2:#5fa860;--text3:#2e602e;
+  --green:#39ff14;--green-dim:#1a7a08;--green-glow:rgba(57,255,20,.15);
+  --red:#ff1f3d;--red-dim:#7a0010;--red-glow:rgba(255,31,61,.15);
+  --amber:#ffb800;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;
+  font-size:15px;line-height:1.7;-webkit-font-smoothing:antialiased;
+}
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:1;
+  background:repeating-linear-gradient(0deg,rgba(57,255,20,.02) 0px,rgba(57,255,20,.02) 1px,transparent 1px,transparent 3px);
+}
+main{max-width:800px;margin:0 auto;padding:0 0 100px;position:relative;}
+strong{color:#fff;font-weight:700;}
+code{font-family:'JetBrains Mono',monospace;background:var(--bg2);color:var(--green);padding:2px 6px;border:1px solid var(--line-hi);font-size:.85em;}
+
+/* BREACH ALERT HEADER */
+.alert-header{
+  padding:0;border-bottom:2px solid var(--red);position:relative;overflow:hidden;
+}
+.alert-strip{
+  background:var(--red);color:#000;padding:6px 20px;font-family:'JetBrains Mono',monospace;
+  font-size:11px;letter-spacing:.2em;display:flex;justify-content:space-between;align-items:center;
+  animation:strobe 2.4s infinite;
+}
+@keyframes strobe{0%,85%,100%{opacity:1;}90%{opacity:.6;}}
+.alert-body{padding:30px 24px 26px;background:linear-gradient(180deg,rgba(255,31,61,.06),transparent);}
+.breach-tag{font-size:11px;letter-spacing:.25em;color:var(--green);margin-bottom:12px;}
+h1.breach-title{
+  font-size:clamp(28px,5.5vw,44px);font-weight:700;color:#fff;line-height:1.1;
+  letter-spacing:-.01em;margin-bottom:10px;font-family:'JetBrains Mono',monospace;
+}
+h1.breach-title span{color:var(--red);}
+.breach-sub{font-size:14.5px;color:var(--text2);max-width:560px;}
+.breach-meta{display:flex;gap:0;margin-top:18px;border:1px solid var(--line-hi);flex-wrap:wrap;}
+.bm-item{flex:1;min-width:120px;padding:10px 14px;border-right:1px solid var(--line-hi);}
+.bm-item:last-child{border-right:none;}
+.bm-label{font-size:9px;letter-spacing:.15em;color:var(--text3);}
+.bm-val{font-size:13px;color:var(--green);font-weight:700;margin-top:2px;}
+
+.section{padding:30px 20px 0;}
+.sec-tag{font-size:11px;letter-spacing:.18em;color:var(--green);margin-bottom:14px;display:flex;align-items:center;gap:10px;}
+.sec-tag::after{content:"";flex:1;height:1px;background:var(--line);}
+.prose{font-size:14.5px;line-height:1.85;color:var(--text);}
+.prose p{margin-bottom:12px;}
+
+/* CODE BLOCKS */
+.code-block{
+  background:var(--bg);border:1px solid var(--line-hi);border-left:3px solid var(--green);
+  padding:16px 18px;margin:16px 0;font-family:'JetBrains Mono',monospace;font-size:13px;
+  line-height:1.7;overflow-x:auto;position:relative;
+}
+.code-block::before{content:attr(data-label);position:absolute;top:-10px;left:14px;background:var(--green);color:#000;font-size:9px;letter-spacing:.2em;padding:1px 10px;}
+.vuln-code{border-left-color:var(--red);}
+.vuln-code::before{background:var(--red);color:#fff;}
+.safe-code{border-left-color:var(--green);}
+.cm{color:var(--text3);}
+.cs{color:#7fffd4;}
+.cr{color:var(--red);}
+.cg{color:var(--green);}
+
+/* THREAT / INFO BOXES */
+.box{padding:16px 20px;margin:18px 0;position:relative;}
+.box-label{position:absolute;top:-10px;left:14px;font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.2em;padding:1px 10px;}
+.box p,.box li{font-size:14px;line-height:1.7;}
+.box ul,.box ol{margin-left:16px;margin-top:6px;}
+.box li::marker{color:var(--green);}
+.info{background:rgba(57,255,20,.04);border:1px solid var(--green-dim);border-left:4px solid var(--green);}
+.info .box-label{background:var(--green);color:#000;}
+.threat{background:rgba(255,31,61,.06);border:1px solid var(--red-dim);border-left:4px solid var(--red);}
+.threat .box-label{background:var(--red);color:#fff;}
+
+/* INJECTION TYPE CARDS */
+.type-grid{display:flex;flex-direction:column;gap:10px;margin:18px 0;}
+.type-card{background:var(--bg2);border:1px solid var(--line);cursor:pointer;transition:border-color .15s;}
+.type-card:hover{border-color:var(--green-dim);}
+.type-card.open{border-color:var(--green);}
+.type-head{display:flex;align-items:center;gap:14px;padding:14px 16px;}
+.type-num{
+  width:32px;height:32px;flex-shrink:0;border:1px solid var(--green);color:var(--green);
+  display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;
+}
+.type-name{font-weight:700;color:#fff;font-size:14px;}
+.type-short{font-size:12px;color:var(--text2);}
+.type-chevron{margin-left:auto;color:var(--text3);transition:transform .2s;}
+.type-card.open .type-chevron{transform:rotate(90deg);color:var(--green);}
+.type-body{display:none;padding:0 16px 16px;border-top:1px solid var(--line);}
+.type-card.open .type-body{display:block;}
+.type-body p{font-size:13px;color:var(--text2);line-height:1.7;margin-top:12px;}
+
+/* LIVE SQLI TERMINAL — the centerpiece */
+.terminal{
+  margin:22px 0;border:1px solid var(--green-dim);background:#010301;
+  box-shadow:0 0 0 1px rgba(57,255,20,.08), 0 0 40px rgba(57,255,20,.06);
+}
+.term-titlebar{
+  display:flex;align-items:center;gap:8px;padding:9px 14px;
+  background:var(--bg2);border-bottom:1px solid var(--line-hi);
+}
+.term-dot{width:9px;height:9px;border-radius:50%;}
+.term-titlebar-text{flex:1;text-align:center;font-size:11px;color:var(--text3);letter-spacing:.05em;}
+.term-body{padding:18px;}
+.term-prompt-row{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap;}
+.term-label{font-size:9px;letter-spacing:.15em;color:var(--text3);width:100%;margin-bottom:6px;}
+.term-input{
+  flex:1;min-width:180px;background:#000;border:1px solid var(--line-hi);color:var(--green);
+  font-family:'JetBrains Mono',monospace;font-size:13px;padding:10px 14px;outline:none;
+}
+.term-input:focus{border-color:var(--green);}
+.term-btn{
+  background:var(--green);color:#000;border:none;padding:10px 18px;
+  font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:.1em;cursor:pointer;
+}
+.term-presets{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;margin-bottom:14px;}
+.term-preset{
+  font-size:10px;padding:5px 11px;background:var(--bg2);border:1px solid var(--line-hi);
+  color:var(--text2);cursor:pointer;transition:all .15s;
+}
+.term-preset:hover{border-color:var(--green);color:var(--green);}
+.term-preset.danger:hover{border-color:var(--red);color:var(--red);}
+.term-query{
+  background:#000;border:1px solid var(--line);padding:12px 14px;font-size:12.5px;
+  margin-bottom:10px;word-break:break-all;color:var(--text2);
+}
+.term-output{
+  background:#000;border:1px solid var(--line);padding:12px 14px;font-size:12.5px;
+  min-height:60px;white-space:pre-wrap;word-break:break-all;line-height:1.8;
+}
+.flag-leak{color:var(--red);font-weight:700;}
+.flag-safe{color:var(--green);font-weight:700;}
+.inject-char{background:rgba(255,31,61,.2);color:var(--red);padding:0 2px;}
+
+/* COMPARE TABLE */
+.compare-table{width:100%;border-collapse:collapse;margin:16px 0;font-size:13px;}
+.compare-table th{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.1em;color:var(--green);padding:9px 12px;background:var(--bg2);text-align:left;border:1px solid var(--line);}
+.compare-table td{padding:9px 12px;border:1px solid var(--line);color:var(--text2);vertical-align:top;}
+
+/* QUIZ */
+.quiz-box{margin:32px 20px 0;border:1px solid var(--green-dim);background:var(--bg1);}
+.quiz-head{padding:14px 20px;border-bottom:1px solid var(--line-hi);display:flex;justify-content:space-between;align-items:center;background:var(--bg2);}
+.quiz-title{font-size:13px;letter-spacing:.1em;color:var(--green);}
+.quiz-progress{font-size:11px;color:var(--text3);}
+.q-item{padding:20px;border-bottom:1px solid var(--line);}
+.q-item:last-child{border-bottom:none;}
+.q-prompt{font-size:14.5px;color:#fff;margin-bottom:12px;line-height:1.5;}
+.q-opts{display:flex;flex-direction:column;gap:7px;}
+.q-opt{text-align:left;padding:9px 13px;background:#000;border:1px solid var(--line-hi);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:12.5px;cursor:pointer;transition:all .15s;}
+.q-opt:hover:not(.locked){border-color:var(--green);color:var(--green);}
+.q-opt.correct{background:rgba(57,255,20,.08);border-color:var(--green);color:var(--green);}
+.q-opt.wrong{background:rgba(255,31,61,.08);border-color:var(--red);color:var(--red);}
+.q-opt.locked{cursor:default;}
+.q-opt.locked:not(.correct):not(.wrong){opacity:.4;}
+.q-fb{margin-top:9px;padding:9px 13px;font-size:12px;color:var(--text2);background:var(--bg2);border-left:3px solid var(--line-hi);display:none;}
+.q-fb.show{display:block;}
+
+.footer-strip{padding:24px 20px;text-align:center;font-size:11px;color:var(--text3);letter-spacing:.08em;border-top:1px solid var(--line);margin-top:20px;}
+
+@media(max-width:680px){
+  .breach-meta{flex-direction:column;}
+  .bm-item{border-right:none;border-bottom:1px solid var(--line-hi);}
+  .bm-item:last-child{border-bottom:none;}
+}
+</style>
+</head>
+<body>
+<main>
+
+<div class="alert-header">
+  <div class="alert-strip"><span>⚠ SIMULATED BREACH ENVIRONMENT — TRAINING ONLY</span><span>SEV: CRITICAL</span></div>
+  <div class="alert-body">
+    <div class="breach-tag">DAY 8 OF 60 // FOUNDATIONS PHASE</div>
+    <h1 class="breach-title">SQL Injection<br><span>Breach Console</span></h1>
+    <p class="breach-sub">The most famous web vulnerability in existence. Find one in a real assessment and you've earned your seat at the table. Today you build the actual mental model — then break a login form with your own hands, safely, below.</p>
+    <div class="breach-meta">
+      <div class="bm-item"><div class="bm-label">VULN CLASS</div><div class="bm-val">OWASP A03</div></div>
+      <div class="bm-item"><div class="bm-label">ROOT CAUSE</div><div class="bm-val">UNSANITIZED INPUT</div></div>
+      <div class="bm-item"><div class="bm-label">FIX</div><div class="bm-val">PARAMETERIZED QUERIES</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="sec-tag">// THE ROOT CAUSE</div>
+  <div class="prose"><p>SQL injection happens when user-supplied input gets <strong>concatenated directly into a SQL query string</strong> instead of being treated as pure data. The database has no way to tell where the developer's intended command ends and the attacker's payload begins — to the database, it's all just one query.</p></div>
+
+  <div class="code-block vuln-code" data-label="VULNERABLE — NEVER DO THIS">
+<span class="cm"># Python — string concatenation</span>
+username = request.form[<span class="cs">"username"</span>]
+query = <span class="cs">f"SELECT * FROM users WHERE username = '{username}'"</span>
+db.execute(query)
+
+<span class="cm"># Java — same flaw</span>
+String query = <span class="cs">"SELECT * FROM users WHERE id = "</span> + userId;
+stmt.executeQuery(query);
+  </div>
+
+  <div class="code-block safe-code" data-label="SAFE — PARAMETERIZED QUERIES">
+<span class="cm"># Python — the database driver handles escaping</span>
+query = <span class="cs">"SELECT * FROM users WHERE username = ?"</span>
+db.execute(query, (username,))
+
+<span class="cm"># Java — PreparedStatement</span>
+PreparedStatement stmt = conn.prepareStatement(
+    <span class="cs">"SELECT * FROM users WHERE id = ?"</span>);
+stmt.setInt(1, userId);
+  </div>
+
+  <div class="box threat"><div class="box-label">WHY THIS WORKS</div><p>In the vulnerable version, the query structure and the user's data are the exact same string by the time the database sees it. In the safe version, the placeholder <code>?</code> is sent to the database <strong>separately</strong> from the value — the database knows definitively "this entire value is data, never treat any part of it as command syntax," no matter what characters it contains.</p></div>
+</div>
+
+<div class="section">
+  <div class="sec-tag">// FIVE INJECTION TYPES — TAP EACH ONE</div>
+  <div class="type-grid" id="typeGrid"></div>
+</div>
+
+<div class="section">
+  <div class="sec-tag">// LIVE BREACH SIMULATOR — TYPE YOUR OWN PAYLOAD</div>
+  <div class="prose"><p>Below is a working simulation of a vulnerable login form's backend logic. Type into the username field exactly as if you were testing a real form in Burp Repeater, and watch what the (simulated) database actually does with your input.</p></div>
+
+  <div class="terminal">
+    <div class="term-titlebar"><span class="term-dot" style="background:#ff5f57;"></span><span class="term-dot" style="background:#febc2e;"></span><span class="term-dot" style="background:#28c840;"></span><div class="term-titlebar-text">vulnerable-login-backend — simulated</div></div>
+    <div class="term-body">
+      <div class="term-label">▸ USERNAME FIELD — TYPE YOUR PAYLOAD</div>
+      <div class="term-prompt-row">
+        <input type="text" class="term-input" id="sqliInput" placeholder="Enter a username...">
+        <button class="term-btn" id="sqliRun">EXECUTE ▸</button>
+      </div>
+      <div class="term-presets">
+        <button class="term-preset" data-val="admin">admin</button>
+        <button class="term-preset danger" data-val="admin' OR '1'='1">admin' OR '1'='1</button>
+        <button class="term-preset danger" data-val="' OR 1=1--">' OR 1=1--</button>
+        <button class="term-preset danger" data-val="admin'--">admin'--</button>
+        <button class="term-preset danger" data-val="' UNION SELECT 1,password,3 FROM users--">UNION attack</button>
+      </div>
+      <div class="term-label">GENERATED QUERY</div>
+      <div class="term-query" id="sqliQuery">SELECT * FROM users WHERE username = '...' — type something above</div>
+      <div class="term-label">DATABASE RESPONSE</div>
+      <div class="term-output" id="sqliOutput">// Waiting for input...</div>
+    </div>
+  </div>
+
+  <div class="box info"><div class="box-label">WHAT JUST HAPPENED</div><p>Every payload you just tried follows the same root principle: a quote character (<code>'</code>) closes the string literal early, and everything after it becomes <strong>part of the SQL command itself</strong> rather than part of the data. <code>OR '1'='1'</code> adds a condition that's always true. <code>--</code> comments out the rest of the original query so a trailing quote or parenthesis doesn't cause a syntax error.</p></div>
+</div>
+
+<div class="section">
+  <div class="sec-tag">// SQLMAP — THE INDUSTRY TOOL</div>
+  <div class="prose"><p>Manual testing teaches you the mental model. In real assessments, <strong>sqlmap</strong> automates discovery and exploitation once you suspect a parameter is vulnerable.</p></div>
+  <div class="code-block" data-label="SQLMAP QUICK REFERENCE">
+<span class="cm"># Basic test against a suspected parameter</span>
+sqlmap -u <span class="cs">"http://target.com/page.php?id=1"</span> --batch
+
+<span class="cm"># If vulnerable, enumerate database names</span>
+sqlmap -u <span class="cs">"http://target.com/page.php?id=1"</span> --dbs --batch
+
+<span class="cm"># Dump a specific table</span>
+sqlmap -u <span class="cs">"http://target.com/page.php?id=1"</span> -D mydb -T users --dump --batch
+
+<span class="cm"># Testing a POST request instead of GET</span>
+sqlmap -u <span class="cs">"http://target.com/login"</span> --data <span class="cs">"user=admin&pass=test"</span> --batch
+  </div>
+  <div class="box threat"><div class="box-label">LEGAL BOUNDARY</div><p>sqlmap and every technique on this page are for systems you own or have explicit written authorization to test — PortSwigger labs, TryHackMe, HackTheBox, your own local Juice Shop instance. Running this against anything else is a computer crime in essentially every jurisdiction, regardless of intent.</p></div>
+</div>
+
+<div class="section">
+  <div class="sec-tag">// PATTERN RECOGNITION — WHAT TO TRY WHEN</div>
+  <table class="compare-table">
+    <tr><th>SYMPTOM YOU SEE</th><th>WHAT TO TRY NEXT</th></tr>
+    <tr><td>Login form, no visible errors</td><td><code>' OR '1'='1</code> in username, any password</td></tr>
+    <tr><td>Server returns a raw database error</td><td>You've confirmed injection — read the error for column/table hints, then move to UNION</td></tr>
+    <tr><td>Page looks identical regardless of input</td><td>Try time-based blind: append <code>' AND SLEEP(5)--</code> and measure response delay</td></tr>
+    <tr><td>Numeric ID parameter in a URL</td><td><code>?id=1 UNION SELECT null,null,null--</code> — adjust column count until no error</td></tr>
+  </table>
+</div>
+
+<div class="quiz-box" id="quizBox">
+  <div class="quiz-head"><div class="quiz-title">BREACH DEBRIEF — SYSTEMS CHECK</div><div class="quiz-progress" id="quizProgress">0 / 5</div></div>
+  <div id="quizItems"></div>
+</div>
+
+<div class="footer-strip">DAY 8 OF 60 — SQL INJECTION BREACH CONSOLE — APPSEC HUB</div>
+
+</main>
+
+<script>
+const SK='day8-v1';
+let S={};
+try{S=JSON.parse(localStorage.getItem(SK)||'{}')}catch(e){}
+function save(){try{localStorage.setItem(SK,JSON.stringify(S))}catch(e){}}
+
+// INJECTION TYPE CARDS
+const types=[
+  {name:'Classic (In-Band)',short:'Results visible directly in the page response',detail:'The simplest case: your injected query runs and its results are displayed right back to you in the normal page output. If a search field reveals extra rows after an OR-based payload, you\'re looking at classic injection.'},
+  {name:'Error-Based',short:'Database error messages leak structural details',detail:'When the application doesn\'t suppress database errors, a deliberately malformed payload causes a verbose error message that reveals table names, column names, or database version — turning a crash into a reconnaissance tool.'},
+  {name:'UNION-Based',short:'Append a UNION SELECT to pull data from other tables',detail:'UNION combines results from two SELECT statements. If you can control one side of a UNION and match its column count to the original query, you can pull arbitrary data from any table the database user can read — including a users table with password hashes.'},
+  {name:'Blind Boolean',short:'No data shown directly — only true/false page changes',detail:'The application gives no errors and no extra data, but the page itself behaves differently depending on whether your injected condition evaluates true or false (a "Welcome" message appears vs doesn\'t, for example). You extract data one bit at a time by asking the database yes/no questions.'},
+  {name:'Blind Time-Based',short:'No visible difference at all — only response timing changes',detail:'When even the page behavior looks identical regardless of true or false, you can still confirm injection by injecting a deliberate delay: append something like AND SLEEP(5) and measure whether the response takes 5 seconds longer. A reliable timing difference confirms the injection point exists, even with zero other feedback.'},
+];
+function buildTypes(){
+  const grid=document.getElementById('typeGrid');
+  types.forEach((t,i)=>{
+    const card=document.createElement('div');
+    card.className='type-card'+(S[`type-${i}`]?' open':'');
+    card.innerHTML=`<div class="type-head">
+      <div class="type-num">${i+1}</div>
+      <div><div class="type-name">${t.name}</div><div class="type-short">${t.short}</div></div>
+      <div class="type-chevron">▶</div>
+    </div>
+    <div class="type-body"><p>${t.detail}</p></div>`;
+    card.querySelector('.type-head').addEventListener('click',()=>{
+      card.classList.toggle('open');
+      S[`type-${i}`]=card.classList.contains('open');save();
+    });
+    grid.appendChild(card);
+  });
+}
+buildTypes();
+
+// LIVE SQLI TERMINAL
+function setSQLiInput(val){
+  document.getElementById('sqliInput').value=val;
+  runSQLi();
+}
+function runSQLi(){
+  const val=document.getElementById('sqliInput').value;
+  const q=document.getElementById('sqliQuery');
+  const out=document.getElementById('sqliOutput');
+
+  if(!val){
+    q.textContent="SELECT * FROM users WHERE username = '...' — type something above";
+    out.textContent='// Waiting for input...';
+    return;
+  }
+
+  const highlighted=val.replace(/(['";]|--)/g,'<span class="inject-char">$1</span>');
+  q.innerHTML=`SELECT * FROM users WHERE username = '${highlighted}'`;
+
+  const isUnion=/union/i.test(val);
+  const isBoolBypass=/ or /i.test(val) && /=/.test(val);
+  const isCommentTrunc=/--/.test(val) && !isUnion;
+  const hasQuote=/'/.test(val);
+
+  if(isUnion){
+    out.innerHTML=`<span class="flag-leak">[CRITICAL] UNION-BASED INJECTION CONFIRMED</span>\n\nQuery executed across two SELECT statements. Database returned columns from an unrelated table:\n\nid | username      | password_hash\n---+----------------+------------------------------\n1  | admin          | $2b$12$KIXqL8z... (bcrypt)\n2  | finance_admin  | $2b$12$Q7nT2vP... (bcrypt)\n\n[ANALYSIS] This is full database read access via a single injected parameter. In a real assessment, this is a Critical severity finding.`;
+  } else if(isBoolBypass){
+    out.innerHTML=`<span class="flag-leak">[CRITICAL] AUTHENTICATION BYPASS</span>\n\nWHERE clause evaluated as: WHERE username = '${val.split("'")[0]}' OR '1'='1'\nThe OR condition is unconditionally true for EVERY row in the table.\n\n[RESULT] Login succeeded as the FIRST row returned (typically the admin account, id=1) — without ever supplying a valid password.`;
+  } else if(isCommentTrunc){
+    out.innerHTML=`<span class="flag-leak">[HIGH] PASSWORD CHECK BYPASSED VIA COMMENT</span>\n\nWHERE clause evaluated as: WHERE username = '${val.replace('--','')}'-- AND password = '[anything]'\nEverything after -- is treated as a SQL comment and never executed — including the password check.\n\n[RESULT] Logged in as '${val.replace("--","").replace(/'/g,'')}' with NO password verification performed at all.`;
+  } else if(hasQuote){
+    out.innerHTML=`<span class="flag-leak">[MEDIUM] SYNTAX ERROR LEAKED</span>\n\nMySQLSyntaxErrorException: unexpected token near '${val.split("'")[1]||"'"}'  at line 1\n\n[ANALYSIS] The raw database error confirms your input reached the SQL parser unsanitized. This alone is a finding — and the error text itself is reconnaissance for your next payload.`;
+  } else {
+    out.innerHTML=`<span class="flag-safe">[NORMAL] No injection characters detected</span>\n\nQuery executed as intended: WHERE username = '${val}'\nThis is exactly how a legitimate username should be processed. Try one of the preset payloads above to see how the response changes.`;
+  }
+}
+document.getElementById('sqliRun').addEventListener('click',runSQLi);
+document.getElementById('sqliInput').addEventListener('keypress',(e)=>{if(e.key==='Enter')runSQLi();});
+document.querySelectorAll('.term-preset').forEach(btn=>{
+  btn.addEventListener('click',()=>setSQLiInput(btn.dataset.val));
+});
+
+// QUIZ
+const quiz=[
+  {q:'What is the fundamental root cause that makes SQL injection possible in the vulnerable code example?',opts:['The database is running an old version','The developer used Python instead of Java','User input is concatenated directly into the query string, so the database can\'t distinguish data from command','The server doesn\'t use HTTPS'],correct:2,fb:'The query structure and the attacker\'s data become the exact same string by execution time. The database has no way to know "this part was supposed to just be a value" once everything is merged into one string.'},
+  {q:'In the live simulator, what made admin\' OR \'1\'=\'1 succeed as an authentication bypass?',opts:['It guessed the correct password','The OR condition is true for every single row, so the WHERE clause matches the entire table','It deleted the password requirement from the database','It exploited a missing HTTPS certificate'],correct:1,fb:'\'1\'=\'1\' is always true, and OR means the whole WHERE clause is true if either side is true — so it matches every row in the users table regardless of the actual username or password, typically returning the first row.'},
+  {q:'Why does appending -- after a payload help bypass a password check specifically?',opts:['It deletes the password column','Everything after -- is treated as a SQL comment, so the rest of the original query (including the password check) never executes','It encrypts the rest of the query','It forces the database to skip authentication entirely as a built-in feature'],correct:1,fb:'-- starts a SQL comment. If the original query was WHERE username=\'X\' AND password=\'Y\', truncating after the username with -- means the AND password=\'Y\' portion is simply never evaluated.'},
+  {q:'You suspect a parameter is injectable but the page shows zero visible difference no matter what you send — same content, same layout, every time. What\'s your next move?',opts:['Give up — it\'s definitely not injectable','Try a time-based payload like AND SLEEP(5) and measure whether the response takes meaningfully longer','Only try UNION attacks, since those are the strongest','Switch to testing XSS instead'],correct:1,fb:'This is the exact scenario blind time-based injection is built for. When there\'s no error and no visible content difference, a measurable delay is often the only signal you have left to confirm the injection point.'},
+  {q:'What is the single correct fix for SQL injection, regardless of which type you\'re defending against?',opts:['Blocking the apostrophe character with input validation','Using HTTPS for all connections','Parameterized queries / prepared statements, so user input is always sent to the database separately from the query structure','Renaming the database tables to obscure names'],correct:2,fb:'Parameterized queries are the only complete fix. Character-blocking input validation is fragile and frequently bypassable; parameterization removes the vulnerability at the structural level by never letting user data become part of the command in the first place.'},
+];
+function buildQuiz(){
+  const c=document.getElementById('quizItems');
+  quiz.forEach((q,qi)=>{
+    const saved=S[`q${qi}`];
+    const div=document.createElement('div');
+    div.className='q-item';
+    div.innerHTML=`<div class="q-prompt">${qi+1}. ${q.q}</div>
+    <div class="q-opts">${q.opts.map((o,oi)=>`<button class="q-opt ${saved!==undefined?'locked':''} ${saved!==undefined&&oi===q.correct?'correct':''} ${saved!==undefined&&oi===saved&&oi!==q.correct?'wrong':''}" data-oi="${oi}">${o}</button>`).join('')}</div>
+    <div class="q-fb ${saved!==undefined?'show':''}" id="fb${qi}">${saved!==undefined?q.fb:''}</div>`;
+    c.appendChild(div);
+    if(saved===undefined){
+      div.querySelectorAll('.q-opt').forEach((btn,oi)=>{
+        btn.addEventListener('click',()=>{
+          div.querySelectorAll('.q-opt').forEach((b,bi)=>{b.classList.add('locked');if(bi===q.correct)b.classList.add('correct');});
+          if(oi!==q.correct)btn.classList.add('wrong');
+          document.getElementById(`fb${qi}`).textContent=q.fb;
+          document.getElementById(`fb${qi}`).classList.add('show');
+          S[`q${qi}`]=oi;save();
+          updateProgress();
+        });
+      });
+    }
+  });
+  updateProgress();
+}
+function updateProgress(){
+  const done=quiz.filter((_,qi)=>S[`q${qi}`]!==undefined).length;
+  document.getElementById('quizProgress').textContent=`${done} / ${quiz.length}`;
+}
+buildQuiz();
+</script>
+</body>
+</html>

@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title id="pageTitle">Revision Notes — AppSec Hub</title>
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0a0f;--bg1:#0f0e16;--bg2:#15131f;--bg3:#1c1929;
+  --border:#231f30;--border-hi:#332b4a;
+  --text:#e8e6f0;--text2:#9a93b0;--text3:#5c5575;
+  --violet:#7c3aed;--violet-light:#a78bfa;
+  --amber:#f5a623;--green:#34d399;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-size:15px;-webkit-font-smoothing:antialiased;}
+a{color:inherit;text-decoration:none;}
+strong{color:#fff;}
+code{font-family:'JetBrains Mono',monospace;background:var(--bg2);color:var(--violet-light);padding:2px 6px;border-radius:3px;font-size:.88em;border:1px solid var(--border-hi);}
+
+.layout{display:flex;height:100vh;}
+
+.sidebar{width:320px;flex-shrink:0;background:var(--bg1);border-right:1px solid var(--border);display:flex;flex-direction:column;height:100vh;}
+.sidebar-head{padding:20px 22px;border-bottom:1px solid var(--border);}
+.sidebar-brand{display:flex;align-items:center;gap:9px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;color:#fff;}
+.sidebar-brand svg{width:22px;height:22px;}
+.sidebar-search{padding:14px 18px;border-bottom:1px solid var(--border);}
+.sidebar-search input{width:100%;background:var(--bg);border:1px solid var(--border-hi);color:var(--text);padding:9px 12px;border-radius:8px;font-size:13px;outline:none;}
+.sidebar-search input:focus{border-color:var(--violet);}
+.note-list{flex:1;overflow-y:auto;padding:10px 12px 20px;}
+.note-item{padding:13px 14px;border-radius:10px;cursor:pointer;margin-bottom:4px;}
+.note-item:hover{background:var(--bg2);}
+.note-item.active{background:rgba(124,58,237,.12);}
+.note-item-title{font-size:13.5px;font-weight:600;color:#fff;margin-bottom:3px;}
+.note-item.active .note-item-title{color:var(--violet-light);}
+.note-item-desc{font-size:12px;color:var(--text3);line-height:1.5;}
+.sidebar-foot{padding:14px 18px;border-top:1px solid var(--border);}
+.sidebar-foot a{font-size:12.5px;color:var(--text3);}
+.sidebar-foot a:hover{color:var(--violet-light);}
+
+.main{flex:1;overflow-y:auto;height:100vh;}
+.mobile-topbar{display:none;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg);z-index:10;}
+.sidebar-toggle{width:34px;height:34px;border-radius:8px;background:var(--bg2);border:1px solid var(--border-hi);color:var(--text2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;flex-shrink:0;}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99;}
+.sidebar-overlay.show{display:block;}
+.note-reader{max-width:760px;margin:0 auto;padding:60px 40px 100px;}
+.note-reader h1{font-family:'Space Grotesk',sans-serif;font-size:30px;color:#fff;margin:30px 0 14px;line-height:1.2;}
+.note-reader h1:first-child{margin-top:0;}
+.note-reader h2{font-family:'Space Grotesk',sans-serif;font-size:21px;color:var(--violet-light);margin:30px 0 12px;padding-bottom:10px;border-bottom:1px solid var(--border);}
+.note-reader h3{font-family:'JetBrains Mono',monospace;font-size:13.5px;letter-spacing:.04em;color:var(--green);margin:22px 0 10px;}
+.note-reader p{margin:12px 0;line-height:1.8;color:var(--text);font-size:15.5px;}
+.note-reader pre{background:var(--bg1);border:1px solid var(--border-hi);border-left:3px solid var(--violet);border-radius:8px;padding:16px 18px;overflow-x:auto;margin:16px 0;}
+.note-reader pre code{background:none;border:none;padding:0;color:#a8e890;font-size:13.5px;}
+.note-reader table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;display:block;overflow-x:auto;white-space:nowrap;}
+.note-reader th{background:var(--bg1);color:var(--violet-light);font-family:'JetBrains Mono',monospace;font-size:11.5px;letter-spacing:.04em;text-align:left;padding:10px 14px;}
+.note-reader td{padding:9px 14px;border-bottom:1px solid var(--border);color:var(--text2);}
+.note-reader ul,.note-reader ol{margin:10px 0 14px 22px;}
+.note-reader li{margin:6px 0;line-height:1.7;}
+.note-reader li::marker{color:var(--violet-light);}
+.note-reader blockquote{border-left:3px solid var(--violet);padding:10px 16px;margin:14px 0;background:var(--bg1);border-radius:0 8px 8px 0;color:var(--text2);font-style:italic;}
+.note-reader hr{border:none;border-top:1px solid var(--border);margin:30px 0;}
+.empty-state{display:flex;align-items:center;justify-content:center;height:100%;color:var(--text3);font-size:14px;}
+
+@media(max-width:860px){
+  .sidebar{position:fixed;left:-320px;z-index:100;transition:left .25s;}
+  .sidebar.open{left:0;}
+  .note-reader{padding:40px 22px 80px;}
+  .mobile-topbar{display:flex;}
+}
+</style>
+</head>
+<body>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-head">
+      <a href="index.html" class="sidebar-brand">
+        <svg viewBox="0 0 512 512"><path d="M256 80 L380 130 L380 260 C380 350 320 410 256 432 C192 410 132 350 132 260 L132 130 Z" fill="none" stroke="#a78bfa" stroke-width="20"/><path d="M196 220 L236 256 L196 292" fill="none" stroke="#a78bfa" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/><line x1="256" y1="292" x2="316" y2="292" stroke="#a78bfa" stroke-width="22" stroke-linecap="round"/></svg>
+        AppSec Hub
+      </a>
+    </div>
+    <div class="sidebar-search"><input type="text" id="noteSearch" placeholder="Search notes..."></div>
+    <div class="note-list" id="noteList"></div>
+    <div class="sidebar-foot"><a href="index.html">← Back to roadmap</a></div>
+  </aside>
+
+  <main class="main">
+    <div class="mobile-topbar">
+      <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+      <strong style="color:#fff;font-size:14px;">Revision Notes</strong>
+    </div>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <div class="note-reader" id="noteReader">
+      <div class="empty-state">Select a note from the sidebar to read it.</div>
+    </div>
+  </main>
+</div>
+
+<script src="data.js"></script>
+<script>
+function getNoteFromURL(){
+  const params=new URLSearchParams(window.location.search);
+  return params.get('note');
+}
+
+function buildList(filter=''){
+  const list=document.getElementById('noteList');
+  const q=filter.toLowerCase();
+  const currentNote=getNoteFromURL();
+  const filtered=NOTES.filter(n=>!q||n.title.toLowerCase().includes(q)||n.desc.toLowerCase().includes(q));
+  list.innerHTML=filtered.map(n=>`
+    <div class="note-item ${n.file===currentNote?'active':''}" data-file="${n.file}" data-id="${n.id}">
+      <div class="note-item-title">${n.title}</div>
+      <div class="note-item-desc">${n.desc}</div>
+    </div>
+  `).join('');
+  list.querySelectorAll('.note-item').forEach(item=>{
+    item.addEventListener('click',()=>{
+      window.location.href=`notes.html?note=${encodeURIComponent(item.dataset.file)}`;
+    });
+  });
+}
+
+document.getElementById('noteSearch').addEventListener('input',(e)=>buildList(e.target.value));
+
+function renderMarkdown(md){
+  let html=md;
+  const codeBlocks=[];
+  html=html.replace(/```[\w]*\n([\s\S]*?)```/g,(m,code)=>{
+    codeBlocks.push(code.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'));
+    return `\u0000CODEBLOCK${codeBlocks.length-1}\u0000`;
+  });
+  html=html.replace(/^### (.*$)/gim,'<h3>$1</h3>');
+  html=html.replace(/^## (.*$)/gim,'<h2>$1</h2>');
+  html=html.replace(/^# (.*$)/gim,'<h1>$1</h1>');
+  html=html.replace(/^> ?(.*)$/gim,'<blockquote>$1</blockquote>');
+  html=html.replace(/(<blockquote>.*<\/blockquote>\n?)+/g,m=>m.replace(/<\/blockquote>\n?<blockquote>/g,'<br>'));
+  html=html.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+  html=html.replace(/(?<!\*)\*([^*]+?)\*(?!\*)/g,'<em>$1</em>');
+  html=html.replace(/`([^`]+)`/g,'<code>$1</code>');
+  html=html.replace(/^\|(.+)\|\s*\n\|[\s:|-]+\|\s*\n((?:\|.*\|\s*\n?)*)/gim,(m,header,body)=>{
+    const headers=header.split('|').map(h=>h.trim()).filter(Boolean);
+    const rows=body.trim().split('\n').map(r=>r.split('|').map(c=>c.trim()).filter((c,i,a)=>!(i===0&&c==='')&&!(i===a.length-1&&c==='')));
+    let t='<table><tr>'+headers.map(h=>`<th>${h}</th>`).join('')+'</tr>';
+    rows.forEach(r=>{t+='<tr>'+r.map(c=>`<td>${c}</td>`).join('')+'</tr>';});
+    t+='</table>';
+    return t;
+  });
+  html=html.replace(/^---$/gim,'<hr>');
+  html=html.replace(/^\d+\.\s+(.*)$/gim,'<li class="ol">$1</li>');
+  html=html.replace(/^[-*]\s+(.*)$/gim,'<li class="ul">$1</li>');
+  html=html.replace(/(<li class="ol">.*<\/li>\n?)+/g,m=>'<ol>'+m.replace(/ class="ol"/g,'')+'</ol>');
+  html=html.replace(/(<li class="ul">.*<\/li>\n?)+/g,m=>'<ul>'+m.replace(/ class="ul"/g,'')+'</ul>');
+  html=html.split('\n').map(line=>{
+    if(/^<(h\d|ul|ol|li|table|tr|th|td|hr|blockquote|\/)/.test(line.trim())||line.trim()==='')return line;
+    if(line.includes('\u0000CODEBLOCK'))return line;
+    return `<p>${line}</p>`;
+  }).join('\n');
+  html=html.replace(/\u0000CODEBLOCK(\d+)\u0000/g,(m,i)=>`<pre><code>${codeBlocks[i]}</code></pre>`);
+  return html;
+}
+
+const noteCache={};
+async function loadNote(){
+  const file=getNoteFromURL();
+  const reader=document.getElementById('noteReader');
+  if(!file){
+    reader.innerHTML='<div class="empty-state">Select a note from the sidebar to read it.</div>';
+    return;
+  }
+  const note=NOTES.find(n=>n.file===file);
+  document.title=(note?note.title:'Note')+' — AppSec Hub';
+  if(noteCache[file]){reader.innerHTML=noteCache[file];return;}
+  reader.innerHTML='<div class="empty-state">Loading...</div>';
+  try{
+    const res=await fetch(`notes/${file}`);
+    const md=await res.text();
+    const html=renderMarkdown(md);
+    noteCache[file]=html;
+    reader.innerHTML=html;
+  }catch(e){
+    reader.innerHTML=`<div class="empty-state">Could not load notes/${file}</div>`;
+  }
+}
+
+buildList();
+loadNote();
+
+const sidebarEl=document.querySelector('.sidebar');
+const overlayEl=document.getElementById('sidebarOverlay');
+document.getElementById('sidebarToggle').addEventListener('click',()=>{
+  sidebarEl.classList.add('open');
+  overlayEl.classList.add('show');
+});
+overlayEl.addEventListener('click',()=>{
+  sidebarEl.classList.remove('open');
+  overlayEl.classList.remove('show');
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title id="pageTitle">Loading day... — AppSec Hub</title>
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0a0f;--bg1:#0f0e16;--bg2:#15131f;--bg3:#1c1929;
+  --border:#231f30;--border-hi:#332b4a;
+  --text:#e8e6f0;--text2:#9a93b0;--text3:#5c5575;
+  --violet:#7c3aed;--violet-light:#a78bfa;--violet-glow:rgba(124,58,237,.16);
+  --amber:#f5a623;--green:#34d399;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-size:15px;-webkit-font-smoothing:antialiased;}
+a{color:inherit;text-decoration:none;}
+
+.layout{display:flex;height:100vh;}
+
+/* SIDEBAR — real desktop nav, not a bottom tab bar */
+.sidebar{
+  width:300px;flex-shrink:0;background:var(--bg1);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;height:100vh;overflow:hidden;
+}
+.sidebar-head{padding:20px 22px;border-bottom:1px solid var(--border);}
+.sidebar-brand{display:flex;align-items:center;gap:9px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;color:#fff;margin-bottom:14px;}
+.sidebar-brand svg{width:22px;height:22px;}
+.sidebar-progress-label{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--text3);letter-spacing:.08em;margin-bottom:6px;display:flex;justify-content:space-between;}
+.sidebar-progress-track{height:5px;background:var(--bg3);border-radius:3px;overflow:hidden;}
+.sidebar-progress-fill{height:100%;background:var(--violet);border-radius:3px;width:15%;}
+
+.sidebar-search{padding:14px 18px;border-bottom:1px solid var(--border);}
+.sidebar-search input{
+  width:100%;background:var(--bg);border:1px solid var(--border-hi);color:var(--text);
+  padding:9px 12px;border-radius:8px;font-size:13px;outline:none;
+}
+.sidebar-search input:focus{border-color:var(--violet);}
+
+.sidebar-list{flex:1;overflow-y:auto;padding:10px 12px 20px;}
+.sidebar-phase-label{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.12em;color:var(--amber);padding:14px 10px 6px;}
+.sidebar-item{
+  display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;
+  font-size:13.5px;color:var(--text2);margin-bottom:2px;
+}
+.sidebar-item:hover{background:var(--bg2);color:var(--text);}
+.sidebar-item.active{background:rgba(124,58,237,.12);color:var(--violet-light);}
+.sidebar-item.locked{opacity:.4;cursor:default;}
+.sidebar-item.locked:hover{background:none;color:var(--text2);}
+.si-num{
+  width:24px;height:24px;border-radius:6px;background:var(--bg3);font-family:'Space Grotesk',sans-serif;
+  font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--text3);
+}
+.sidebar-item.active .si-num{background:var(--violet);color:#fff;}
+.si-title{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.si-check{color:var(--green);font-size:13px;}
+
+.sidebar-foot{padding:14px 18px;border-top:1px solid var(--border);}
+.sidebar-foot a{font-size:12.5px;color:var(--text3);display:flex;align-items:center;gap:6px;}
+.sidebar-foot a:hover{color:var(--violet-light);}
+
+/* MAIN PANE */
+.main{flex:1;display:flex;flex-direction:column;height:100vh;overflow:hidden;}
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;padding:14px 28px;
+  border-bottom:1px solid var(--border);background:rgba(15,14,22,.7);backdrop-filter:blur(10px);flex-shrink:0;
+}
+.topbar-left{display:flex;align-items:center;gap:16px;}
+.sidebar-toggle{display:none;width:34px;height:34px;border-radius:8px;background:var(--bg2);border:1px solid var(--border-hi);color:var(--text2);align-items:center;justify-content:center;cursor:pointer;font-size:16px;}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99;}
+.sidebar-overlay.show{display:block;}
+.topbar-day{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--amber);letter-spacing:.08em;}
+.topbar-title{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:15.5px;color:#fff;}
+.topbar-actions{display:flex;gap:10px;align-items:center;}
+.btn-complete{
+  font-family:'JetBrains Mono',monospace;font-size:11.5px;letter-spacing:.05em;padding:8px 16px;border-radius:8px;
+  border:1px solid var(--border-hi);background:var(--bg2);color:var(--text2);cursor:pointer;
+}
+.btn-complete.done{background:rgba(52,211,153,.12);border-color:var(--green);color:var(--green);}
+.btn-nav{
+  width:34px;height:34px;border-radius:8px;background:var(--bg2);border:1px solid var(--border-hi);
+  color:var(--text2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;
+}
+.btn-nav:hover{border-color:var(--violet);color:var(--violet-light);}
+.btn-nav.disabled{opacity:.3;cursor:default;pointer-events:none;}
+
+.lesson-frame-wrap{flex:1;overflow:hidden;position:relative;background:var(--bg);}
+.lesson-frame{width:100%;height:100%;border:none;display:block;}
+.no-lesson-state{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;
+  text-align:center;padding:40px;
+}
+.no-lesson-state h2{font-family:'Space Grotesk',sans-serif;font-size:24px;color:#fff;margin-bottom:12px;}
+.no-lesson-state p{color:var(--text2);max-width:420px;margin-bottom:20px;font-size:15px;line-height:1.6;}
+.no-lesson-state a{background:var(--violet);color:#fff;padding:11px 22px;border-radius:8px;font-weight:600;font-size:14px;}
+
+@media(max-width:860px){
+  .sidebar{position:fixed;left:-300px;z-index:100;transition:left .25s;box-shadow:0 0 40px rgba(0,0,0,.5);}
+  .sidebar.open{left:0;}
+  .topbar-left{gap:10px;}
+  .sidebar-toggle{display:flex;}
+}
+</style>
+</head>
+<body>
+
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-head">
+      <a href="index.html" class="sidebar-brand">
+        <svg viewBox="0 0 512 512"><path d="M256 80 L380 130 L380 260 C380 350 320 410 256 432 C192 410 132 350 132 260 L132 130 Z" fill="none" stroke="#a78bfa" stroke-width="20"/><path d="M196 220 L236 256 L196 292" fill="none" stroke="#a78bfa" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/><line x1="256" y1="292" x2="316" y2="292" stroke="#a78bfa" stroke-width="22" stroke-linecap="round"/></svg>
+        AppSec Hub
+      </a>
+      <div class="sidebar-progress-label"><span id="progressLabel">0 / 60 complete</span><span id="progressPct">0%</span></div>
+      <div class="sidebar-progress-track"><div class="sidebar-progress-fill" id="progressFill"></div></div>
+    </div>
+    <div class="sidebar-search">
+      <input type="text" id="sidebarSearch" placeholder="Filter days...">
+    </div>
+    <div class="sidebar-list" id="sidebarList"></div>
+    <div class="sidebar-foot">
+      <a href="notes.html">📝 All revision notes →</a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <button class="sidebar-toggle" id="sidebarToggle" title="Menu">☰</button>
+        <button class="btn-nav" id="prevDayBtn" title="Previous day">‹</button>
+        <button class="btn-nav" id="nextDayBtn" title="Next day">›</button>
+        <div>
+          <div class="topbar-day" id="topbarDay">DAY —</div>
+          <div class="topbar-title" id="topbarTitle">Loading...</div>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <a class="btn-nav" id="noteLink" title="Open revision notes" href="#" style="display:none;">📝</a>
+        <button class="btn-complete" id="completeBtn">○ MARK COMPLETE</button>
+      </div>
+    </div>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <div class="lesson-frame-wrap" id="frameWrap">
+      <iframe class="lesson-frame" id="lessonFrame" style="display:none;"></iframe>
+      <div class="no-lesson-state" id="noLessonState" style="display:none;">
+        <h2>This day isn't built yet</h2>
+        <p>The interactive lesson for this day hasn't shipped. Check the revision notes — many days have full notes ready even before the interactive lesson is built.</p>
+        <a href="#" id="noLessonNoteLink">Read the notes instead →</a>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="data.js"></script>
+<script>
+const SK='appsec-site-progress-v1';
+let S={};
+try{S=JSON.parse(localStorage.getItem(SK)||'{}')}catch(e){}
+if(!S.completed) S.completed=[];
+function save(){try{localStorage.setItem(SK,JSON.stringify(S))}catch(e){}}
+
+function getDayFromURL(){
+  const params=new URLSearchParams(window.location.search);
+  const d=parseInt(params.get('day'));
+  return isNaN(d)?1:d;
+}
+
+function buildSidebar(){
+  const list=document.getElementById('sidebarList');
+  const currentDay=getDayFromURL();
+  let html='';
+  PHASES.forEach(phase=>{
+    const daysInPhase=DAYS.filter(d=>d.phase===phase.id);
+    if(daysInPhase.length===0)return;
+    html+=`<div class="sidebar-phase-label">${phase.label.toUpperCase()}</div>`;
+    daysInPhase.forEach(d=>{
+      const hasContent=d.lesson||d.note;
+      const isActive=d.day===currentDay;
+      const isComplete=S.completed.includes(d.day);
+      let cls='sidebar-item'+(isActive?' active':'')+(!hasContent?' locked':'');
+      html+=`<div class="${cls}" data-day="${d.day}" data-haslesson="${!!d.lesson}">
+        <div class="si-num">${d.day}</div>
+        <div class="si-title">${d.title}</div>
+        ${isComplete?'<div class="si-check">✓</div>':''}
+      </div>`;
+    });
+  });
+  list.innerHTML=html;
+  list.querySelectorAll('.sidebar-item:not(.locked)').forEach(item=>{
+    item.addEventListener('click',()=>{
+      window.location.href=`day.html?day=${item.dataset.day}`;
+    });
+  });
+}
+
+document.getElementById('sidebarSearch').addEventListener('input',(e)=>{
+  const q=e.target.value.toLowerCase();
+  document.querySelectorAll('.sidebar-item').forEach(item=>{
+    const title=item.querySelector('.si-title').textContent.toLowerCase();
+    item.style.display=title.includes(q)?'flex':'none';
+  });
+});
+
+function updateProgressUI(){
+  const pct=Math.round((S.completed.length/60)*100);
+  document.getElementById('progressLabel').textContent=`${S.completed.length} / 60 complete`;
+  document.getElementById('progressPct').textContent=pct+'%';
+  document.getElementById('progressFill').style.width=pct+'%';
+}
+
+function loadDay(){
+  const dayNum=getDayFromURL();
+  const d=DAYS.find(x=>x.day===dayNum);
+  if(!d){
+    document.getElementById('topbarTitle').textContent='Day not found';
+    return;
+  }
+  document.title=`Day ${d.day} — ${d.title} — AppSec Hub`;
+  document.getElementById('topbarDay').textContent=`DAY ${d.day}`;
+  document.getElementById('topbarTitle').textContent=d.title;
+
+  const frame=document.getElementById('lessonFrame');
+  const noLessonState=document.getElementById('noLessonState');
+  if(d.lesson){
+    frame.src=`lessons/${d.lesson}`;
+    frame.style.display='block';
+    noLessonState.style.display='none';
+  } else {
+    frame.style.display='none';
+    noLessonState.style.display='flex';
+    const noteLink=document.getElementById('noLessonNoteLink');
+    if(d.note) noteLink.href=`notes.html?note=${encodeURIComponent(d.note)}`;
+    else noteLink.style.display='none';
+  }
+
+  const noteLinkBtn=document.getElementById('noteLink');
+  if(d.note){
+    noteLinkBtn.href=`notes.html?note=${encodeURIComponent(d.note)}`;
+    noteLinkBtn.style.display='flex';
+  } else {
+    noteLinkBtn.style.display='none';
+  }
+
+  const completeBtn=document.getElementById('completeBtn');
+  function refreshCompleteBtn(){
+    const isComplete=S.completed.includes(dayNum);
+    completeBtn.textContent=isComplete?'✓ COMPLETED':'○ MARK COMPLETE';
+    completeBtn.classList.toggle('done',isComplete);
+  }
+  refreshCompleteBtn();
+  completeBtn.onclick=()=>{
+    const idx=S.completed.indexOf(dayNum);
+    if(idx>=0) S.completed.splice(idx,1);
+    else S.completed.push(dayNum);
+    save();
+    refreshCompleteBtn();
+    updateProgressUI();
+    buildSidebar();
+  };
+
+  // Prev/next nav
+  const allBuiltOrAny=DAYS;
+  const prevBtn=document.getElementById('prevDayBtn');
+  const nextBtn=document.getElementById('nextDayBtn');
+  const prevDay=DAYS.find(x=>x.day===dayNum-1);
+  const nextDay=DAYS.find(x=>x.day===dayNum+1);
+  if(prevDay){prevBtn.classList.remove('disabled');prevBtn.onclick=()=>window.location.href=`day.html?day=${prevDay.day}`;}
+  else prevBtn.classList.add('disabled');
+  if(nextDay){nextBtn.classList.remove('disabled');nextBtn.onclick=()=>window.location.href=`day.html?day=${nextDay.day}`;}
+  else nextBtn.classList.add('disabled');
+}
+
+buildSidebar();
+updateProgressUI();
+loadDay();
+
+// Mobile sidebar toggle
+const sidebarEl=document.getElementById('sidebar');
+const overlayEl=document.getElementById('sidebarOverlay');
+document.getElementById('sidebarToggle').addEventListener('click',()=>{
+  sidebarEl.classList.add('open');
+  overlayEl.classList.add('show');
+});
+overlayEl.addEventListener('click',()=>{
+  sidebarEl.classList.remove('open');
+  overlayEl.classList.remove('show');
+});
+</script>
+</body>
+</html>

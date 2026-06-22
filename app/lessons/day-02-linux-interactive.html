@@ -1,0 +1,1492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0a0c12">
+<title>OPS FILE 02 — Linux Command Line Foundation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&family=Exo+2:ital,wght@0,300;0,400;0,600;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #0a0c12;
+    --bg-panel:  #0f1219;
+    --bg-card:   #13171f;
+    --border:    #1e2535;
+    --border-bright: #2d3a50;
+    --text:      #c0c8d8;
+    --text-soft: #7a8899;
+    --text-dim:  #4a5568;
+    --amber:     #e8a832;
+    --amber-dim: #9a6e1a;
+    --amber-glow:rgba(232,168,50,0.12);
+    --steel:     #4a8fa8;
+    --steel-dim: #2a5f78;
+    --red:       #d44e3a;
+    --green:     #4aad6a;
+    --shadow:    rgba(0,0,0,0.5);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 17px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Grid texture */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(232,168,50,0.015) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(232,168,50,0.015) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 0%, rgba(232,168,50,0.05) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  main {
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 60px 28px 160px;
+    position: relative;
+    z-index: 5;
+  }
+
+  /* ====== TYPOGRAPHY ====== */
+  .mono { font-family: 'Share Tech Mono', monospace; }
+  code {
+    font-family: 'Share Tech Mono', monospace;
+    background: var(--bg-card);
+    color: var(--amber);
+    padding: 1px 7px;
+    border: 1px solid var(--border);
+    font-size: 0.88em;
+  }
+
+  strong { color: #e8f0fc; font-weight: 600; }
+  em { color: var(--amber); font-style: normal; font-weight: 600; }
+
+  /* ====== HEADER ====== */
+  .ops-header {
+    border: 1px solid var(--border-bright);
+    padding: 40px;
+    margin-bottom: 60px;
+    position: relative;
+    background: var(--bg-panel);
+    box-shadow: 0 0 60px rgba(232,168,50,0.05);
+  }
+
+  .ops-header::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0;
+    width: 4px; height: 100%;
+    background: linear-gradient(to bottom, var(--amber), var(--amber-dim), transparent);
+  }
+
+  .ops-tag {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    color: var(--amber);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .ops-tag::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, var(--amber-dim), transparent);
+  }
+
+  h1.ops-title {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: clamp(32px, 5vw, 52px);
+    color: var(--amber);
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    font-weight: normal;
+    margin-bottom: 16px;
+    text-shadow: 0 0 40px var(--amber-glow);
+  }
+
+  .ops-sub {
+    font-family: 'Exo 2', sans-serif;
+    font-style: italic;
+    font-size: 18px;
+    color: var(--text-soft);
+    margin-bottom: 28px;
+  }
+
+  .status-bar {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    color: var(--text-dim);
+  }
+  .status-bar .stat { display: flex; gap: 8px; align-items: center; }
+  .status-bar .stat-val { color: var(--amber); }
+
+  /* ====== OPERATIONS ====== */
+  .operation {
+    margin: 60px 0;
+    padding: 32px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    position: relative;
+  }
+
+  .operation::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px; height: 40px;
+    background: var(--amber);
+  }
+
+  .op-number {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.25em;
+    color: var(--amber);
+    margin-bottom: 8px;
+  }
+
+  h2.op-title {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: clamp(22px, 3.5vw, 32px);
+    color: #e8f0fc;
+    font-weight: normal;
+    margin-bottom: 8px;
+  }
+
+  .op-mission {
+    font-style: italic;
+    color: var(--text-soft);
+    font-family: 'Exo 2', sans-serif;
+    margin-bottom: 24px;
+    font-size: 16px;
+    padding-left: 14px;
+    border-left: 2px solid var(--steel-dim);
+  }
+
+  .narrative {
+    margin: 16px 0;
+    line-height: 1.75;
+    font-size: 17px;
+    color: var(--text);
+  }
+
+  .narrative p { margin-bottom: 16px; }
+
+  /* ====== COMMAND CARDS ====== */
+  .cmd-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 12px;
+    margin: 24px 0;
+  }
+
+  .cmd-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 16px 18px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cmd-card:hover {
+    border-color: var(--amber-dim);
+    box-shadow: 0 0 20px var(--amber-glow);
+  }
+
+  .cmd-card::after {
+    content: "";
+    position: absolute;
+    top: 0; right: 0;
+    width: 3px; height: 100%;
+    background: var(--border);
+    transition: background 0.2s;
+  }
+  .cmd-card:hover::after { background: var(--amber); }
+
+  .cmd-syntax {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 15px;
+    color: var(--amber);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .cmd-syntax .prompt { color: var(--steel); }
+
+  .cmd-desc {
+    font-size: 14px;
+    color: var(--text-soft);
+    line-height: 1.5;
+  }
+
+  .cmd-hook {
+    font-family: 'Exo 2', sans-serif;
+    font-style: italic;
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--border);
+  }
+
+  .cmd-tag {
+    display: inline-block;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    padding: 2px 8px;
+    border: 1px solid;
+    position: absolute;
+    top: 10px;
+    right: 14px;
+  }
+  .cmd-tag.danger { color: var(--red); border-color: var(--red); }
+  .cmd-tag.security { color: var(--steel); border-color: var(--steel-dim); }
+  .cmd-tag.important { color: var(--amber); border-color: var(--amber-dim); }
+
+  /* ====== MEMORY HOOK BOX ====== */
+  .hook-box {
+    background: rgba(232,168,50,0.06);
+    border: 1px solid var(--amber-dim);
+    border-left: 4px solid var(--amber);
+    padding: 18px 22px;
+    margin: 20px 0;
+    position: relative;
+  }
+  .hook-box::before {
+    content: "★ MEMORY HOOK";
+    position: absolute;
+    top: -10px; left: 16px;
+    background: var(--amber);
+    color: var(--bg);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    padding: 1px 10px;
+  }
+  .hook-box p { margin: 0; font-size: 16px; }
+
+  /* ====== APPSEC CONNECTION ====== */
+  .appsec-box {
+    background: rgba(74, 143, 168, 0.08);
+    border: 1px solid var(--steel-dim);
+    border-left: 4px solid var(--steel);
+    padding: 18px 22px;
+    margin: 20px 0;
+    position: relative;
+  }
+  .appsec-box::before {
+    content: "→ APPSEC RELEVANCE";
+    position: absolute;
+    top: -10px; left: 16px;
+    background: var(--steel);
+    color: var(--bg);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    padding: 1px 10px;
+  }
+  .appsec-box p { margin: 0; font-size: 16px; line-height: 1.6; }
+
+  /* ====== DANGER BOX ====== */
+  .danger-box {
+    background: rgba(212, 78, 58, 0.08);
+    border: 1px solid var(--red);
+    border-left: 4px solid var(--red);
+    padding: 16px 20px;
+    margin: 20px 0;
+    position: relative;
+  }
+  .danger-box::before {
+    content: "⚠ WARNING";
+    position: absolute;
+    top: -10px; left: 16px;
+    background: var(--red);
+    color: #fff;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    padding: 1px 10px;
+  }
+  .danger-box p { margin: 0; font-size: 16px; }
+
+  /* ====== ACTION BLOCK ====== */
+  .action {
+    background: var(--bg);
+    border: 1px solid var(--border-bright);
+    border-left: 3px solid var(--amber);
+    padding: 18px 20px;
+    margin: 20px 0;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    line-height: 1.7;
+    overflow-x: auto;
+    position: relative;
+  }
+  .action::before {
+    content: "EXECUTE";
+    position: absolute;
+    top: -10px; left: 16px;
+    background: var(--amber);
+    color: var(--bg);
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    padding: 1px 10px;
+  }
+  .action .prompt { color: var(--steel); }
+  .action .comment { color: var(--text-dim); }
+  .action .output { color: var(--green); }
+
+  /* ====== CHMOD CALCULATOR ====== */
+  .chmod-calc {
+    background: var(--bg-card);
+    border: 1px solid var(--border-bright);
+    padding: 28px;
+    margin: 24px 0;
+  }
+
+  .chmod-title {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 0.2em;
+    color: var(--amber);
+    margin-bottom: 20px;
+  }
+
+  .chmod-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 12px 0;
+    flex-wrap: wrap;
+  }
+
+  .chmod-who {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    color: var(--text-soft);
+    width: 60px;
+    flex-shrink: 0;
+  }
+
+  .chmod-bits {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .chmod-bit {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .chmod-bit label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+    cursor: pointer;
+  }
+
+  .chmod-bit input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 36px;
+    height: 36px;
+    background: var(--bg);
+    border: 1px solid var(--border-bright);
+    cursor: pointer;
+    position: relative;
+    transition: all 0.15s;
+  }
+
+  .chmod-bit input[type="checkbox"]:checked {
+    background: var(--amber);
+    border-color: var(--amber);
+  }
+  .chmod-bit input[type="checkbox"]:checked::after {
+    content: "1";
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--bg);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 14px;
+    font-weight: bold;
+  }
+  .chmod-bit input[type="checkbox"]:not(:checked)::after {
+    content: "0";
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--text-dim);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 14px;
+  }
+
+  .chmod-num {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 28px;
+    color: var(--amber);
+    width: 40px;
+    text-align: center;
+    font-weight: normal;
+    flex-shrink: 0;
+  }
+
+  .chmod-result {
+    margin-top: 20px;
+    padding: 14px 18px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 14px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: center;
+  }
+
+  .chmod-cmd { color: var(--amber); }
+  .chmod-explain { color: var(--text-soft); font-size: 13px; }
+
+  /* ====== COMMAND GUESSER GAME ====== */
+  .guesser {
+    margin: 28px 0;
+  }
+
+  .challenge-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 24px;
+    margin-bottom: 12px;
+    position: relative;
+  }
+
+  .challenge-num {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    color: var(--amber-dim);
+    margin-bottom: 10px;
+  }
+
+  .challenge-desc {
+    font-size: 17px;
+    margin-bottom: 16px;
+    color: var(--text);
+  }
+
+  .challenge-opts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .challenge-opt {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    padding: 8px 14px;
+    background: var(--bg);
+    border: 1px solid var(--border-bright);
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .challenge-opt:hover:not(.locked) {
+    border-color: var(--amber-dim);
+    color: var(--amber);
+  }
+  .challenge-opt.correct-pick {
+    background: rgba(74,173,106,0.15);
+    border-color: var(--green);
+    color: var(--green);
+  }
+  .challenge-opt.wrong-pick {
+    background: rgba(212,78,58,0.1);
+    border-color: var(--red);
+    color: var(--red);
+  }
+  .challenge-opt.reveal-correct {
+    border-color: var(--green);
+    color: var(--green);
+    opacity: 0.6;
+  }
+  .challenge-opt.locked { cursor: not-allowed; }
+
+  .challenge-feedback {
+    margin-top: 12px;
+    padding: 12px 16px;
+    background: var(--bg);
+    border-left: 3px solid var(--border);
+    font-size: 15px;
+    display: none;
+    font-family: 'Exo 2', sans-serif;
+    font-style: italic;
+    color: var(--text-soft);
+  }
+  .challenge-feedback.show { display: block; }
+  .challenge-feedback.ok { border-left-color: var(--green); }
+  .challenge-feedback.bad { border-left-color: var(--red); }
+
+  /* ====== QUIZ ====== */
+  .quiz-panel {
+    margin: 60px 0;
+    background: var(--bg-panel);
+    border: 1px solid var(--border-bright);
+    padding: 40px 32px;
+    position: relative;
+    box-shadow: 0 0 40px rgba(232,168,50,0.04);
+  }
+
+  .quiz-panel::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 3px;
+    background: linear-gradient(to right, var(--amber), var(--steel), transparent);
+  }
+
+  .quiz-panel h2 {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 22px;
+    color: var(--amber);
+    font-weight: normal;
+    margin-bottom: 6px;
+  }
+
+  .quiz-question {
+    margin: 32px 0;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+  .quiz-question:first-of-type { border-top: none; padding-top: 0; margin-top: 24px; }
+
+  .q-num {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.25em;
+    color: var(--amber-dim);
+    margin-bottom: 8px;
+  }
+
+  .q-text {
+    font-size: 18px;
+    margin-bottom: 14px;
+    line-height: 1.5;
+    color: #e8f0fc;
+  }
+
+  .q-opts { display: flex; flex-direction: column; gap: 8px; }
+
+  .q-opt {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    text-align: left;
+    padding: 12px 16px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .q-opt:hover:not(.locked) {
+    border-color: var(--amber-dim);
+    color: var(--amber);
+    transform: translateX(4px);
+  }
+  .q-opt.correct { background: rgba(74,173,106,0.12); border-color: var(--green); color: var(--green); }
+  .q-opt.wrong { background: rgba(212,78,58,0.08); border-color: var(--red); color: var(--red); }
+  .q-opt.locked { cursor: not-allowed; }
+  .q-opt.locked:not(.correct):not(.wrong) { opacity: 0.4; }
+
+  .q-fb {
+    margin-top: 10px;
+    padding: 12px 16px;
+    font-family: 'Exo 2', sans-serif;
+    font-style: italic;
+    font-size: 15px;
+    color: var(--text-soft);
+    background: var(--bg-card);
+    border-left: 3px solid var(--border);
+    display: none;
+  }
+  .q-fb.show { display: block; }
+  .q-fb .verdict {
+    font-style: normal;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    display: block;
+    margin-bottom: 6px;
+  }
+  .q-fb .verdict.ok { color: var(--green); }
+  .q-fb .verdict.bad { color: var(--red); }
+
+  /* ====== FIELD NOTES ====== */
+  .field-notes {
+    margin: 60px 0;
+    background: var(--bg-panel);
+    border: 1px dashed var(--border-bright);
+    padding: 36px 32px;
+    position: relative;
+  }
+  .field-notes::before {
+    content: "📋 FIELD NOTES — YOUR TURN";
+    position: absolute;
+    top: -12px; left: 28px;
+    background: var(--bg-panel);
+    padding: 0 12px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.2em;
+    color: var(--amber);
+  }
+  .field-notes h3 {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 14px;
+    letter-spacing: 0.15em;
+    color: var(--steel);
+    margin: 22px 0 10px;
+  }
+  .field-notes h3:first-of-type { margin-top: 0; }
+  .field-notes p, .field-notes li { font-size: 16px; line-height: 1.7; }
+  .field-notes ul { margin-left: 20px; margin-bottom: 12px; }
+  .field-notes li::marker { color: var(--amber); }
+
+  /* ====== CLOSING ====== */
+  .closing {
+    margin-top: 80px;
+    text-align: center;
+    padding-top: 32px;
+    border-top: 1px solid var(--border-bright);
+  }
+  .closing p { color: var(--text-soft); font-family: 'Exo 2', sans-serif; font-style: italic; margin-bottom: 8px; }
+  .closing .sig {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 0.3em;
+    color: var(--amber);
+    margin-top: 20px;
+  }
+
+  /* Progress pill */
+  .saved-pill {
+    position: fixed;
+    top: 16px; right: 16px;
+    background: var(--amber);
+    color: var(--bg);
+    padding: 5px 14px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    opacity: 0;
+    transition: opacity 0.3s;
+    z-index: 100;
+  }
+  .saved-pill.show { opacity: 1; }
+
+  /* MOBILE */
+  @media (max-width: 680px) {
+    main { padding: 28px 16px 100px; }
+    .ops-header { padding: 24px 20px; }
+    .operation { padding: 24px 18px; }
+    .cmd-grid { grid-template-columns: 1fr; }
+    .quiz-panel { padding: 24px 18px; }
+    .chmod-row { gap: 10px; }
+    .chmod-bits { gap: 6px; }
+    .chmod-bit input[type="checkbox"] { width: 30px; height: 30px; }
+    .field-notes { padding: 28px 18px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="saved-pill" id="savedPill">SAVED</div>
+<main>
+
+<!-- HEADER -->
+<div class="ops-header">
+  <div class="ops-tag">OPS FILE №02 // DAY 2 OF 60</div>
+  <h1 class="ops-title">LINUX<br>COMMAND LINE<br>FOUNDATION</h1>
+  <p class="ops-sub">Every server, every cloud instance, every security tool runs on Linux. Today you stop being afraid of the terminal.</p>
+  <div class="status-bar">
+    <span class="stat">PHASE <span class="stat-val">FOUNDATIONS</span></span>
+    <span class="stat">ENVIRONMENT <span class="stat-val">KALI VM</span></span>
+    <span class="stat">TIME <span class="stat-val">5–6 HOURS</span></span>
+    <span class="stat">TOOL <span class="stat-val">OVERTHEWIRE BANDIT</span></span>
+  </div>
+</div>
+
+<!-- OP 01: Navigation -->
+<section class="operation">
+  <div class="op-number">OPERATION 01</div>
+  <h2 class="op-title">Navigate the Filesystem</h2>
+  <p class="op-mission">Before you can attack a system, you must move through it blindfolded.</p>
+
+  <div class="narrative">
+    <p>Linux has no "My Computer" or Finder window. You navigate through text commands. The filesystem is a tree. You are always <strong>somewhere in that tree</strong>. These commands tell you where you are and let you move.</p>
+  </div>
+
+  <div class="cmd-grid">
+    <div class="cmd-card">
+      <div class="cmd-syntax"><span class="prompt">$</span> pwd</div>
+      <div class="cmd-desc">Print Working Directory. Shows your current location.</div>
+      <div class="cmd-hook">The "I'm lost, where am I?" command. First thing to type in an unfamiliar shell.</div>
+    </div>
+    <div class="cmd-card">
+      <div class="cmd-syntax"><span class="prompt">$</span> ls</div>
+      <div class="cmd-desc">List files in current folder.</div>
+      <div class="cmd-hook">Windows equivalent: just looking at a folder. Do this constantly.</div>
+    </div>
+    <div class="cmd-card">
+      <div class="cmd-syntax"><span class="prompt">$</span> ls -la</div>
+      <div class="cmd-desc">List ALL files including hidden ones, with details.</div>
+      <div class="cmd-hook">The X-Ray vision version. Hidden files start with a dot (.bashrc, .ssh, .env). Security engineers always use -la — secrets hide in hidden files.</div>
+      <span class="cmd-tag security">SECURITY</span>
+    </div>
+    <div class="cmd-card">
+      <div class="cmd-syntax"><span class="prompt">$</span> cd folder/</div>
+      <div class="cmd-desc">Change directory. Move into a folder.</div>
+      <div class="cmd-hook">Type cd then Tab to autocomplete filenames. Saves enormous time.</div>
+    </div>
+    <div class="cmd-card">
+      <div class="cmd-syntax"><span class="prompt">$</span> cd ..</div>
+      <div class="cmd-desc">Go up one level (to parent folder).</div>
+      <div class="cmd-hook">Two dots = parent. One dot = current. Weird but universal.</div>
+    </div>
+    <div class="cmd-card">
+      <div class="cmd-syntax"><span class="prompt">$</span> cd ~</div>
+      <div class="cmd-desc">Go to home directory.</div>
+      <div class="cmd-hook">Tilde (~) = home. Always your safe starting point. Like pressing "Home" on Windows.</div>
+    </div>
+  </div>
+
+  <div class="hook-box">
+    <p><strong>The Submarine Analogy.</strong> Your terminal is a submarine. You can't see outside. <code>pwd</code> = depth gauge (where are you?). <code>ls</code> = sonar (what's around you?). <code>cd</code> = propeller (move forward). <code>cd ..</code> = reverse. Without these three reflexes, you're blind underwater.</p>
+  </div>
+
+  <div class="action">
+    <span class="comment"># Boot Kali VM. Open terminal. Run these in order:</span><br>
+    <span class="prompt">$</span> pwd<br>
+    <span class="output">/home/kali</span><br>
+    <span class="prompt">$</span> ls -la<br>
+    <span class="prompt">$</span> cd /etc<br>
+    <span class="prompt">$</span> ls -la<br>
+    <span class="comment"># /etc holds system config files — a goldmine for security</span><br>
+    <span class="prompt">$</span> cd ~<br>
+    <span class="comment"># Back to safety</span>
+  </div>
+
+  <div class="appsec-box">
+    <p>When you hack a machine (or do a pentest), <code>ls -la</code> is the first command you run after getting access. Hidden files in home directories often contain SSH keys, passwords, tokens. A <code>.bash_history</code> file shows every command the user ran. These are your first clues.</p>
+  </div>
+</section>
+
+<!-- OP 02: File Operations -->
+<section class="operation">
+  <div class="op-number">OPERATION 02</div>
+  <h2 class="op-title">Manipulate Files</h2>
+  <p class="op-mission">Create, destroy, copy, rename. These are your hands in the Linux world.</p>
+
+  <div class="cmd-grid">
+    <div class="cmd-card">
+      <div class="cmd-syntax"><span class="prompt">$</span> touch file.txt</div>
+      <div class="cmd-desc">Create an empty file. Also updates timestamps.</div>
+      <div class="cmd-hook">Like tapping something to create it. Think of touching a blank piece of paper.</div>
+    </div>
+    <div class="cmd-card">
+      <div class="cmd-syntax"><span class="prompt">$</span> mkdir myfolder</div>
+      <div class="cmd-desc">Make directory (folder).</div>
+      <div class="cmd-hook">mkdir -p makes nested folders at once: mkdir -p a/b/c</div>
+    </div>
+    <div class="cmd-card">
+      <div class="cmd-syntax"><span class="prompt">$</span> cat file.txt</div>
+      <div class="cmd-desc">Print file contents to screen.</div>
+      <div class="cmd-hook">Short files: cat. Long files: less (page by page, q to quit).</div>
+      <span class="cmd-tag important">USE DAILY</span>
+    </div>
+    <div class="cmd-card">
+      <div class="cmd-syntax"><span class="prompt">$</span> cp file.txt copy.txt</div>
+      <div class="cmd-desc">Copy a file. cp -r folder/ dest/ copies folders.</div>
+      <div class="cmd-hook">Always copies — original stays. cp source destination.</div>
+    </div>
+    <div class="cmd-card">
+      <div class="cmd-syntax"><span class="prompt">$</span> mv file.txt new.txt</div>
+      <div class="cmd-desc">Move OR rename a file. Same command for both.</div>
+      <div class="cmd-hook">mv within same folder = rename. mv to different path = move.</div>
+    </div>
+    <div class="cmd-card">
+      <div class="cmd-syntax"><span class="prompt">$</span> rm file.txt</div>
+      <div class="cmd-desc">Delete a file. Permanently. No recycle bin.</div>
+      <div class="cmd-hook">The point of no return. rm -r deletes folders. NEVER run rm -rf / on a real system.</div>
+      <span class="cmd-tag danger">PERMANENT</span>
+    </div>
+    <div class="cmd-card">
+      <div class="cmd-syntax"><span class="prompt">$</span> tail -f log.txt</div>
+      <div class="cmd-desc">Watch a file grow in real time. Ctrl+C to stop.</div>
+      <div class="cmd-hook">Security gold: tail -f /var/log/auth.log shows live login attempts on a server.</div>
+      <span class="cmd-tag security">SECURITY</span>
+    </div>
+    <div class="cmd-card">
+      <div class="cmd-syntax"><span class="prompt">$</span> head -20 / tail -20</div>
+      <div class="cmd-desc">Show first or last 20 lines of a file.</div>
+      <div class="cmd-hook">Log files are huge. head and tail show the interesting bits without loading everything.</div>
+    </div>
+  </div>
+
+  <div class="danger-box">
+    <p><code>rm</code> is permanent on Linux. There is no "undo." The trash can doesn't exist. Double-check before running it. Never run <code>rm -rf /</code> — that deletes the entire operating system. People have lost entire servers this way.</p>
+  </div>
+</section>
+
+<!-- OP 03: Searching -->
+<section class="operation">
+  <div class="op-number">OPERATION 03</div>
+  <h2 class="op-title">Find What's Hidden</h2>
+  <p class="op-mission">These commands are your metal detector. They find needles in haystacks.</p>
+
+  <div class="cmd-grid">
+    <div class="cmd-card">
+      <div class="cmd-syntax"><span class="prompt">$</span> grep "password" file.txt</div>
+      <div class="cmd-desc">Search for a string inside a file. Prints matching lines.</div>
+      <div class="cmd-hook">grep = Global Regular Expression Print. Think of it as Ctrl+F for the terminal.</div>
+      <span class="cmd-tag important">USE DAILY</span>
+    </div>
+    <div class="cmd-card">
+      <div class="cmd-syntax"><span class="prompt">$</span> grep -r "TODO" /home/</div>
+      <div class="cmd-desc">Recursive search — searches ALL files inside a folder and its subfolders.</div>
+      <div class="cmd-hook">The -r flag is the secret weapon. grep -r "api_key" /var/www/ is a classic recon move.</div>
+      <span class="cmd-tag security">SECURITY</span>
+    </div>
+    <div class="cmd-card">
+      <div class="cmd-syntax"><span class="prompt">$</span> grep -i "error" log.txt</div>
+      <div class="cmd-desc">Case-insensitive search. Matches "Error", "ERROR", "error".</div>
+      <div class="cmd-hook">Always use -i when searching logs — servers aren't consistent with capitalization.</div>
+    </div>
+    <div class="cmd-card">
+      <div class="cmd-syntax"><span class="prompt">$</span> find / -name "*.conf"</div>
+      <div class="cmd-desc">Find files by name pattern across the whole filesystem.</div>
+      <div class="cmd-hook">Add 2>/dev/null to silence permission errors: find / -name "*.conf" 2>/dev/null</div>
+      <span class="cmd-tag security">SECURITY</span>
+    </div>
+  </div>
+
+  <div class="action">
+    <span class="comment"># Security reconnaissance: find potential secrets in a folder</span><br>
+    <span class="prompt">$</span> grep -rE "(password|api_key|secret|token|AWS)" /etc/ 2>/dev/null<br><br>
+    <span class="comment"># Find world-readable sensitive files</span><br>
+    <span class="prompt">$</span> find /etc -name "*.conf" -readable 2>/dev/null<br><br>
+    <span class="comment"># Search a log for failed login attempts</span><br>
+    <span class="prompt">$</span> grep -i "failed" /var/log/auth.log 2>/dev/null | head -20
+  </div>
+
+  <div class="appsec-box">
+    <p>These three commands are how security engineers find hardcoded credentials in source code. On Day 20 (DevSecOps), you'll integrate <strong>automated grep-style scanning</strong> (called secret scanning) into GitHub CI/CD pipelines using tools like TruffleHog and GitLeaks — which are just sophisticated versions of <code>grep -rE</code>.</p>
+  </div>
+</section>
+
+<!-- OP 04: Permissions -->
+<section class="operation">
+  <div class="op-number">OPERATION 04</div>
+  <h2 class="op-title">Control Access</h2>
+  <p class="op-mission">Permission misconfigurations cause more security incidents than almost anything else. Understand this deeply.</p>
+
+  <div class="narrative">
+    <p>Every file in Linux has permissions. Three groups of people can interact with it: the <strong>Owner</strong> (u), the <strong>Group</strong> (g), and <strong>Everyone else</strong> (o). Each group can have three permissions: <em>Read</em> (r=4), <em>Write</em> (w=2), <em>Execute</em> (x=1).</p>
+    <p>When you run <code>ls -la</code>, you see something like <code>-rwxr-xr--</code>. This is three groups of three bits telling you exactly who can do what.</p>
+  </div>
+
+  <div class="chmod-calc">
+    <div class="chmod-title">▸ CHMOD INTERACTIVE CALCULATOR</div>
+    <p style="font-size: 14px; color: var(--text-soft); margin-bottom: 20px;">Click the permission bits to build any chmod value. Watch the command update.</p>
+
+    <div class="chmod-row">
+      <div class="chmod-who">OWNER</div>
+      <div class="chmod-bits">
+        <div class="chmod-bit"><label for="ur">READ</label><input type="checkbox" id="ur" data-who="0" data-val="4" onchange="updateChmod()"></div>
+        <div class="chmod-bit"><label for="uw">WRITE</label><input type="checkbox" id="uw" data-who="0" data-val="2" onchange="updateChmod()"></div>
+        <div class="chmod-bit"><label for="ux">EXEC</label><input type="checkbox" id="ux" data-who="0" data-val="1" onchange="updateChmod()"></div>
+      </div>
+      <div class="chmod-num" id="n0">0</div>
+    </div>
+
+    <div class="chmod-row">
+      <div class="chmod-who">GROUP</div>
+      <div class="chmod-bits">
+        <div class="chmod-bit"><label for="gr">READ</label><input type="checkbox" id="gr" data-who="1" data-val="4" onchange="updateChmod()"></div>
+        <div class="chmod-bit"><label for="gw">WRITE</label><input type="checkbox" id="gw" data-who="1" data-val="2" onchange="updateChmod()"></div>
+        <div class="chmod-bit"><label for="gx">EXEC</label><input type="checkbox" id="gx" data-who="1" data-val="1" onchange="updateChmod()"></div>
+      </div>
+      <div class="chmod-num" id="n1">0</div>
+    </div>
+
+    <div class="chmod-row">
+      <div class="chmod-who">OTHERS</div>
+      <div class="chmod-bits">
+        <div class="chmod-bit"><label for="or">READ</label><input type="checkbox" id="or" data-who="2" data-val="4" onchange="updateChmod()"></div>
+        <div class="chmod-bit"><label for="ow">WRITE</label><input type="checkbox" id="ow" data-who="2" data-val="2" onchange="updateChmod()"></div>
+        <div class="chmod-bit"><label for="ox">EXEC</label><input type="checkbox" id="ox" data-who="2" data-val="1" onchange="updateChmod()"></div>
+      </div>
+      <div class="chmod-num" id="n2">0</div>
+    </div>
+
+    <div class="chmod-result">
+      <span class="chmod-cmd" id="chmodCmd">chmod 000 file</span>
+      <span class="chmod-explain" id="chmodExplain">Nobody can do anything</span>
+    </div>
+  </div>
+
+  <div class="hook-box">
+    <p><strong>Common values to memorize:</strong><br>
+    <code>chmod 755</code> = owner does anything (7), others read+execute (5). Standard for programs.<br>
+    <code>chmod 644</code> = owner read+write (6), others read-only (4). Standard for files.<br>
+    <code>chmod 600</code> = owner read+write, nobody else. Use for SSH keys and secrets.<br>
+    <code>chmod 777</code> = everyone can do everything. <strong>DANGEROUS. Never in production.</strong></p>
+  </div>
+
+  <div class="cmd-grid">
+    <div class="cmd-card">
+      <div class="cmd-syntax"><span class="prompt">$</span> chmod +x script.sh</div>
+      <div class="cmd-desc">Make a file executable. Required before running scripts.</div>
+      <div class="cmd-hook">+x adds execute. You'll do this every time you write a bash script.</div>
+      <span class="cmd-tag important">USE DAILY</span>
+    </div>
+    <div class="cmd-card">
+      <div class="cmd-syntax"><span class="prompt">$</span> sudo command</div>
+      <div class="cmd-desc">Run a command as administrator (superuser).</div>
+      <div class="cmd-hook">"sudo" = "superuser do." Getting sudo access is the #1 goal of privilege escalation attacks.</div>
+      <span class="cmd-tag security">SECURITY</span>
+    </div>
+    <div class="cmd-card">
+      <div class="cmd-syntax"><span class="prompt">$</span> whoami</div>
+      <div class="cmd-desc">Print current logged-in username.</div>
+      <div class="cmd-hook">First command after gaining shell access in a pentest. Am I root yet?</div>
+      <span class="cmd-tag security">SECURITY</span>
+    </div>
+  </div>
+
+  <div class="appsec-box">
+    <p>On Day 39 (Penetration Testing AWS), privilege escalation is a key attack. On Linux systems, it means going from a regular user to root (sudo). Understanding permissions now means you'll understand how attackers exploit misconfigurations — like <code>chmod 777</code> files that shouldn't be writable, or SUID bits that let normal users run as root.</p>
+  </div>
+</section>
+
+<!-- OP 05: Pipes and Redirection -->
+<section class="operation">
+  <div class="op-number">OPERATION 05</div>
+  <h2 class="op-title">Build Command Chains</h2>
+  <p class="op-mission">Single commands are tools. Pipes turn them into machines.</p>
+
+  <div class="narrative">
+    <p>The real power of Linux is <strong>chaining commands together</strong>. The output of one command becomes the input of the next. You build data processing pipelines from simple building blocks.</p>
+  </div>
+
+  <div class="cmd-grid">
+    <div class="cmd-card">
+      <div class="cmd-syntax"><span class="prompt">$</span> ls | grep "txt"</div>
+      <div class="cmd-desc">Pipe ls output into grep to filter only .txt files.</div>
+      <div class="cmd-hook">The pipe | is like a worker passing their result to the next worker in line.</div>
+      <span class="cmd-tag important">USE DAILY</span>
+    </div>
+    <div class="cmd-card">
+      <div class="cmd-syntax"><span class="prompt">$</span> cat file.txt | wc -l</div>
+      <div class="cmd-desc">Count the number of lines in a file.</div>
+      <div class="cmd-hook">wc = word count. -l = lines. -w = words. -c = characters.</div>
+    </div>
+    <div class="cmd-card">
+      <div class="cmd-syntax"><span class="prompt">$</span> ls > output.txt</div>
+      <div class="cmd-desc">Save output to a file. Overwrites if exists.</div>
+      <div class="cmd-hook">> is a "funnel." Instead of screen, output goes to file. OVERWRITES.</div>
+    </div>
+    <div class="cmd-card">
+      <div class="cmd-syntax"><span class="prompt">$</span> ls >> output.txt</div>
+      <div class="cmd-desc">Append output to a file. Adds to end without erasing.</div>
+      <div class="cmd-hook">>> = keep adding. Good for logs. > = overwrite. >> = append. Don't confuse them.</div>
+    </div>
+    <div class="cmd-card">
+      <div class="cmd-syntax"><span class="prompt">$</span> 2>/dev/null</div>
+      <div class="cmd-desc">Throw error messages in the trash (they still clutter output).</div>
+      <div class="cmd-hook">/dev/null is Linux's black hole. Anything sent there disappears. You'll see this everywhere.</div>
+    </div>
+    <div class="cmd-card">
+      <div class="cmd-syntax"><span class="prompt">$</span> sort | uniq -c</div>
+      <div class="cmd-desc">Sort lines then count unique values.</div>
+      <div class="cmd-hook">Classic log analysis combo: who made the most requests? sort | uniq -c | sort -rn</div>
+    </div>
+  </div>
+
+  <div class="action">
+    <span class="comment"># Real security pipeline: find failed logins, count by IP</span><br>
+    <span class="prompt">$</span> grep "Failed" /var/log/auth.log 2>/dev/null | \<br>
+    &nbsp;&nbsp;awk '{print $11}' | sort | uniq -c | sort -rn | head -10<br><br>
+    <span class="comment"># Count how many files are in the current directory</span><br>
+    <span class="prompt">$</span> ls | wc -l<br><br>
+    <span class="comment"># Save nmap results to a file</span><br>
+    <span class="prompt">$</span> nmap -sV 192.168.1.1 > scan_results.txt 2>&1
+  </div>
+
+  <div class="hook-box">
+    <p><strong>The Assembly Line.</strong> Imagine a factory making a product. Each worker does one job and passes the result to the next. That's a pipe. <code>cat log.txt | grep "error" | sort | uniq -c</code> is a 4-worker assembly line: read file → filter errors → sort them → count unique ones. Each command is simple. The chain is powerful.</p>
+  </div>
+</section>
+
+<!-- OP 06: Command Guesser Game -->
+<section class="operation">
+  <div class="op-number">OPERATION 06 — TRAINING DRILL</div>
+  <h2 class="op-title">Command Guesser</h2>
+  <p class="op-mission">Given a task, identify the right command. Click your answer.</p>
+
+  <div class="guesser" id="guesser"></div>
+</section>
+
+<!-- OP 07: Build the Security Script -->
+<section class="operation">
+  <div class="op-number">OPERATION 07 — BUILD SOMETHING</div>
+  <h2 class="op-title">Your First Security Script</h2>
+  <p class="op-mission">Combining everything you've learned into one working tool.</p>
+
+  <div class="narrative">
+    <p>A bash script is just a text file with commands in it. Instead of typing 10 commands manually every time, you put them in a file and run them with one command.</p>
+  </div>
+
+  <div class="action">
+    <span class="comment"># Step 1: Create the scripts folder</span><br>
+    <span class="prompt">$</span> mkdir -p ~/scripts<br>
+    <span class="prompt">$</span> cd ~/scripts<br><br>
+    <span class="comment"># Step 2: Create the script file</span><br>
+    <span class="prompt">$</span> cat > find_secrets.sh << 'EOF'<br>
+#!/bin/bash<br>
+# Day 2 Security Script: Find potential secrets in files<br>
+<br>
+echo "=== Secret Scanner ==="<br>
+echo "Target: $1"<br>
+echo ""<br>
+<br>
+TARGET=${1:-"$HOME"}<br>
+<br>
+echo "[*] Searching for credentials..."<br>
+grep -rE "(password|passwd|api_key|secret|token|AWS)" \<br>
+&nbsp;&nbsp;$TARGET 2>/dev/null | head -20<br>
+<br>
+echo ""<br>
+echo "[*] Searching for .env files..."<br>
+find $TARGET -name ".env" 2>/dev/null<br>
+<br>
+echo ""<br>
+echo "[*] World-writable files (security risk)..."<br>
+find $TARGET -perm -o+w -type f 2>/dev/null | head -10<br>
+<br>
+echo ""<br>
+echo "=== Scan Complete ==="<br>
+EOF<br><br>
+    <span class="comment"># Step 3: Make it executable</span><br>
+    <span class="prompt">$</span> chmod +x find_secrets.sh<br><br>
+    <span class="comment"># Step 4: Run it on your home directory</span><br>
+    <span class="prompt">$</span> ./find_secrets.sh ~<br><br>
+    <span class="comment"># Step 5: Run it on /etc to see system configs</span><br>
+    <span class="prompt">$</span> ./find_secrets.sh /etc
+  </div>
+
+  <div class="appsec-box">
+    <p>This is a primitive version of what <strong>Semgrep</strong> and <strong>TruffleHog</strong> do commercially — search code for hardcoded secrets. On Day 20 (DevSecOps), you'll automate exactly this kind of scan in a GitHub pipeline. Today you built the manual version from scratch. That's the right order to learn it.</p>
+  </div>
+</section>
+
+<!-- OP 08: OverTheWire -->
+<section class="operation">
+  <div class="op-number">OPERATION 08 — FIELD EXERCISE</div>
+  <h2 class="op-title">OverTheWire Bandit</h2>
+  <p class="op-mission">The most effective Linux training on the internet. Free. Gamified. Starts now.</p>
+
+  <div class="narrative">
+    <p>Bandit is a <strong>wargame</strong> — a series of security puzzles. Each level gives you a shell on their server and a goal. You use Linux commands to find the password to the next level. It's exactly how real CTF (Capture The Flag) competitions work.</p>
+    <p>Every level teaches one new command or concept. You can't cheat your way through — you have to understand the command to use it.</p>
+  </div>
+
+  <div class="action">
+    <span class="comment"># Connect to Level 0 (from your Kali terminal)</span><br>
+    <span class="prompt">$</span> ssh bandit0@bandit.labs.overthewire.org -p 2220<br>
+    <span class="comment"># Password: bandit0</span><br>
+    <span class="comment"># When asked about host authenticity: type "yes"</span>
+  </div>
+
+  <div class="hook-box">
+    <p><strong>Goal for today:</strong> Complete levels 0–10. Each takes 5–15 minutes once you know the right command. You'll need: cat, ls -la, find, file, du, strings, base64, tr, gzip, bzip2, tar.<br><br>
+    <strong>When you get stuck:</strong> Google "OverTheWire Bandit Level X hint" — not the answer, just a hint. The struggle is the learning.<br><br>
+    <strong>Tomorrow:</strong> Levels 11–20 on Day 2 review day.</p>
+  </div>
+
+  <div style="text-align: center; margin: 28px 0;">
+    <a href="https://overthewire.org/wargames/bandit/" target="_blank" style="display: inline-block; font-family: 'Share Tech Mono', monospace; font-size: 14px; letter-spacing: 0.15em; color: var(--bg); background: var(--amber); padding: 14px 28px; text-decoration: none; transition: opacity 0.2s;">▸ OPEN OVERTHEWIRE BANDIT</a>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section class="quiz-panel">
+  <h2>SKILLS ASSESSMENT — DAY 2</h2>
+  <p style="color: var(--text-soft); font-family: 'Exo 2', sans-serif; font-style: italic; margin-top: 4px; margin-bottom: 8px;">10 questions. No guessing without reasoning. Click — then read the feedback.</p>
+
+  <div class="quiz-question">
+    <div class="q-num">Q.01</div>
+    <div class="q-text">You SSH into a server and want to see ALL files including hidden ones. What do you run?</div>
+    <div class="q-opts" data-q="d2-1">
+      <button class="q-opt" data-c="false" data-f="ls shows files, but not hidden ones (starting with dot) and not detailed info.">ls</button>
+      <button class="q-opt" data-c="true" data-f="Exactly. -l = long format (shows permissions, size, dates). -a = all files including hidden. Together: -la is the standard recon first-look.">ls -la</button>
+      <button class="q-opt" data-c="false" data-f="dir is a Windows command. Linux uses ls.">dir</button>
+      <button class="q-opt" data-c="false" data-f="find lists files too, but it's for searching, not browsing current directory.">find .</button>
+    </div>
+    <div class="q-fb"></div>
+  </div>
+
+  <div class="quiz-question">
+    <div class="q-num">Q.02</div>
+    <div class="q-text">What does <code>grep -r "password" /var/www/</code> do?</div>
+    <div class="q-opts" data-q="d2-2">
+      <button class="q-opt" data-c="false" data-f="grep searches file contents, not filenames. find -name would search filenames.">Finds all files named 'password' in /var/www/</button>
+      <button class="q-opt" data-c="false" data-f="grep reads existing files, it doesn't delete them.">Deletes files containing 'password'</button>
+      <button class="q-opt" data-c="true" data-f="Correct. -r = recursive (searches inside all files in the folder and subfolders). This is a classic secret-hunting command — run it on source code repos to find hardcoded credentials.">Searches inside ALL files under /var/www/ for the string 'password'</button>
+      <button class="q-opt" data-c="false" data-f="grep reads file contents. To see permissions you'd use ls -la.">Shows file permissions for /var/www/</button>
+    </div>
+    <div class="q-fb"></div>
+  </div>
+
+  <div class="quiz-question">
+    <div class="q-num">Q.03</div>
+    <div class="q-text">You accidentally deleted an important file with <code>rm file.txt</code>. Where is it?</div>
+    <div class="q-opts" data-q="d2-3">
+      <button class="q-opt" data-c="false" data-f="Linux has no Recycle Bin by default. rm is immediate and permanent.">In the Recycle Bin</button>
+      <button class="q-opt" data-c="false" data-f="There's no /tmp/deleted folder. /tmp stores temp files but not deleted ones.">In /tmp/deleted</button>
+      <button class="q-opt" data-c="false" data-f="No such thing as ~/.trash in standard Linux (some desktop environments add it, but terminal rm doesn't use it).">In ~/.trash</button>
+      <button class="q-opt" data-c="true" data-f="Exactly the right answer. rm permanently removes files. No undo. This is why you back up, use version control, and double-check before running rm. Some people use 'trash-cli' as a safer alternative.">Gone permanently — rm has no recycle bin on Linux</button>
+    </div>
+    <div class="q-fb"></div>
+  </div>
+
+  <div class="quiz-question">
+    <div class="q-num">Q.04</div>
+    <div class="q-text">What's the difference between <code>></code> and <code>>></code> for file output?</div>
+    <div class="q-opts" data-q="d2-4">
+      <button class="q-opt" data-c="false" data-f="Both send to file. The difference is what happens to existing content."> > sends to file, >> sends to screen</button>
+      <button class="q-opt" data-c="true" data-f="Correct. > overwrites (destroys existing content). >> appends (adds to end). Use >> for logs where you want to accumulate data. Use > when you want a fresh start."> > overwrites the file, >> appends to it</button>
+      <button class="q-opt" data-c="false" data-f="Not about file type — both work on any text file."> > works on text files, >> works on binary files</button>
+      <button class="q-opt" data-c="false" data-f="Both redirect stdout (normal output). 2> redirects stderr (error messages)."> > redirects errors, >> redirects output</button>
+    </div>
+    <div class="q-fb"></div>
+  </div>
+
+  <div class="quiz-question">
+    <div class="q-num">Q.05</div>
+    <div class="q-text">You want to make a bash script called <code>scan.sh</code> executable. What command do you run?</div>
+    <div class="q-opts" data-q="d2-5">
+      <button class="q-opt" data-c="false" data-f="execute scan.sh isn't a valid Linux command.">execute scan.sh</button>
+      <button class="q-opt" data-c="true" data-f="Correct. chmod = change mode (permissions). +x = add execute permission. You must do this before running any script you create. Then run it with ./scan.sh">chmod +x scan.sh</button>
+      <button class="q-opt" data-c="false" data-f="chown changes the file OWNER, not its permissions. chown user:group file.">chown +x scan.sh</button>
+      <button class="q-opt" data-c="false" data-f="sudo chmod would work but is overkill — you own the file so you can change its permissions without sudo.">sudo execute scan.sh</button>
+    </div>
+    <div class="q-fb"></div>
+  </div>
+
+  <div class="quiz-question">
+    <div class="q-num">Q.06</div>
+    <div class="q-text">A file has permissions <code>chmod 777</code>. Why is this a security problem?</div>
+    <div class="q-opts" data-q="d2-6">
+      <button class="q-opt" data-c="false" data-f="777 doesn't corrupt files. The issue is about WHO can access and modify the file.">It corrupts the file</button>
+      <button class="q-opt" data-c="false" data-f="The file still exists — 777 doesn't delete it.">It makes the file invisible</button>
+      <button class="q-opt" data-c="true" data-f="Exactly. 777 = 7(owner)+7(group)+7(others). 7 = read+write+execute. So EVERYONE on the system can read, modify, and execute the file. If it's a web server script, any process or attacker with any access can overwrite it. Principle of least privilege: grant only what's needed.">Everyone on the system (and sometimes the internet) can read, write, and execute it</button>
+      <button class="q-opt" data-c="false" data-f="777 doesn't change who owns the file — ownership is separate from permissions.">It changes the file's owner to root</button>
+    </div>
+    <div class="q-fb"></div>
+  </div>
+
+  <div class="quiz-question">
+    <div class="q-num">Q.07</div>
+    <div class="q-text">What does the <code>|</code> (pipe) character do?</div>
+    <div class="q-opts" data-q="d2-7">
+      <button class="q-opt" data-c="false" data-f="Pipe doesn't save to files — that's > and >>">Saves command output to a file</button>
+      <button class="q-opt" data-c="true" data-f="Correct. The pipe passes the output (stdout) of the left command as the input (stdin) of the right command. ls | grep txt means: list files, then filter that list for 'txt'. This is the core of Linux power — composing simple tools into complex operations.">Sends output of one command as input to the next command</button>
+      <button class="q-opt" data-c="false" data-f="Pipe doesn't divide. It connects.">Divides output between two files</button>
+      <button class="q-opt" data-c="false" data-f="| runs commands sequentially but connected, not in background (that's &).">Runs commands simultaneously in background</button>
+    </div>
+    <div class="q-fb"></div>
+  </div>
+
+  <div class="quiz-question">
+    <div class="q-num">Q.08</div>
+    <div class="q-text">What does <code>tail -f /var/log/auth.log</code> do and why would a security engineer use it?</div>
+    <div class="q-opts" data-q="d2-8">
+      <button class="q-opt" data-c="false" data-f="tail -f doesn't delete anything. The -f flag means 'follow'.">Deletes old log entries</button>
+      <button class="q-opt" data-c="false" data-f="tail -f shows the LAST lines and keeps updating. head shows the first lines.">Shows the first 10 lines of the file</button>
+      <button class="q-opt" data-c="true" data-f="Exactly. -f = follow. It shows the last lines and continues printing new lines as they're added. For auth.log, this means watching login attempts happen in real time — useful when monitoring a server under attack or during incident response.">Watches the log file and shows new lines in real time as logins happen</button>
+      <button class="q-opt" data-c="false" data-f="tail -f reads from the file, it doesn't copy anything.">Copies log entries to another file</button>
+    </div>
+    <div class="q-fb"></div>
+  </div>
+
+  <div class="quiz-question">
+    <div class="q-num">Q.09</div>
+    <div class="q-text">After gaining access to a server during a pentest, the VERY FIRST command you should run is:</div>
+    <div class="q-opts" data-q="d2-9">
+      <button class="q-opt" data-c="false" data-f="You'd want to know who you ARE before doing anything. rm would be destroying evidence of your presence (also unethical in real pentests).">rm -rf /tmp/*</button>
+      <button class="q-opt" data-c="true" data-f="Correct. whoami tells you which user account you're running as. Are you root? A service account? A regular user? This determines everything else — what commands you can run, what files you can read, and whether you need to escalate privileges.">whoami</button>
+      <button class="q-opt" data-c="false" data-f="pwd tells you WHERE you are, not WHO you are. Both are important but identity comes first.">pwd</button>
+      <button class="q-opt" data-c="false" data-f="ls is useful but you need to know who you are before you know what you can see.">ls /etc</button>
+    </div>
+    <div class="q-fb"></div>
+  </div>
+
+  <div class="quiz-question">
+    <div class="q-num">Q.10</div>
+    <div class="q-text">You want to find failed SSH login attempts and count how many came from each IP. Which command chain is correct?</div>
+    <div class="q-opts" data-q="d2-10">
+      <button class="q-opt" data-c="false" data-f="cat alone just prints the file — no filtering or counting.">cat /var/log/auth.log</button>
+      <button class="q-opt" data-c="false" data-f="This only filters — it doesn't count or group by IP.">grep "Failed" /var/log/auth.log</button>
+      <button class="q-opt" data-c="true" data-f="Correct pipeline: grep filters lines with 'Failed', awk extracts the IP field (field 11 in auth.log), sort alphabetically groups matching IPs together, uniq -c counts consecutive duplicates, sort -rn sorts by count descending. This is real incident response work.">grep "Failed" /var/log/auth.log | awk '{print $11}' | sort | uniq -c | sort -rn</button>
+      <button class="q-opt" data-c="false" data-f="This finds files named 'Failed', not log entries containing that word.">find /var/log -name "Failed"</button>
+    </div>
+    <div class="q-fb"></div>
+  </div>
+</section>
+
+<!-- FIELD NOTES -->
+<section class="field-notes">
+  <h3>1. YOUR 5 MOST USEFUL COMMANDS TODAY</h3>
+  <p>Open VS Code → <code>60-day-appsec-journey/</code> → create <code>day-02-linux-basics.md</code>. Write the 5 commands that felt most immediately useful. Explain each in ONE sentence in your own words.</p>
+
+  <h3>2. COMMANDS THAT CONFUSED YOU</h3>
+  <p>Write 2–3 commands you didn't fully get. For each, note: what did the man page say? (<code>man command</code> in terminal gives you the manual.)</p>
+
+  <h3>3. OverTheWire BANDIT PROGRESS</h3>
+  <p>Note which levels you reached. Paste any interesting commands you discovered. Tomorrow: levels 11–20.</p>
+
+  <h3>4. SECURITY CONNECTION</h3>
+  <p>Complete this sentence: "Today's Linux command I'll use most in AppSec work is ___ because ___."</p>
+
+  <h3>5. COMMIT AND PUSH</h3>
+  <div class="action" style="margin-top: 10px;">
+    <span class="prompt">$</span> cd ~/Documents/appsec-roadmap/60-day-appsec-journey<br>
+    <span class="prompt">$</span> git add .<br>
+    <span class="prompt">$</span> git commit -m "Day 2: Linux command line foundation"<br>
+    <span class="prompt">$</span> git push
+  </div>
+  <p>Then push your <code>find_secrets.sh</code> script to <code>python-security-scripts</code> repo. Day 2 is done. Mark it complete in the roadmap HTML.</p>
+</section>
+
+<!-- CLOSING -->
+<div class="closing">
+  <p>Day 2 closed. You speak Linux now.</p>
+  <p>Tomorrow: <strong>Day 3 — Networking compressed.</strong> Still on your Mac Terminal.</p>
+  <div class="sig">— END OPS FILE 02 —</div>
+</div>
+
+</main>
+
+<script>
+// State management
+const SK = 'day2-state-v1';
+let S = {};
+try { S = JSON.parse(localStorage.getItem(SK)||'{}'); } catch(e) {}
+function save() { try { localStorage.setItem(SK, JSON.stringify(S)); } catch(e) {} showSaved(); }
+function showSaved() {
+  const p = document.getElementById('savedPill');
+  p.classList.add('show');
+  clearTimeout(window._st);
+  window._st = setTimeout(() => p.classList.remove('show'), 1500);
+}
+
+// chmod calculator
+const chmodExplains = {
+  '000': 'Nobody can do anything',
+  '400': 'Owner can only read',
+  '600': 'Owner read+write only (use for SSH keys)',
+  '644': 'Owner read+write, others read-only (standard files)',
+  '700': 'Owner full control, nobody else',
+  '755': 'Owner full, others read+execute (standard programs)',
+  '777': 'EVERYONE full control — DANGEROUS',
+  '111': 'Everyone can execute only',
+  '444': 'Everyone can read only',
+};
+
+function updateChmod() {
+  const bits = [[0,0,0],[0,0,0],[0,0,0]];
+  document.querySelectorAll('.chmod-bit input').forEach(cb => {
+    bits[+cb.dataset.who][cb.dataset.val=='4'?0:cb.dataset.val=='2'?1:2] = cb.checked ? +cb.dataset.val : 0;
+  });
+  const nums = bits.map(b => b.reduce((a,v)=>a+v,0));
+  nums.forEach((n,i) => document.getElementById('n'+i).textContent = n);
+  const code = nums.join('');
+  document.getElementById('chmodCmd').textContent = `chmod ${code} file`;
+  const ex = chmodExplains[code];
+  document.getElementById('chmodExplain').textContent = ex || (() => {
+    const parts = [['Owner','can'],['Group','can'],['Others','can']];
+    return nums.map((n,i) => `${parts[i][0]}: ${n>=4?'r':''}${n%4>=2?'w':''}${n%2?'x':''}${n==0?'nothing':''}`).join(' | ');
+  })();
+  S.chmod = code; save();
+}
+
+// Restore chmod
+if (S.chmod) {
+  const code = S.chmod.split('').map(Number);
+  const mapping = [{id:'ur',v:4},{id:'uw',v:2},{id:'ux',v:1},{id:'gr',v:4},{id:'gw',v:2},{id:'gx',v:1},{id:'or',v:4},{id:'ow',v:2},{id:'ox',v:1}];
+  [0,1,2].forEach(who => {
+    const n = code[who];
+    if (n>=4) document.getElementById(['ur','gr','or'][who]).checked = true;
+    if (n%4>=2) document.getElementById(['uw','gw','ow'][who]).checked = true;
+    if (n%2) document.getElementById(['ux','gx','ox'][who]).checked = true;
+  });
+  updateChmod();
+}
+
+// Command guesser data
+const challenges = [
+  {
+    desc: "You're in /home/kali and want to go to /etc without typing the full path step by step.",
+    opts: ['pwd', 'cd /etc', 'ls /etc', 'cat /etc'],
+    correct: 1,
+    fb: "cd /etc jumps directly to any absolute path regardless of where you are. Absolute paths start with /. Relative paths start from where you are."
+  },
+  {
+    desc: "You need to see if a file called .ssh exists in your home directory. It might be hidden.",
+    opts: ['ls', 'ls -la', 'cat ~/.ssh', 'find -name ssh'],
+    correct: 1,
+    fb: "ls -la shows hidden files (starting with dot). Plain ls would never show .ssh because hidden files are invisible to it."
+  },
+  {
+    desc: "You have 10,000 lines in a log file. You want to see just the last 50 lines.",
+    opts: ['cat log.txt | head -50', 'tail -50 log.txt', 'grep -50 log.txt', 'less -50 log.txt'],
+    correct: 1,
+    fb: "tail shows lines from the end. tail -50 = last 50 lines. head -50 would show the FIRST 50. For logs, you almost always want tail (most recent events)."
+  },
+  {
+    desc: "You want to count how many lines in a file contain the word 'error'.",
+    opts: ['grep error file.txt', 'grep -c error file.txt', 'find error file.txt', 'cat file.txt | head error'],
+    correct: 1,
+    fb: "grep -c = count matching lines (not print them). Without -c, grep prints the lines. With -c it just gives you the number. Useful: grep -c 'ERROR' server.log"
+  },
+  {
+    desc: "You just wrote a Python script called scanner.py and can't run it. What's missing?",
+    opts: ['mv scanner.py ~/scripts/', 'chmod +x scanner.py', 'sudo scanner.py', 'cp scanner.py /usr/bin/'],
+    correct: 1,
+    fb: "Scripts aren't executable by default. chmod +x adds execute permission. Then you can run it with ./scanner.py or python3 scanner.py (python3 doesn't need +x)."
+  },
+  {
+    desc: "You want to find all .conf files anywhere on the system, ignoring permission errors.",
+    opts: ['ls *.conf', 'grep conf / -r', 'find / -name "*.conf" 2>/dev/null', 'locate *.conf'],
+    correct: 2,
+    fb: "find / -name '*.conf' searches from root. 2>/dev/null hides 'permission denied' errors. *.conf matches any filename ending in .conf. The wildcard requires quotes to prevent the shell from expanding it prematurely."
+  }
+];
+
+function buildGuesser() {
+  const g = document.getElementById('guesser');
+  challenges.forEach((ch, ci) => {
+    const answered = S[`ch-${ci}`];
+    const div = document.createElement('div');
+    div.className = 'challenge-card';
+    div.innerHTML = `
+      <div class="challenge-num">CHALLENGE ${ci+1} OF ${challenges.length}</div>
+      <div class="challenge-desc">${ch.desc}</div>
+      <div class="challenge-opts" id="ch-opts-${ci}">
+        ${ch.opts.map((o,oi) => `<button class="challenge-opt ${answered!==undefined?'locked':''} ${answered!==undefined&&oi===ch.correct?'reveal-correct':''} ${answered===oi&&oi!==ch.correct?'wrong-pick':''} ${answered===oi&&oi===ch.correct?'correct-pick':''}" data-ci="${ci}" data-oi="${oi}" onclick="pickChallenge(this,${ci},${oi},${ch.correct})">${o}</button>`).join('')}
+      </div>
+      <div class="challenge-feedback ${answered!==undefined?'show':''}  ${answered!==undefined?(answered===ch.correct?'ok':'bad'):''}" id="ch-fb-${ci}">
+        ${answered!==undefined?ch.fb:''}
+      </div>
+    `;
+    g.appendChild(div);
+  });
+}
+
+function pickChallenge(btn, ci, oi, correct) {
+  if (btn.classList.contains('locked')) return;
+  const opts = document.querySelectorAll(`#ch-opts-${ci} .challenge-opt`);
+  opts.forEach(o => {
+    o.classList.add('locked');
+    if (+o.dataset.oi === correct) o.classList.add('reveal-correct');
+  });
+  if (oi === correct) btn.classList.add('correct-pick');
+  else btn.classList.add('wrong-pick');
+  const fb = document.getElementById(`ch-fb-${ci}`);
+  fb.textContent = challenges[ci].fb;
+  fb.className = `challenge-feedback show ${oi===correct?'ok':'bad'}`;
+  S[`ch-${ci}`] = oi;
+  save();
+}
+
+// Quiz
+document.querySelectorAll('.q-opts').forEach(opts => {
+  const qid = opts.dataset.q;
+  const saved = S[`q-${qid}`];
+  if (saved !== undefined) {
+    const btns = opts.querySelectorAll('.q-opt');
+    btns.forEach((b,i) => {
+      b.classList.add('locked');
+      if (b.dataset.c==='true') b.classList.add('correct');
+      if (i===saved && b.dataset.c!=='true') b.classList.add('wrong');
+    });
+    const fb = opts.parentElement.querySelector('.q-fb');
+    const pickedBtn = btns[saved];
+    const ok = pickedBtn.dataset.c==='true';
+    fb.innerHTML = `<span class="verdict ${ok?'ok':'bad'}">${ok?'CORRECT':'INCORRECT'}</span>${pickedBtn.dataset.f}`;
+    fb.classList.add('show');
+  }
+  opts.querySelectorAll('.q-opt').forEach((btn,i) => {
+    btn.addEventListener('click', () => {
+      if (btn.classList.contains('locked')) return;
+      const ok = btn.dataset.c==='true';
+      opts.querySelectorAll('.q-opt').forEach(b => {
+        b.classList.add('locked');
+        if (b.dataset.c==='true') b.classList.add('correct');
+      });
+      if (!ok) btn.classList.add('wrong');
+      const fb = opts.parentElement.querySelector('.q-fb');
+      fb.innerHTML = `<span class="verdict ${ok?'ok':'bad'}">${ok?'CORRECT':'INCORRECT'}</span>${btn.dataset.f}`;
+      fb.classList.add('show');
+      S[`q-${qid}`] = i;
+      save();
+    });
+  });
+});
+
+buildGuesser();
+
+console.log('%c▸ OPS FILE 02 — DAY 2 // LINUX COMMAND LINE', 'font-family:monospace;font-weight:bold;color:#e8a832;font-size:14px');
+</script>
+</body>
+</html>

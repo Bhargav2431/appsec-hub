@@ -5,7 +5,7 @@
 // whenever you add new lesson/note files so the cache refreshes.
 // ============================================================
 
-const CACHE_VERSION = 'appsec-hub-v2';
+const CACHE_VERSION = 'appsec-hub-v4';
 
 // These are the app "shell" files — they change every time you ship an update.
 // We use network-first for these so a phone with an old cached version
@@ -25,6 +25,11 @@ const LESSON_ASSETS = [
   './lessons/day-02-linux-interactive.html',
   './lessons/day-03-networking-interactive.html',
   './lessons/day-04-python-interactive.html',
+  './lessons/day-05-architecture-interactive.html',
+  './lessons/day-06-owasp-interactive.html',
+  './lessons/day-07-burpsuite-interactive.html',
+  './lessons/day-08-sqli-interactive.html',
+  './lessons/day-09-xss-interactive.html',
   './lessons/interview-prep-days-1-4.html',
 ];
 
@@ -33,6 +38,11 @@ const NOTE_ASSETS = [
   './notes/day-02-revision-notes.md',
   './notes/day-03-revision-notes.md',
   './notes/day-04-revision-notes.md',
+  './notes/day-05-revision-notes.md',
+  './notes/day-06-revision-notes.md',
+  './notes/day-07-revision-notes.md',
+  './notes/day-08-revision-notes.md',
+  './notes/day-09-revision-notes.md',
   './notes/days-05-25-revision-notes.md',
   './notes/day-0-verification-checklist.md',
   './notes/github-push-guide.md',

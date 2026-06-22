@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Day 5 — Web Application Architecture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a1420;--bg1:#0e1c2c;--bg2:#132538;--bg3:#1a3148;
+  --line:#2a4a64;--line-hi:#3d6688;
+  --text:#cdd9e5;--text2:#8aa2b8;--text3:#4a6178;
+  --cyan:#22d3ee;--cyan-dim:#0e6478;--cyan-glow:rgba(34,211,238,.12);
+  --amber:#fbbf24;--green:#34d399;--red:#f87171;
+  --paper:#e2e8f0;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  background:var(--bg);color:var(--text);font-family:'JetBrains Mono',monospace;
+  font-size:15px;line-height:1.7;-webkit-font-smoothing:antialiased;
+  background-image:
+    linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size:32px 32px;background-attachment:fixed;
+  background-color:var(--bg);
+  background-blend-mode:normal;
+}
+body::before{
+  content:"";position:fixed;inset:0;
+  background-image:
+    linear-gradient(rgba(34,211,238,.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(34,211,238,.04) 1px, transparent 1px);
+  background-size:32px 32px;pointer-events:none;z-index:0;
+}
+main{max-width:780px;margin:0 auto;padding:0 0 100px;position:relative;z-index:1;}
+strong{color:#fff;font-weight:700;}
+code{background:var(--bg2);color:var(--cyan);padding:2px 6px;border:1px solid var(--line-hi);font-size:.88em;}
+h1,h2,h3{font-family:'Space Grotesk',sans-serif;}
+
+/* TITLE BLOCK — like an architectural drawing's corner stamp */
+.title-block{
+  margin:24px 20px 0;border:2px solid var(--line-hi);background:rgba(19,37,56,.6);
+  position:relative;
+}
+.title-block::before{
+  content:"";position:absolute;top:-2px;left:-2px;right:-2px;bottom:-2px;
+  border:1px solid var(--cyan-dim);pointer-events:none;
+}
+.tb-header{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:10px 16px;border-bottom:1px solid var(--line-hi);
+  font-size:11px;letter-spacing:.1em;color:var(--cyan);
+}
+.tb-body{padding:24px 24px 28px;}
+.drawing-num{font-size:10px;color:var(--text3);letter-spacing:.1em;}
+.tb-title{font-family:'Space Grotesk',sans-serif;font-size:clamp(26px,5vw,38px);font-weight:700;color:#fff;line-height:1.1;margin-bottom:8px;letter-spacing:-.01em;}
+.tb-subtitle{font-size:14px;color:var(--text2);font-style:italic;border-left:3px solid var(--cyan);padding-left:14px;margin-top:14px;}
+.scale-note{display:flex;gap:20px;margin-top:18px;padding-top:14px;border-top:1px dashed var(--line-hi);font-size:10px;color:var(--text3);letter-spacing:.06em;flex-wrap:wrap;}
+.scale-note span strong{color:var(--cyan);font-size:11px;}
+
+/* SECTIONS */
+.section{padding:32px 20px 0;}
+.sec-label{
+  display:flex;align-items:center;gap:12px;margin-bottom:16px;
+  font-size:11px;letter-spacing:.15em;color:var(--cyan);
+}
+.sec-label::after{content:"";flex:1;height:1px;background:repeating-linear-gradient(90deg,var(--line-hi) 0 4px,transparent 4px 8px);}
+.sec-num{
+  width:24px;height:24px;border:1px solid var(--cyan);display:flex;
+  align-items:center;justify-content:center;font-size:11px;color:var(--cyan);flex-shrink:0;
+}
+.prose{font-family:'JetBrains Mono',monospace;font-size:14.5px;line-height:1.8;color:var(--text);}
+.prose p{margin-bottom:12px;}
+
+/* CROSS SECTION DIAGRAM */
+.cross-section{
+  margin:20px 0;border:1px solid var(--line-hi);background:var(--bg1);
+  position:relative;overflow:hidden;
+}
+.cs-label-bar{
+  padding:8px 16px;border-bottom:1px solid var(--line-hi);
+  font-size:10px;letter-spacing:.1em;color:var(--text3);
+  display:flex;justify-content:space-between;
+}
+.cs-svg-wrap{padding:16px;}
+.tier-floor{cursor:pointer;}
+.tier-floor:hover .tier-rect{fill-opacity:.18;}
+.tier-rect{transition:fill-opacity .2s;}
+.tier-floor.selected .tier-rect{fill-opacity:.22;stroke-width:2.5;}
+.flow-particle{opacity:0;}
+.flow-particle.flowing{animation:flowdown 1.8s ease-in-out infinite;}
+@keyframes flowdown{
+  0%{opacity:0;transform:translateY(0);}
+  15%{opacity:1;}
+  85%{opacity:1;}
+  100%{opacity:0;transform:translateY(140px);}
+}
+.tier-detail{
+  display:none;padding:16px 18px;border-top:1px solid var(--line-hi);
+  background:var(--bg2);font-size:13px;line-height:1.7;color:var(--text2);
+}
+.tier-detail.show{display:block;}
+.tier-detail strong{color:var(--cyan);}
+.tier-tag{
+  display:inline-block;font-size:9px;letter-spacing:.1em;padding:2px 8px;
+  border:1px solid;margin-top:8px;margin-right:6px;
+}
+
+/* AUTH VS AUTHZ — two-column blueprint comparison */
+.dual-panel{display:grid;grid-template-columns:1fr 1fr;gap:1px;margin:18px 0;background:var(--line-hi);border:1px solid var(--line-hi);}
+.panel{background:var(--bg1);padding:18px;}
+.panel-tag{font-size:10px;letter-spacing:.12em;color:var(--cyan);margin-bottom:8px;}
+.panel-title{font-family:'Space Grotesk',sans-serif;font-size:16px;color:#fff;font-weight:600;margin-bottom:10px;}
+.panel-q{font-size:13px;color:var(--text2);font-style:italic;margin-bottom:10px;}
+.panel-ex{font-size:12px;color:var(--text3);padding-top:10px;border-top:1px dashed var(--line);}
+
+/* SESSION FLOW — annotated sequence diagram */
+.seq-diagram{margin:20px 0;border:1px solid var(--line-hi);background:var(--bg1);padding:20px;}
+.seq-step{display:flex;gap:14px;padding:10px 0;border-bottom:1px dashed var(--line);align-items:flex-start;}
+.seq-step:last-child{border-bottom:none;}
+.seq-num{width:22px;height:22px;border-radius:50%;border:1px solid var(--cyan);color:var(--cyan);display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;margin-top:2px;}
+.seq-text{font-size:13px;line-height:1.6;color:var(--text);flex:1;}
+.seq-arrow{color:var(--text3);font-size:11px;}
+
+/* COOKIE FLAGS INSPECTOR */
+.cookie-demo{margin:20px 0;border:1px solid var(--line-hi);background:var(--bg1);padding:20px;}
+.cookie-string{
+  background:var(--bg);border:1px solid var(--line);padding:12px 14px;
+  font-size:13px;word-break:break-all;margin-bottom:14px;line-height:1.9;
+}
+.flag-tag{padding:1px 5px;border-radius:3px;cursor:pointer;transition:all .15s;}
+.flag-tag.httponly{background:rgba(34,211,238,.15);color:var(--cyan);border:1px solid var(--cyan-dim);}
+.flag-tag.secure{background:rgba(52,211,153,.15);color:var(--green);border:1px solid rgba(52,211,153,.4);}
+.flag-tag.samesite{background:rgba(251,191,36,.15);color:var(--amber);border:1px solid rgba(251,191,36,.4);}
+.flag-detail{display:none;padding:10px 14px;font-size:12.5px;color:var(--text2);border-left:3px solid var(--line-hi);margin-bottom:8px;background:var(--bg2);}
+.flag-detail.show{display:block;}
+
+/* MEMORY HOOK */
+.hook-box{
+  margin:24px 20px 0;border:2px dashed var(--cyan-dim);background:rgba(34,211,238,.04);
+  padding:20px 22px;position:relative;
+}
+.hook-tag{
+  position:absolute;top:-11px;left:16px;background:var(--bg);padding:0 10px;
+  font-size:10px;letter-spacing:.15em;color:var(--cyan);
+}
+.hook-box p{font-size:14px;line-height:1.75;color:var(--text);}
+.hook-box em{color:var(--cyan);font-style:normal;}
+
+/* THREAT NOTE */
+.threat-box{
+  margin:20px 0;border-left:3px solid var(--red);background:rgba(248,113,113,.05);
+  padding:16px 18px;
+}
+.threat-tag{font-size:10px;letter-spacing:.12em;color:var(--red);margin-bottom:6px;}
+.threat-box p{font-size:13.5px;line-height:1.7;color:var(--text2);}
+
+/* QUIZ */
+.quiz-box{margin:32px 20px 0;border:1px solid var(--cyan-dim);background:var(--bg1);padding:0;}
+.quiz-head{padding:14px 20px;border-bottom:1px solid var(--line-hi);display:flex;justify-content:space-between;align-items:center;}
+.quiz-title{font-size:13px;letter-spacing:.1em;color:var(--cyan);}
+.quiz-progress{font-size:11px;color:var(--text3);}
+.q-item{padding:22px 20px;border-bottom:1px solid var(--line);}
+.q-item:last-child{border-bottom:none;}
+.q-prompt{font-size:15px;color:#fff;margin-bottom:12px;line-height:1.5;}
+.q-opts{display:flex;flex-direction:column;gap:8px;}
+.q-opt{
+  text-align:left;padding:10px 14px;background:var(--bg);border:1px solid var(--line-hi);
+  color:var(--text);font-family:'JetBrains Mono',monospace;font-size:13px;cursor:pointer;transition:all .15s;
+}
+.q-opt:hover:not(.locked){border-color:var(--cyan);color:var(--cyan);}
+.q-opt.correct{background:rgba(52,211,153,.1);border-color:var(--green);color:var(--green);}
+.q-opt.wrong{background:rgba(248,113,113,.08);border-color:var(--red);color:var(--red);}
+.q-opt.locked{cursor:default;}
+.q-opt.locked:not(.correct):not(.wrong){opacity:.4;}
+.q-fb{margin-top:10px;padding:10px 14px;font-size:12.5px;color:var(--text2);background:var(--bg2);border-left:3px solid var(--line-hi);display:none;}
+.q-fb.show{display:block;}
+
+.progress-footer{padding:24px 20px;text-align:center;font-size:11px;color:var(--text3);letter-spacing:.08em;}
+
+@media(max-width:680px){
+  .dual-panel{grid-template-columns:1fr;}
+  .tb-body{padding:20px 18px 24px;}
+  .section{padding:26px 16px 0;}
+}
+</style>
+</head>
+<body>
+<main>
+
+<div class="title-block">
+  <div class="tb-header">
+    <span>DWG NO. 05-ARCH</span>
+    <span>REV A</span>
+  </div>
+  <div class="tb-body">
+    <div class="drawing-num">FOUNDATIONS PHASE // DAY 5 OF 60</div>
+    <h1 class="tb-title">Web Application<br>Architecture</h1>
+    <p class="tb-subtitle">Every app you'll ever attack has the same load-bearing structure. Learn the blueprint once, and you can read any building.</p>
+    <div class="scale-note">
+      <span><strong>SCOPE:</strong> 3-tier model</span>
+      <span><strong>EST. TIME:</strong> 60–90 min</span>
+      <span><strong>PREREQ:</strong> Days 1–4</span>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="sec-label"><div class="sec-num">01</div>THE THREE TIERS</div>
+  <div class="prose">
+    <p>Open any web app — a bank, a social network, a shopping site — and you'll find the same three load-bearing floors underneath, no matter how different the paint job looks.</p>
+  </div>
+
+  <div class="cross-section">
+    <div class="cs-label-bar"><span>CROSS-SECTION VIEW</span><span>TAP A FLOOR</span></div>
+    <div class="cs-svg-wrap">
+      <svg viewBox="0 0 700 320" width="100%" style="max-width:100%;">
+        <!-- Frontend floor -->
+        <g class="tier-floor" data-tier="frontend">
+          <rect class="tier-rect" x="40" y="20" width="620" height="80" fill="#22d3ee" fill-opacity="0.06" stroke="#22d3ee" stroke-width="1.5"/>
+          <text x="60" y="50" fill="#22d3ee" font-family="JetBrains Mono" font-size="13" font-weight="700">FRONTEND</text>
+          <text x="60" y="70" fill="#8aa2b8" font-family="JetBrains Mono" font-size="11">HTML · CSS · JavaScript — runs in the user's browser</text>
+          <text x="600" y="50" fill="#4a6178" font-family="JetBrains Mono" font-size="10" text-anchor="end">FLOOR 3</text>
+        </g>
+        <!-- Backend floor -->
+        <g class="tier-floor" data-tier="backend">
+          <rect class="tier-rect" x="40" y="120" width="620" height="80" fill="#fbbf24" fill-opacity="0.06" stroke="#fbbf24" stroke-width="1.5"/>
+          <text x="60" y="150" fill="#fbbf24" font-family="JetBrains Mono" font-size="13" font-weight="700">BACKEND</text>
+          <text x="60" y="170" fill="#8aa2b8" font-family="JetBrains Mono" font-size="11">Flask · Spring Boot · Node — runs on the server</text>
+          <text x="600" y="150" fill="#4a6178" font-family="JetBrains Mono" font-size="10" text-anchor="end">FLOOR 2</text>
+        </g>
+        <!-- Database floor -->
+        <g class="tier-floor" data-tier="database">
+          <rect class="tier-rect" x="40" y="220" width="620" height="80" fill="#34d399" fill-opacity="0.06" stroke="#34d399" stroke-width="1.5"/>
+          <text x="60" y="250" fill="#34d399" font-family="JetBrains Mono" font-size="13" font-weight="700">DATABASE</text>
+          <text x="60" y="270" fill="#8aa2b8" font-family="JetBrains Mono" font-size="11">MySQL · PostgreSQL — where data persists</text>
+          <text x="600" y="250" fill="#4a6178" font-family="JetBrains Mono" font-size="10" text-anchor="end">FLOOR 1</text>
+        </g>
+        <!-- Flow particles between floors -->
+        <circle class="flow-particle" id="p1" cx="350" cy="100" r="4" fill="#22d3ee"/>
+        <circle class="flow-particle" id="p2" cx="350" cy="200" r="4" fill="#fbbf24"/>
+      </svg>
+    </div>
+    <div class="tier-detail" id="detail-frontend">
+      <strong>What it controls:</strong> Everything the user sees and clicks. Forms, buttons, layout, client-side validation.<br><br>
+      <strong>The security catch:</strong> The user fully controls this layer — they can view source, modify JavaScript, disable validation, or send requests that didn't come from your actual UI at all (curl, Burp Repeater). Anything enforced only here is not enforced at all.
+      <div><span class="tier-tag" style="color:#22d3ee;border-color:#22d3ee;">USER-CONTROLLED</span><span class="tier-tag" style="color:#f87171;border-color:#f87171;">NEVER TRUST</span></div>
+    </div>
+    <div class="tier-detail" id="detail-backend">
+      <strong>What it controls:</strong> The actual logic — checking passwords, deciding who can see what, talking to the database, processing payments.<br><br>
+      <strong>Why this is where bugs live:</strong> This is the layer that's supposed to enforce every rule the frontend only suggested. SQL injection, broken authentication, IDOR, CSRF — almost everything in the OWASP Top 10 is a backend failing to re-verify something it assumed the frontend already checked.
+      <div><span class="tier-tag" style="color:#fbbf24;border-color:#fbbf24;">YOU CONTROL THIS</span><span class="tier-tag" style="color:#fbbf24;border-color:#fbbf24;">MUST VALIDATE</span></div>
+    </div>
+    <div class="tier-detail" id="detail-database">
+      <strong>What it controls:</strong> Long-term storage. User accounts, transactions, content — anything that needs to survive a server restart.<br><br>
+      <strong>Why it matters for security:</strong> This is the prize at the end of most attacks. SQL injection exists specifically to manipulate this layer through the backend. Weak encryption here means a single breach exposes everything permanently.
+      <div><span class="tier-tag" style="color:#34d399;border-color:#34d399;">PERSISTENT</span><span class="tier-tag" style="color:#f87171;border-color:#f87171;">THE TARGET</span></div>
+    </div>
+  </div>
+
+  <div class="threat-box">
+    <div class="threat-tag">▸ APPSEC RELEVANCE</div>
+    <p>When you audit an app, map each tier separately in your head. Frontend bugs affect the UI only. Backend bugs affect data and logic — the dangerous ones. Database bugs affect persistence. SQL injection specifically happens when the backend passes user input from the frontend tier directly into a query on the database tier — a tier-boundary failure where untrusted input crosses into a trusted execution context.</p>
+  </div>
+</div>
+
+<div class="section">
+  <div class="sec-label"><div class="sec-num">02</div>AUTHENTICATION VS AUTHORIZATION</div>
+  <div class="prose"><p>These two words get used interchangeably in casual conversation, and that confusion is the root of one of the most common vulnerability classes in the OWASP Top 10. Keep them permanently separate in your head.</p></div>
+
+  <div class="dual-panel">
+    <div class="panel">
+      <div class="panel-tag">AUTHENTICATION</div>
+      <div class="panel-title">Who are you?</div>
+      <div class="panel-q">"Prove your identity."</div>
+      <div class="panel-ex">Login form. Password. MFA code. Your hotel key card proving you're a guest.</div>
+    </div>
+    <div class="panel">
+      <div class="panel-tag" style="color:#fbbf24;">AUTHORIZATION</div>
+      <div class="panel-title">What can you do?</div>
+      <div class="panel-q">"Prove your permission."</div>
+      <div class="panel-ex">Admin vs regular user. Which rooms your specific key card actually opens.</div>
+    </div>
+  </div>
+
+  <div class="hook-box">
+    <div class="hook-tag">MEMORY HOOK</div>
+    <p><strong>The Hotel Analogy.</strong> Authentication = your key card proves who you are. Authorization = which rooms that key card actually opens. Being a guest (authenticated) doesn't get you into the penthouse (authorized). An <em>IDOR vulnerability</em> is like a hotel key card that opens every room because the door lock only checks "is this a valid key?" — never "is this YOUR key?" That's a backend that authenticated you correctly but forgot to authorize you for the specific resource you're requesting.</p>
+  </div>
+</div>
+
+<div class="section">
+  <div class="sec-label"><div class="sec-num">03</div>HOW A SESSION ACTUALLY WORKS</div>
+  <div class="prose"><p>You'll see this exact flow referenced constantly from here through Day 60. Know it cold — not just the words, but the actual sequence of network events.</p></div>
+
+  <div class="seq-diagram">
+    <div class="seq-step"><div class="seq-num">1</div><div class="seq-text">User submits login form: <code>POST /login {username: admin, password: ●●●●●●●}</code></div></div>
+    <div class="seq-step"><div class="seq-num">2</div><div class="seq-text">Server validates credentials, then creates a session record: <code>session["a8f7d3"] = "admin"</code></div></div>
+    <div class="seq-step"><div class="seq-num">3</div><div class="seq-text">Server responds with: <code>Set-Cookie: session=a8f7d3; HttpOnly; Secure; SameSite=Strict</code></div></div>
+    <div class="seq-step"><div class="seq-num">4</div><div class="seq-text">Browser stores this cookie — invisibly attached to every future request to this domain</div></div>
+    <div class="seq-step"><div class="seq-num">5</div><div class="seq-text">Every subsequent request automatically includes: <code>Cookie: session=a8f7d3</code></div></div>
+    <div class="seq-step"><div class="seq-num">6</div><div class="seq-text">Server looks up <code>a8f7d3</code> in its session store → knows this request is from admin</div></div>
+    <div class="seq-step"><div class="seq-num">7</div><div class="seq-text">Session expires after a timeout, or is destroyed immediately on logout</div></div>
+  </div>
+
+  <div class="cookie-demo">
+    <div style="font-size:11px;letter-spacing:.1em;color:var(--cyan);margin-bottom:12px;">▸ TAP A FLAG TO SEE WHAT IT BLOCKS</div>
+    <div class="cookie-string">
+      Set-Cookie: session=a8f7d3c9e2;
+      <span class="flag-tag httponly" data-flag="httponly">HttpOnly</span>;
+      <span class="flag-tag secure" data-flag="secure">Secure</span>;
+      <span class="flag-tag samesite" data-flag="samesite">SameSite=Strict</span>
+    </div>
+    <div class="flag-detail" id="flagdetail-httponly"><strong style="color:var(--cyan)">HttpOnly</strong> — JavaScript cannot read this cookie via <code>document.cookie</code>. This is the single most important defense against session theft via XSS: even if an attacker successfully injects a script into the page, that script still can't read the session cookie to steal it.</div>
+    <div class="flag-detail" id="flagdetail-secure"><strong style="color:var(--green)">Secure</strong> — The cookie is only ever sent over an HTTPS connection, never plain HTTP. Without this flag, anyone on the same network (coffee shop WiFi, a compromised router) could intercept the cookie in cleartext.</div>
+    <div class="flag-detail" id="flagdetail-samesite"><strong style="color:var(--amber)">SameSite=Strict</strong> — The browser will not attach this cookie to requests originating from a different site. This is the primary defense against CSRF: a malicious page on evil.com cannot trigger a request to your bank that carries your real session cookie along with it.</div>
+  </div>
+
+  <div class="threat-box">
+    <div class="threat-tag">▸ ATTACK SURFACE</div>
+    <p>Missing any one of these three flags is an automatic finding in a security assessment. No exceptions, no "it depends" — a session cookie without all three is incomplete by default, not a judgment call.</p>
+  </div>
+</div>
+
+<div class="quiz-box" id="quizBox">
+  <div class="quiz-head">
+    <div class="quiz-title">CHECK YOUR UNDERSTANDING</div>
+    <div class="quiz-progress" id="quizProgress">0 / 4</div>
+  </div>
+  <div id="quizItems"></div>
+</div>
+
+<div class="progress-footer">DAY 5 OF 60 — WEB APPLICATION ARCHITECTURE — APPSEC HUB</div>
+
+</main>
+
+<script>
+const SK='day5-v1';
+let S={};
+try{S=JSON.parse(localStorage.getItem(SK)||'{}')}catch(e){}
+function save(){try{localStorage.setItem(SK,JSON.stringify(S))}catch(e){}}
+
+// CROSS SECTION INTERACTIVITY
+let selectedTier=null;
+document.querySelectorAll('.tier-floor').forEach(floor=>{
+  floor.addEventListener('click',()=>{
+    const tier=floor.dataset.tier;
+    document.querySelectorAll('.tier-floor').forEach(f=>f.classList.remove('selected'));
+    document.querySelectorAll('.tier-detail').forEach(d=>d.classList.remove('show'));
+    if(selectedTier===tier){selectedTier=null;return;}
+    floor.classList.add('selected');
+    document.getElementById('detail-'+tier).classList.add('show');
+    selectedTier=tier;
+  });
+});
+// Animate flow particles continuously
+document.getElementById('p1').classList.add('flowing');
+setTimeout(()=>document.getElementById('p2').classList.add('flowing'),900);
+
+// COOKIE FLAG INTERACTIVITY
+document.querySelectorAll('.flag-tag').forEach(tag=>{
+  tag.addEventListener('click',()=>{
+    const flag=tag.dataset.flag;
+    const detail=document.getElementById('flagdetail-'+flag);
+    const isShowing=detail.classList.contains('show');
+    document.querySelectorAll('.flag-detail').forEach(d=>d.classList.remove('show'));
+    if(!isShowing)detail.classList.add('show');
+  });
+});
+
+// QUIZ
+const quiz=[
+  {q:'A user disables JavaScript in their browser and submits a form directly via curl, bypassing all client-side validation. What does this prove?',opts:['The website is broken','Frontend validation is a UX convenience, not a security control — the backend must independently validate everything','curl is a security vulnerability','The user needs to re-enable JavaScript'],correct:1,fb:'Anything enforced only in the frontend is not enforced at all — the user fully controls that layer. This is why backend validation is non-negotiable, no matter how good the frontend validation looks.'},
+  {q:'A logged-in regular user changes a URL parameter and successfully views another user\'s private order history. Which concept failed?',opts:['Authentication — the server didn\'t verify who they were','Authorization — the server verified who they were but not what they\'re allowed to access','Encryption — the connection wasn\'t using HTTPS','Session management — their session expired'],correct:1,fb:'The user was correctly authenticated (logged in as themselves) but the backend failed to authorize the specific resource request — it didn\'t check that the requested order actually belonged to them. This is IDOR, and it\'s an authorization failure, not an authentication one.'},
+  {q:'Which cookie flag specifically prevents JavaScript from reading the session cookie, even if an XSS vulnerability exists on the page?',opts:['Secure','SameSite=Strict','HttpOnly','Path=/'],correct:2,fb:'HttpOnly blocks document.cookie from returning this value to any script. It doesn\'t prevent XSS itself, but it neutralizes one of XSS\'s most dangerous payloads: stealing the session to hijack the account.'},
+  {q:'In the 3-tier model, where does SQL injection actually happen, in terms of which tier boundary fails?',opts:['Entirely within the frontend tier','Entirely within the database tier','At the boundary where the backend passes untrusted frontend input directly into a database tier query','Only in the network layer between tiers'],correct:2,fb:'SQL injection is fundamentally a tier-boundary failure: user input from the frontend tier crosses into the database tier\'s trusted execution context (a SQL query) without the backend tier properly separating data from query structure first.'},
+];
+function buildQuiz(){
+  const c=document.getElementById('quizItems');
+  quiz.forEach((q,qi)=>{
+    const saved=S[`q${qi}`];
+    const div=document.createElement('div');
+    div.className='q-item';
+    div.innerHTML=`<div class="q-prompt">${qi+1}. ${q.q}</div>
+    <div class="q-opts">${q.opts.map((o,oi)=>`<button class="q-opt ${saved!==undefined?'locked':''} ${saved!==undefined&&oi===q.correct?'correct':''} ${saved!==undefined&&oi===saved&&oi!==q.correct?'wrong':''}" data-oi="${oi}">${o}</button>`).join('')}</div>
+    <div class="q-fb ${saved!==undefined?'show':''}" id="fb${qi}">${saved!==undefined?q.fb:''}</div>`;
+    c.appendChild(div);
+    if(saved===undefined){
+      div.querySelectorAll('.q-opt').forEach((btn,oi)=>{
+        btn.addEventListener('click',()=>{
+          div.querySelectorAll('.q-opt').forEach((b,bi)=>{b.classList.add('locked');if(bi===q.correct)b.classList.add('correct');});
+          if(oi!==q.correct)btn.classList.add('wrong');
+          document.getElementById(`fb${qi}`).textContent=q.fb;
+          document.getElementById(`fb${qi}`).classList.add('show');
+          S[`q${qi}`]=oi;save();
+          updateProgress();
+        });
+      });
+    }
+  });
+  updateProgress();
+}
+function updateProgress(){
+  const done=quiz.filter((_,qi)=>S[`q${qi}`]!==undefined).length;
+  document.getElementById('quizProgress').textContent=`${done} / ${quiz.length}`;
+}
+buildQuiz();
+</script>
+</body>
+</html>

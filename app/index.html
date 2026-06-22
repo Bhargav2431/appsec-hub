@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="AppSec Hub">
+<meta name="theme-color" content="#0a0a0f">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.svg">
+<title>AppSec Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0a0f;--bg1:#0f0e16;--bg2:#15131f;--bg3:#1c1929;
+  --border:#231f30;--border-hi:#332b4a;
+  --text:#e8e6f0;--text2:#9a93b0;--text3:#5c5575;
+  --violet:#7c3aed;--violet-light:#a78bfa;--violet-glow:rgba(124,58,237,.18);
+  --violet-dim:#3d2570;
+  --green:#34d399;--amber:#fbbf24;--red:#f87171;
+  --safe-area-top:env(safe-area-inset-top,0px);
+  --safe-area-bottom:env(safe-area-inset-bottom,0px);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overscroll-behavior-y:none;}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:'Inter',sans-serif;font-size:16px;line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  -webkit-tap-highlight-color:transparent;
+  overflow:hidden;position:fixed;width:100%;
+}
+code{font-family:'JetBrains Mono',monospace;}
+strong{color:#fff;font-weight:600;}
+
+/* ============ APP SHELL ============ */
+#app{height:100%;display:flex;flex-direction:column;}
+
+.app-header{
+  flex-shrink:0;padding:calc(var(--safe-area-top) + 14px) 20px 14px;
+  background:rgba(10,10,15,.92);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:12px;
+  position:relative;z-index:10;
+}
+.app-header.hidden{display:none;}
+.back-btn{
+  width:34px;height:34px;border-radius:10px;background:var(--bg2);
+  border:1px solid var(--border);color:var(--text2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;cursor:pointer;flex-shrink:0;
+}
+.back-btn.invisible{visibility:hidden;}
+.header-title{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:600;color:#fff;flex:1;}
+.header-sub{font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;letter-spacing:.08em;}
+
+.app-content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;position:relative;}
+.page{display:none;min-height:100%;padding-bottom:40px;}
+.page.active{display:block;}
+.page.no-scroll{position:absolute;inset:0;padding-bottom:0;display:none;}
+.page.no-scroll.active{display:flex;flex-direction:column;}
+
+.app-tabbar{
+  flex-shrink:0;display:flex;
+  background:rgba(15,14,22,.95);backdrop-filter:blur(20px);
+  border-top:1px solid var(--border);
+  padding:8px 0 calc(var(--safe-area-bottom) + 8px);
+  position:relative;z-index:10;
+}
+.tab-item{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:6px 0;background:none;border:none;cursor:pointer;
+  color:var(--text3);transition:color .15s;
+}
+.tab-item.active{color:var(--violet-light);}
+.tab-icon{font-size:21px;line-height:1;}
+.tab-label{font-size:10px;font-weight:500;letter-spacing:.02em;}
+
+/* ============ HOME PAGE ============ */
+.home-hero{padding:24px 20px 8px;}
+.greeting{font-size:13px;color:var(--text3);font-family:'JetBrains Mono',monospace;letter-spacing:.1em;margin-bottom:6px;}
+.home-title{font-family:'Space Grotesk',sans-serif;font-size:30px;font-weight:700;line-height:1.1;color:#fff;letter-spacing:-.01em;}
+.home-title span{color:var(--violet-light);}
+
+.progress-card{
+  margin:20px 20px 0;background:var(--bg2);border:1px solid var(--border-hi);
+  border-radius:20px;padding:24px;display:flex;align-items:center;gap:20px;
+  position:relative;overflow:hidden;
+}
+.progress-card::before{
+  content:"";position:absolute;top:-50%;right:-30%;width:200px;height:200px;
+  background:radial-gradient(circle,var(--violet-glow) 0%,transparent 70%);
+  pointer-events:none;
+}
+.ring-wrap{position:relative;width:88px;height:88px;flex-shrink:0;}
+.ring-svg{transform:rotate(-90deg);}
+.ring-bg{fill:none;stroke:var(--bg3);stroke-width:7;}
+.ring-fill{fill:none;stroke:var(--violet-light);stroke-width:7;stroke-linecap:round;transition:stroke-dashoffset .8s cubic-bezier(.4,0,.2,1);}
+.ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.ring-num{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;color:#fff;line-height:1;}
+.ring-label{font-size:9px;color:var(--text3);letter-spacing:.1em;margin-top:1px;}
+.progress-info{flex:1;}
+.progress-day{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:600;color:#fff;margin-bottom:3px;}
+.progress-detail{font-size:13px;color:var(--text2);margin-bottom:10px;}
+.continue-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  background:var(--violet);color:#fff;border:none;
+  padding:9px 16px;border-radius:10px;font-size:13px;font-weight:600;
+  cursor:pointer;
+}
+
+.quick-actions{display:flex;gap:10px;padding:18px 20px 0;}
+.quick-action{
+  flex:1;background:var(--bg2);border:1px solid var(--border);
+  border-radius:16px;padding:14px 12px;text-align:center;cursor:pointer;
+  transition:border-color .15s;
+}
+.quick-action:active{border-color:var(--violet-dim);}
+.qa-icon{font-size:22px;margin-bottom:6px;}
+.qa-label{font-size:11px;color:var(--text2);font-weight:500;}
+
+.section-head{
+  display:flex;align-items:baseline;justify-content:space-between;
+  padding:28px 20px 12px;
+}
+.section-title{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:600;color:#fff;}
+.section-meta{font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;letter-spacing:.05em;}
+
+.phase-rail{display:flex;gap:8px;overflow-x:auto;padding:0 20px 4px;scrollbar-width:none;}
+.phase-rail::-webkit-scrollbar{display:none;}
+.phase-chip{
+  flex-shrink:0;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.05em;
+  padding:7px 14px;border-radius:20px;border:1px solid var(--border);
+  background:var(--bg2);color:var(--text2);white-space:nowrap;cursor:pointer;
+}
+.phase-chip.active{background:var(--violet-dim);border-color:var(--violet);color:var(--violet-light);}
+
+.day-list{padding:14px 20px 20px;display:flex;flex-direction:column;gap:8px;}
+.day-card{
+  display:flex;align-items:center;gap:14px;
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:16px;padding:14px 16px;cursor:pointer;
+  transition:border-color .15s,background .15s;
+}
+.day-card:active{background:var(--bg3);}
+.day-card.locked{opacity:.45;}
+.day-card.complete{border-color:rgba(52,211,153,.3);}
+.day-card.active-day{border-color:var(--violet);background:rgba(124,58,237,.08);}
+.day-badge{
+  width:40px;height:40px;border-radius:12px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;
+  background:var(--bg3);color:var(--text2);
+}
+.day-card.complete .day-badge{background:rgba(52,211,153,.15);color:var(--green);}
+.day-card.active-day .day-badge{background:var(--violet);color:#fff;}
+.day-info{flex:1;min-width:0;}
+.day-name{font-size:14px;font-weight:600;color:#fff;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.day-tag{font-size:11px;color:var(--text3);}
+.day-chevron{color:var(--text3);font-size:14px;flex-shrink:0;}
+.day-check{color:var(--green);font-size:16px;flex-shrink:0;}
+
+/* ============ CONTENT FRAME (for embedded lesson pages) ============ */
+.content-frame{width:100%;flex:1;border:none;background:var(--bg);}
+
+/* ============ NOTES LIST PAGE ============ */
+.notes-search{
+  margin:16px 20px;background:var(--bg2);border:1px solid var(--border);
+  border-radius:14px;padding:11px 16px;display:flex;align-items:center;gap:10px;
+}
+.notes-search input{
+  flex:1;background:none;border:none;color:var(--text);font-size:14px;outline:none;
+}
+.notes-search input::placeholder{color:var(--text3);}
+.note-list{padding:0 20px 20px;display:flex;flex-direction:column;gap:8px;}
+.note-card{
+  background:var(--bg2);border:1px solid var(--border);border-radius:16px;
+  padding:16px;cursor:pointer;
+}
+.note-card-title{font-size:14px;font-weight:600;color:#fff;margin-bottom:4px;}
+.note-card-desc{font-size:12px;color:var(--text2);line-height:1.5;}
+
+/* ============ NOTE READER ============ */
+.note-reader{padding:20px;font-size:15px;line-height:1.75;color:var(--text);max-width:680px;margin:0 auto;}
+.note-reader h1{font-family:'Space Grotesk',sans-serif;font-size:24px;color:#fff;margin:24px 0 12px;}
+.note-reader h1:first-child{margin-top:0;}
+.note-reader h2{font-family:'Space Grotesk',sans-serif;font-size:19px;color:var(--violet-light);margin:24px 0 10px;padding-bottom:8px;border-bottom:1px solid var(--border);}
+.note-reader h3{font-family:'JetBrains Mono',monospace;font-size:13px;letter-spacing:.05em;color:var(--green);margin:18px 0 8px;}
+.note-reader p{margin:10px 0;}
+.note-reader code{background:var(--bg2);color:var(--violet-light);padding:2px 7px;border-radius:4px;font-size:.85em;border:1px solid var(--border);}
+.note-reader pre{background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--violet);border-radius:8px;padding:14px 16px;overflow-x:auto;margin:14px 0;}
+.note-reader pre code{background:none;border:none;padding:0;color:#a8e890;font-size:13px;}
+.note-reader table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13.5px;display:block;overflow-x:auto;white-space:nowrap;}
+.note-reader th{background:var(--bg2);color:var(--violet-light);font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.05em;text-align:left;padding:9px 12px;}
+.note-reader td{padding:8px 12px;border-bottom:1px solid var(--border);color:var(--text2);}
+.note-reader ul,.note-reader ol{margin:8px 0 12px 20px;}
+.note-reader li{margin:5px 0;}
+.note-reader li::marker{color:var(--violet-light);}
+.note-reader blockquote{border-left:3px solid var(--violet);padding:8px 14px;margin:12px 0;background:var(--bg2);border-radius:0 8px 8px 0;color:var(--text2);font-style:italic;}
+.note-reader hr{border:none;border-top:1px solid var(--border);margin:24px 0;}
+
+/* Loading state */
+.loading-screen{
+  position:fixed;inset:0;background:var(--bg);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:16px;z-index:9999;transition:opacity .4s;
+}
+.loading-icon{width:64px;height:64px;}
+.loading-text{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text3);letter-spacing:.1em;}
+.loading-bar{width:160px;height:3px;background:var(--bg3);border-radius:2px;overflow:hidden;}
+.loading-fill{height:100%;background:var(--violet);width:30%;border-radius:2px;animation:loadpulse 1.2s ease-in-out infinite;}
+@keyframes loadpulse{0%{width:10%;margin-left:0%;}50%{width:60%;margin-left:20%;}100%{width:10%;margin-left:100%;}}
+
+::-webkit-scrollbar{width:0;height:0;}
+
+@media(min-width:700px){
+  body{display:flex;justify-content:center;}
+  #app{max-width:480px;box-shadow:0 0 80px rgba(0,0,0,.5);}
+}
+</style>
+</head>
+<body>
+
+<div class="loading-screen" id="loadingScreen">
+  <svg class="loading-icon" viewBox="0 0 512 512">
+    <path d="M256 80 L380 130 L380 260 C380 350 320 410 256 432 C192 410 132 350 132 260 L132 130 Z" fill="none" stroke="#a78bfa" stroke-width="14"/>
+    <path d="M196 220 L236 256 L196 292" fill="none" stroke="#a78bfa" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+    <line x1="256" y1="292" x2="316" y2="292" stroke="#a78bfa" stroke-width="16" stroke-linecap="round"/>
+  </svg>
+  <div class="loading-bar"><div class="loading-fill"></div></div>
+  <div class="loading-text">LOADING APPSEC HUB</div>
+</div>
+
+<div id="app">
+  <div class="app-header" id="appHeader">
+    <button class="back-btn invisible" id="backBtn">‹</button>
+    <div style="flex:1;">
+      <div class="header-title" id="headerTitle">AppSec Hub</div>
+      <div class="header-sub" id="headerSub"></div>
+    </div>
+  </div>
+
+  <div class="app-content" id="appContent">
+
+    <!-- HOME PAGE -->
+    <div class="page active" id="page-home">
+      <div class="home-hero">
+        <div class="greeting" id="greeting">DAY <span id="currentDayNum">1</span> OF 60</div>
+        <div class="home-title">AppSec <span>Hub</span></div>
+      </div>
+
+      <div class="progress-card">
+        <div class="ring-wrap">
+          <svg class="ring-svg" width="88" height="88" viewBox="0 0 88 88">
+            <circle class="ring-bg" cx="44" cy="44" r="38"/>
+            <circle class="ring-fill" id="homeRing" cx="44" cy="44" r="38" stroke-dasharray="239" stroke-dashoffset="239"/>
+          </svg>
+          <div class="ring-center"><div class="ring-num" id="homeRingPct">0%</div><div class="ring-label">DONE</div></div>
+        </div>
+        <div class="progress-info">
+          <div class="progress-day" id="nextDayTitle">Day 1 — HTTP Fundamentals</div>
+          <div class="progress-detail" id="nextDayDetail">Pick up where you left off</div>
+          <button class="continue-btn" id="continueBtn">Continue →</button>
+        </div>
+      </div>
+
+      <div class="quick-actions">
+        <div class="quick-action" data-nav="roadmap">
+          <div class="qa-icon">🗺️</div>
+          <div class="qa-label">Roadmap</div>
+        </div>
+        <div class="quick-action" data-nav="interview">
+          <div class="qa-icon">🎯</div>
+          <div class="qa-label">Interview</div>
+        </div>
+        <div class="quick-action" data-nav="notes">
+          <div class="qa-icon">📝</div>
+          <div class="qa-label">Notes</div>
+        </div>
+      </div>
+
+      <div class="section-head">
+        <div class="section-title">Continue Learning</div>
+        <div class="section-meta" id="dayCountMeta">0 / 0 DONE</div>
+      </div>
+      <div class="phase-rail" id="phaseRail"></div>
+      <div class="day-list" id="dayList"></div>
+    </div>
+
+    <!-- DAYS LIST PAGE (full list, used by tab bar) -->
+    <div class="page" id="page-days">
+      <div class="section-head" style="padding-top:20px;">
+        <div class="section-title">All Days</div>
+        <div class="section-meta" id="dayCountMeta2">0 / 0 DONE</div>
+      </div>
+      <div class="phase-rail" id="phaseRail2"></div>
+      <div class="day-list" id="dayListFull"></div>
+    </div>
+
+    <!-- LESSON VIEWER (iframe-based, loads the actual interactive HTML) -->
+    <div class="page no-scroll" id="page-lesson">
+      <iframe class="content-frame" id="lessonFrame"></iframe>
+    </div>
+
+    <!-- INTERVIEW PREP -->
+    <div class="page no-scroll" id="page-interview">
+      <iframe class="content-frame" id="interviewFrame"></iframe>
+    </div>
+
+    <!-- NOTES LIST -->
+    <div class="page" id="page-notes">
+      <div class="notes-search">
+        <span style="color:var(--text3);">🔍</span>
+        <input type="text" id="notesSearchInput" placeholder="Search revision notes...">
+      </div>
+      <div class="note-list" id="noteList"></div>
+    </div>
+
+    <!-- NOTE READER -->
+    <div class="page" id="page-note-reader">
+      <div class="note-reader" id="noteReaderContent"></div>
+    </div>
+
+  </div>
+
+  <div class="app-tabbar" id="appTabbar">
+    <button class="tab-item active" data-tab="home">
+      <div class="tab-icon">🏠</div>
+      <div class="tab-label">Home</div>
+    </button>
+    <button class="tab-item" data-tab="days">
+      <div class="tab-icon">📅</div>
+      <div class="tab-label">Days</div>
+    </button>
+    <button class="tab-item" data-tab="interview">
+      <div class="tab-icon">🎯</div>
+      <div class="tab-label">Interview</div>
+    </button>
+    <button class="tab-item" data-tab="notes">
+      <div class="tab-icon">📝</div>
+      <div class="tab-label">Notes</div>
+    </button>
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

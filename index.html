@@ -2,351 +2,370 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="AppSec Hub">
-<meta name="theme-color" content="#0a0a0f">
-<link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icon.svg">
-<title>AppSec Hub</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AppSec Hub — 60-Day AppSec & Cloud Security Roadmap</title>
+<meta name="description" content="A 60-day self-directed roadmap from full-stack developer to Application Security Engineer. Interactive lessons, revision notes, and interview prep.">
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#0a0a0f;--bg1:#0f0e16;--bg2:#15131f;--bg3:#1c1929;
   --border:#231f30;--border-hi:#332b4a;
   --text:#e8e6f0;--text2:#9a93b0;--text3:#5c5575;
-  --violet:#7c3aed;--violet-light:#a78bfa;--violet-glow:rgba(124,58,237,.18);
-  --violet-dim:#3d2570;
-  --green:#34d399;--amber:#fbbf24;--red:#f87171;
-  --safe-area-top:env(safe-area-inset-top,0px);
-  --safe-area-bottom:env(safe-area-inset-bottom,0px);
+  --violet:#7c3aed;--violet-light:#a78bfa;--violet-glow:rgba(124,58,237,.16);
+  --amber:#f5a623;--amber-glow:rgba(245,166,35,.14);
+  --green:#34d399;--red:#f87171;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-html,body{height:100%;overscroll-behavior-y:none;}
+html{scroll-behavior:smooth;}
 body{
-  background:var(--bg);color:var(--text);
-  font-family:'Inter',sans-serif;font-size:16px;line-height:1.6;
-  -webkit-font-smoothing:antialiased;
-  -webkit-tap-highlight-color:transparent;
-  overflow:hidden;position:fixed;width:100%;
+  background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;
+  font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;
+  background-image:radial-gradient(circle at 15% 0%, var(--violet-glow) 0%, transparent 45%),
+                    radial-gradient(circle at 85% 15%, var(--amber-glow) 0%, transparent 40%);
 }
-code{font-family:'JetBrains Mono',monospace;}
+a{color:inherit;text-decoration:none;}
 strong{color:#fff;font-weight:600;}
+code{font-family:'JetBrains Mono',monospace;}
 
-/* ============ APP SHELL ============ */
-#app{height:100%;display:flex;flex-direction:column;}
+/* NAV */
+.site-nav{
+  position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;
+  padding:18px 5vw;background:rgba(10,10,15,.85);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);
+}
+.nav-brand{display:flex;align-items:center;gap:10px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:17px;color:#fff;}
+.nav-brand-icon{width:26px;height:26px;}
+.nav-links{display:flex;gap:32px;font-size:14px;color:var(--text2);}
+.nav-links a:hover{color:var(--violet-light);}
+.nav-cta{
+  background:var(--violet);color:#fff;padding:9px 18px;border-radius:8px;font-size:13.5px;font-weight:600;
+}
+.nav-cta:hover{background:#6d28d9;}
+.mobile-toggle{display:none;background:none;border:none;color:var(--text);font-size:22px;cursor:pointer;}
 
-.app-header{
-  flex-shrink:0;padding:calc(var(--safe-area-top) + 14px) 20px 14px;
-  background:rgba(10,10,15,.92);backdrop-filter:blur(20px);
-  border-bottom:1px solid var(--border);
-  display:flex;align-items:center;gap:12px;
-  position:relative;z-index:10;
+/* HERO */
+.hero{padding:80px 5vw 60px;max-width:1280px;margin:0 auto;display:grid;grid-template-columns:1.1fr 1fr;gap:60px;align-items:center;}
+.hero-eyebrow{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.18em;color:var(--amber);margin-bottom:18px;display:flex;align-items:center;gap:10px;}
+.eyebrow-dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+.hero h1{
+  font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:clamp(38px,5.2vw,60px);
+  line-height:1.08;letter-spacing:-.02em;color:#fff;margin-bottom:22px;
 }
-.app-header.hidden{display:none;}
-.back-btn{
-  width:34px;height:34px;border-radius:10px;background:var(--bg2);
-  border:1px solid var(--border);color:var(--text2);
-  display:flex;align-items:center;justify-content:center;
-  font-size:18px;cursor:pointer;flex-shrink:0;
+.hero h1 span{color:var(--violet-light);}
+.hero p.lede{font-size:18px;line-height:1.7;color:var(--text2);max-width:520px;margin-bottom:32px;}
+.hero-actions{display:flex;gap:14px;flex-wrap:wrap;}
+.btn-primary{
+  background:var(--violet);color:#fff;padding:14px 26px;border-radius:10px;font-weight:600;font-size:15px;
+  display:inline-flex;align-items:center;gap:8px;
 }
-.back-btn.invisible{visibility:hidden;}
-.header-title{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:600;color:#fff;flex:1;}
-.header-sub{font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;letter-spacing:.08em;}
+.btn-primary:hover{background:#6d28d9;}
+.btn-secondary{
+  background:var(--bg2);color:var(--text);border:1px solid var(--border-hi);padding:14px 26px;border-radius:10px;
+  font-weight:600;font-size:15px;
+}
+.btn-secondary:hover{border-color:var(--violet);}
 
-.app-content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;position:relative;}
-.page{display:none;min-height:100%;padding-bottom:40px;}
-.page.active{display:block;}
-.page.no-scroll{position:absolute;inset:0;padding-bottom:0;display:none;}
-.page.no-scroll.active{display:flex;flex-direction:column;}
+/* TERMINAL HERO ELEMENT */
+.terminal{
+  background:var(--bg1);border:1px solid var(--border-hi);border-radius:12px;overflow:hidden;
+  box-shadow:0 20px 60px rgba(0,0,0,.45),0 0 0 1px rgba(124,58,237,.08);
+}
+.terminal-bar{display:flex;align-items:center;gap:8px;padding:11px 16px;background:var(--bg2);border-bottom:1px solid var(--border);}
+.tdot{width:11px;height:11px;border-radius:50%;}
+.tdot.r{background:#ff5f57;}.tdot.y{background:#febc2e;}.tdot.g{background:#28c840;}
+.terminal-title{flex:1;text-align:center;font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--text3);}
+.terminal-body{
+  padding:24px 22px;font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.85;
+  color:var(--text2);min-height:300px;
+}
+.t-prompt{color:var(--violet-light);}
+.t-cmd{color:#fff;}
+.t-out{color:var(--text2);}
+.t-ok{color:var(--green);}
+.t-bar-track{display:inline-block;width:160px;height:8px;background:var(--bg3);border-radius:4px;vertical-align:middle;overflow:hidden;margin:0 8px;}
+.t-bar-fill{height:100%;background:var(--violet);width:0%;border-radius:4px;transition:width 1.2s ease-out;}
+.t-cursor{display:inline-block;width:8px;height:15px;background:var(--violet-light);vertical-align:middle;animation:blink 1s steps(1) infinite;}
+@keyframes blink{0%,50%{opacity:1;}51%,100%{opacity:0;}}
+.t-line{opacity:0;animation:fadein .3s forwards;}
+@keyframes fadein{to{opacity:1;}}
 
-.app-tabbar{
-  flex-shrink:0;display:flex;
-  background:rgba(15,14,22,.95);backdrop-filter:blur(20px);
-  border-top:1px solid var(--border);
-  padding:8px 0 calc(var(--safe-area-bottom) + 8px);
-  position:relative;z-index:10;
+/* STATS STRIP */
+.stats-strip{
+  max-width:1280px;margin:0 auto;padding:0 5vw 70px;display:grid;
+  grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:12px;overflow:hidden;
 }
-.tab-item{
-  flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
-  padding:6px 0;background:none;border:none;cursor:pointer;
-  color:var(--text3);transition:color .15s;
-}
-.tab-item.active{color:var(--violet-light);}
-.tab-icon{font-size:21px;line-height:1;}
-.tab-label{font-size:10px;font-weight:500;letter-spacing:.02em;}
+.stat{background:var(--bg1);padding:26px 24px;}
+.stat-num{font-family:'Space Grotesk',sans-serif;font-size:32px;font-weight:700;color:#fff;}
+.stat-num span{color:var(--violet-light);}
+.stat-label{font-size:13px;color:var(--text3);margin-top:4px;letter-spacing:.02em;}
 
-/* ============ HOME PAGE ============ */
-.home-hero{padding:24px 20px 8px;}
-.greeting{font-size:13px;color:var(--text3);font-family:'JetBrains Mono',monospace;letter-spacing:.1em;margin-bottom:6px;}
-.home-title{font-family:'Space Grotesk',sans-serif;font-size:30px;font-weight:700;line-height:1.1;color:#fff;letter-spacing:-.01em;}
-.home-title span{color:var(--violet-light);}
+/* SECTION SHARED */
+.section{max-width:1280px;margin:0 auto;padding:70px 5vw 0;}
+.section-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:36px;flex-wrap:wrap;gap:16px;}
+.section-eyebrow{font-family:'JetBrains Mono',monospace;font-size:11.5px;letter-spacing:.18em;color:var(--amber);margin-bottom:10px;}
+.section-title{font-family:'Space Grotesk',sans-serif;font-size:clamp(26px,3.2vw,36px);font-weight:700;color:#fff;letter-spacing:-.01em;}
+.section-link{font-size:14px;color:var(--violet-light);font-weight:600;}
+.section-link:hover{text-decoration:underline;}
+.section-sub{font-size:15.5px;color:var(--text2);max-width:640px;margin-top:14px;line-height:1.7;}
 
-.progress-card{
-  margin:20px 20px 0;background:var(--bg2);border:1px solid var(--border-hi);
-  border-radius:20px;padding:24px;display:flex;align-items:center;gap:20px;
-  position:relative;overflow:hidden;
+/* PHASE TABS */
+.phase-tabs{display:flex;gap:8px;margin-bottom:28px;flex-wrap:wrap;}
+.phase-tab{
+  font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.04em;padding:8px 16px;
+  border:1px solid var(--border-hi);border-radius:20px;background:var(--bg1);color:var(--text2);cursor:pointer;
 }
-.progress-card::before{
-  content:"";position:absolute;top:-50%;right:-30%;width:200px;height:200px;
-  background:radial-gradient(circle,var(--violet-glow) 0%,transparent 70%);
-  pointer-events:none;
-}
-.ring-wrap{position:relative;width:88px;height:88px;flex-shrink:0;}
-.ring-svg{transform:rotate(-90deg);}
-.ring-bg{fill:none;stroke:var(--bg3);stroke-width:7;}
-.ring-fill{fill:none;stroke:var(--violet-light);stroke-width:7;stroke-linecap:round;transition:stroke-dashoffset .8s cubic-bezier(.4,0,.2,1);}
-.ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
-.ring-num{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;color:#fff;line-height:1;}
-.ring-label{font-size:9px;color:var(--text3);letter-spacing:.1em;margin-top:1px;}
-.progress-info{flex:1;}
-.progress-day{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:600;color:#fff;margin-bottom:3px;}
-.progress-detail{font-size:13px;color:var(--text2);margin-bottom:10px;}
-.continue-btn{
-  display:inline-flex;align-items:center;gap:6px;
-  background:var(--violet);color:#fff;border:none;
-  padding:9px 16px;border-radius:10px;font-size:13px;font-weight:600;
-  cursor:pointer;
-}
+.phase-tab.active{background:var(--violet);border-color:var(--violet);color:#fff;}
+.phase-tab:hover:not(.active){border-color:var(--violet);color:var(--violet-light);}
 
-.quick-actions{display:flex;gap:10px;padding:18px 20px 0;}
-.quick-action{
-  flex:1;background:var(--bg2);border:1px solid var(--border);
-  border-radius:16px;padding:14px 12px;text-align:center;cursor:pointer;
-  transition:border-color .15s;
-}
-.quick-action:active{border-color:var(--violet-dim);}
-.qa-icon{font-size:22px;margin-bottom:6px;}
-.qa-label{font-size:11px;color:var(--text2);font-weight:500;}
-
-.section-head{
-  display:flex;align-items:baseline;justify-content:space-between;
-  padding:28px 20px 12px;
-}
-.section-title{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:600;color:#fff;}
-.section-meta{font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;letter-spacing:.05em;}
-
-.phase-rail{display:flex;gap:8px;overflow-x:auto;padding:0 20px 4px;scrollbar-width:none;}
-.phase-rail::-webkit-scrollbar{display:none;}
-.phase-chip{
-  flex-shrink:0;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.05em;
-  padding:7px 14px;border-radius:20px;border:1px solid var(--border);
-  background:var(--bg2);color:var(--text2);white-space:nowrap;cursor:pointer;
-}
-.phase-chip.active{background:var(--violet-dim);border-color:var(--violet);color:var(--violet-light);}
-
-.day-list{padding:14px 20px 20px;display:flex;flex-direction:column;gap:8px;}
+/* DAY GRID — real desktop multi-column, not a phone list */
+.day-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
 .day-card{
-  display:flex;align-items:center;gap:14px;
-  background:var(--bg2);border:1px solid var(--border);
-  border-radius:16px;padding:14px 16px;cursor:pointer;
-  transition:border-color .15s,background .15s;
+  background:var(--bg1);border:1px solid var(--border);border-radius:12px;padding:24px;
+  display:flex;flex-direction:column;gap:14px;transition:border-color .2s,transform .2s;position:relative;overflow:hidden;
 }
-.day-card:active{background:var(--bg3);}
-.day-card.locked{opacity:.45;}
-.day-card.complete{border-color:rgba(52,211,153,.3);}
-.day-card.active-day{border-color:var(--violet);background:rgba(124,58,237,.08);}
-.day-badge{
-  width:40px;height:40px;border-radius:12px;flex-shrink:0;
-  display:flex;align-items:center;justify-content:center;
-  font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;
-  background:var(--bg3);color:var(--text2);
+.day-card.has-content:hover{border-color:var(--violet);transform:translateY(-2px);}
+.day-card.locked{opacity:.42;}
+.day-card-top{display:flex;justify-content:space-between;align-items:flex-start;}
+.day-num{
+  font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:var(--text3);
+  border:1px solid var(--border-hi);border-radius:6px;padding:3px 9px;
 }
-.day-card.complete .day-badge{background:rgba(52,211,153,.15);color:var(--green);}
-.day-card.active-day .day-badge{background:var(--violet);color:#fff;}
-.day-info{flex:1;min-width:0;}
-.day-name{font-size:14px;font-weight:600;color:#fff;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.day-tag{font-size:11px;color:var(--text3);}
-.day-chevron{color:var(--text3);font-size:14px;flex-shrink:0;}
-.day-check{color:var(--green);font-size:16px;flex-shrink:0;}
+.day-card.has-content .day-num{color:var(--violet-light);border-color:var(--violet);}
+.day-badge-built{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.1em;color:var(--green);}
+.day-title{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:600;color:#fff;line-height:1.3;}
+.day-tag{font-size:13px;color:var(--text2);line-height:1.55;}
+.day-card-links{display:flex;gap:10px;margin-top:auto;padding-top:6px;font-size:12.5px;}
+.day-card-links a{color:var(--violet-light);font-weight:600;}
+.day-card-links a:hover{text-decoration:underline;}
+.day-card-links span{color:var(--text3);}
 
-/* ============ CONTENT FRAME (for embedded lesson pages) ============ */
-.content-frame{width:100%;flex:1;border:none;background:var(--bg);}
+/* FEATURE TRIO */
+.feature-trio{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+.feature-card{background:var(--bg1);border:1px solid var(--border);border-radius:12px;padding:28px;}
+.feature-icon{font-size:26px;margin-bottom:16px;}
+.feature-title{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:600;color:#fff;margin-bottom:10px;}
+.feature-desc{font-size:14.5px;color:var(--text2);line-height:1.7;}
 
-/* ============ NOTES LIST PAGE ============ */
-.notes-search{
-  margin:16px 20px;background:var(--bg2);border:1px solid var(--border);
-  border-radius:14px;padding:11px 16px;display:flex;align-items:center;gap:10px;
+/* FOOTER */
+.site-footer{max-width:1280px;margin:0 auto;padding:60px 5vw 50px;margin-top:80px;border-top:1px solid var(--border);
+  display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;}
+.footer-text{font-size:13px;color:var(--text3);}
+.footer-links{display:flex;gap:24px;font-size:13.5px;color:var(--text2);}
+.footer-links a:hover{color:var(--violet-light);}
+
+@media(max-width:980px){
+  .hero{grid-template-columns:1fr;gap:40px;padding-top:50px;}
+  .stats-strip{grid-template-columns:repeat(2,1fr);}
+  .day-grid{grid-template-columns:repeat(2,1fr);}
+  .feature-trio{grid-template-columns:1fr;}
+  .nav-links{display:none;}
 }
-.notes-search input{
-  flex:1;background:none;border:none;color:var(--text);font-size:14px;outline:none;
-}
-.notes-search input::placeholder{color:var(--text3);}
-.note-list{padding:0 20px 20px;display:flex;flex-direction:column;gap:8px;}
-.note-card{
-  background:var(--bg2);border:1px solid var(--border);border-radius:16px;
-  padding:16px;cursor:pointer;
-}
-.note-card-title{font-size:14px;font-weight:600;color:#fff;margin-bottom:4px;}
-.note-card-desc{font-size:12px;color:var(--text2);line-height:1.5;}
-
-/* ============ NOTE READER ============ */
-.note-reader{padding:20px;font-size:15px;line-height:1.75;color:var(--text);max-width:680px;margin:0 auto;}
-.note-reader h1{font-family:'Space Grotesk',sans-serif;font-size:24px;color:#fff;margin:24px 0 12px;}
-.note-reader h1:first-child{margin-top:0;}
-.note-reader h2{font-family:'Space Grotesk',sans-serif;font-size:19px;color:var(--violet-light);margin:24px 0 10px;padding-bottom:8px;border-bottom:1px solid var(--border);}
-.note-reader h3{font-family:'JetBrains Mono',monospace;font-size:13px;letter-spacing:.05em;color:var(--green);margin:18px 0 8px;}
-.note-reader p{margin:10px 0;}
-.note-reader code{background:var(--bg2);color:var(--violet-light);padding:2px 7px;border-radius:4px;font-size:.85em;border:1px solid var(--border);}
-.note-reader pre{background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--violet);border-radius:8px;padding:14px 16px;overflow-x:auto;margin:14px 0;}
-.note-reader pre code{background:none;border:none;padding:0;color:#a8e890;font-size:13px;}
-.note-reader table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13.5px;display:block;overflow-x:auto;white-space:nowrap;}
-.note-reader th{background:var(--bg2);color:var(--violet-light);font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.05em;text-align:left;padding:9px 12px;}
-.note-reader td{padding:8px 12px;border-bottom:1px solid var(--border);color:var(--text2);}
-.note-reader ul,.note-reader ol{margin:8px 0 12px 20px;}
-.note-reader li{margin:5px 0;}
-.note-reader li::marker{color:var(--violet-light);}
-.note-reader blockquote{border-left:3px solid var(--violet);padding:8px 14px;margin:12px 0;background:var(--bg2);border-radius:0 8px 8px 0;color:var(--text2);font-style:italic;}
-.note-reader hr{border:none;border-top:1px solid var(--border);margin:24px 0;}
-
-/* Loading state */
-.loading-screen{
-  position:fixed;inset:0;background:var(--bg);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:16px;z-index:9999;transition:opacity .4s;
-}
-.loading-icon{width:64px;height:64px;}
-.loading-text{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text3);letter-spacing:.1em;}
-.loading-bar{width:160px;height:3px;background:var(--bg3);border-radius:2px;overflow:hidden;}
-.loading-fill{height:100%;background:var(--violet);width:30%;border-radius:2px;animation:loadpulse 1.2s ease-in-out infinite;}
-@keyframes loadpulse{0%{width:10%;margin-left:0%;}50%{width:60%;margin-left:20%;}100%{width:10%;margin-left:100%;}}
-
-::-webkit-scrollbar{width:0;height:0;}
-
-@media(min-width:700px){
-  body{display:flex;justify-content:center;}
-  #app{max-width:480px;box-shadow:0 0 80px rgba(0,0,0,.5);}
+@media(max-width:640px){
+  .day-grid{grid-template-columns:1fr;}
+  .hero h1{font-size:32px;}
+  .stats-strip{grid-template-columns:1fr 1fr;}
+  .section{padding:50px 6vw 0;}
 }
 </style>
 </head>
 <body>
 
-<div class="loading-screen" id="loadingScreen">
-  <svg class="loading-icon" viewBox="0 0 512 512">
-    <path d="M256 80 L380 130 L380 260 C380 350 320 410 256 432 C192 410 132 350 132 260 L132 130 Z" fill="none" stroke="#a78bfa" stroke-width="14"/>
-    <path d="M196 220 L236 256 L196 292" fill="none" stroke="#a78bfa" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
-    <line x1="256" y1="292" x2="316" y2="292" stroke="#a78bfa" stroke-width="16" stroke-linecap="round"/>
-  </svg>
-  <div class="loading-bar"><div class="loading-fill"></div></div>
-  <div class="loading-text">LOADING APPSEC HUB</div>
-</div>
+<nav class="site-nav">
+  <a href="index.html" class="nav-brand">
+    <svg class="nav-brand-icon" viewBox="0 0 512 512"><path d="M256 80 L380 130 L380 260 C380 350 320 410 256 432 C192 410 132 350 132 260 L132 130 Z" fill="none" stroke="#a78bfa" stroke-width="20"/><path d="M196 220 L236 256 L196 292" fill="none" stroke="#a78bfa" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/><line x1="256" y1="292" x2="316" y2="292" stroke="#a78bfa" stroke-width="22" stroke-linecap="round"/></svg>
+    AppSec Hub
+  </a>
+  <div class="nav-links">
+    <a href="#roadmap">Roadmap</a>
+    <a href="notes.html">Notes</a>
+    <a href="lessons/interview-prep-days-1-4.html">Interview Prep</a>
+    <a href="#about">About</a>
+  </div>
+  <a href="day.html?day=1" class="nav-cta">Start Day 1 →</a>
+</nav>
 
-<div id="app">
-  <div class="app-header" id="appHeader">
-    <button class="back-btn invisible" id="backBtn">‹</button>
-    <div style="flex:1;">
-      <div class="header-title" id="headerTitle">AppSec Hub</div>
-      <div class="header-sub" id="headerSub"></div>
+<header class="hero">
+  <div>
+    <div class="hero-eyebrow"><span class="eyebrow-dot"></span>9 OF 60 DAYS LIVE — UPDATED CONTINUOUSLY</div>
+    <h1>From full-stack developer<br>to <span>AppSec engineer</span>.<br>60 days, documented.</h1>
+    <p class="lede">A self-directed roadmap covering AppSec fundamentals and cloud security — interactive lessons you actually click through, full-depth revision notes, and real interview prep. Built in public, day by day.</p>
+    <div class="hero-actions">
+      <a href="day.html?day=1" class="btn-primary">Start at Day 1 →</a>
+      <a href="#roadmap" class="btn-secondary">Browse the roadmap</a>
     </div>
   </div>
 
-  <div class="app-content" id="appContent">
+  <div class="terminal">
+    <div class="terminal-bar"><span class="tdot r"></span><span class="tdot y"></span><span class="tdot g"></span><div class="terminal-title">bhargav@appsec-hub — zsh</div></div>
+    <div class="terminal-body" id="termBody"></div>
+  </div>
+</header>
 
-    <!-- HOME PAGE -->
-    <div class="page active" id="page-home">
-      <div class="home-hero">
-        <div class="greeting" id="greeting">DAY <span id="currentDayNum">1</span> OF 60</div>
-        <div class="home-title">AppSec <span>Hub</span></div>
-      </div>
+<section class="stats-strip">
+  <div class="stat"><div class="stat-num"><span>9</span>/60</div><div class="stat-label">Days built &amp; live</div></div>
+  <div class="stat"><div class="stat-num">10</div><div class="stat-label">Interactive lessons</div></div>
+  <div class="stat"><div class="stat-num">12</div><div class="stat-label">Full revision note sets</div></div>
+  <div class="stat"><div class="stat-num">62</div><div class="stat-label">Interview flashcards</div></div>
+</section>
 
-      <div class="progress-card">
-        <div class="ring-wrap">
-          <svg class="ring-svg" width="88" height="88" viewBox="0 0 88 88">
-            <circle class="ring-bg" cx="44" cy="44" r="38"/>
-            <circle class="ring-fill" id="homeRing" cx="44" cy="44" r="38" stroke-dasharray="239" stroke-dashoffset="239"/>
-          </svg>
-          <div class="ring-center"><div class="ring-num" id="homeRingPct">0%</div><div class="ring-label">DONE</div></div>
-        </div>
-        <div class="progress-info">
-          <div class="progress-day" id="nextDayTitle">Day 1 — HTTP Fundamentals</div>
-          <div class="progress-detail" id="nextDayDetail">Pick up where you left off</div>
-          <button class="continue-btn" id="continueBtn">Continue →</button>
-        </div>
-      </div>
-
-      <div class="quick-actions">
-        <div class="quick-action" data-nav="roadmap">
-          <div class="qa-icon">🗺️</div>
-          <div class="qa-label">Roadmap</div>
-        </div>
-        <div class="quick-action" data-nav="interview">
-          <div class="qa-icon">🎯</div>
-          <div class="qa-label">Interview</div>
-        </div>
-        <div class="quick-action" data-nav="notes">
-          <div class="qa-icon">📝</div>
-          <div class="qa-label">Notes</div>
-        </div>
-      </div>
-
-      <div class="section-head">
-        <div class="section-title">Continue Learning</div>
-        <div class="section-meta" id="dayCountMeta">0 / 0 DONE</div>
-      </div>
-      <div class="phase-rail" id="phaseRail"></div>
-      <div class="day-list" id="dayList"></div>
+<section class="section" id="roadmap">
+  <div class="section-head">
+    <div>
+      <div class="section-eyebrow">// THE ROADMAP</div>
+      <div class="section-title">60 days, six phases</div>
+      <p class="section-sub">Foundations first, then AppSec core, then cloud security, then the AI-augmented and portfolio phases that turn all of it into a job application. Every built day is fully interactive — click in and work through it.</p>
     </div>
-
-    <!-- DAYS LIST PAGE (full list, used by tab bar) -->
-    <div class="page" id="page-days">
-      <div class="section-head" style="padding-top:20px;">
-        <div class="section-title">All Days</div>
-        <div class="section-meta" id="dayCountMeta2">0 / 0 DONE</div>
-      </div>
-      <div class="phase-rail" id="phaseRail2"></div>
-      <div class="day-list" id="dayListFull"></div>
-    </div>
-
-    <!-- LESSON VIEWER (iframe-based, loads the actual interactive HTML) -->
-    <div class="page no-scroll" id="page-lesson">
-      <iframe class="content-frame" id="lessonFrame"></iframe>
-    </div>
-
-    <!-- INTERVIEW PREP -->
-    <div class="page no-scroll" id="page-interview">
-      <iframe class="content-frame" id="interviewFrame"></iframe>
-    </div>
-
-    <!-- NOTES LIST -->
-    <div class="page" id="page-notes">
-      <div class="notes-search">
-        <span style="color:var(--text3);">🔍</span>
-        <input type="text" id="notesSearchInput" placeholder="Search revision notes...">
-      </div>
-      <div class="note-list" id="noteList"></div>
-    </div>
-
-    <!-- NOTE READER -->
-    <div class="page" id="page-note-reader">
-      <div class="note-reader" id="noteReaderContent"></div>
-    </div>
-
   </div>
 
-  <div class="app-tabbar" id="appTabbar">
-    <button class="tab-item active" data-tab="home">
-      <div class="tab-icon">🏠</div>
-      <div class="tab-label">Home</div>
-    </button>
-    <button class="tab-item" data-tab="days">
-      <div class="tab-icon">📅</div>
-      <div class="tab-label">Days</div>
-    </button>
-    <button class="tab-item" data-tab="interview">
-      <div class="tab-icon">🎯</div>
-      <div class="tab-label">Interview</div>
-    </button>
-    <button class="tab-item" data-tab="notes">
-      <div class="tab-icon">📝</div>
-      <div class="tab-label">Notes</div>
-    </button>
+  <div class="phase-tabs" id="phaseTabs"></div>
+  <div class="day-grid" id="dayGrid"></div>
+</section>
+
+<section class="section" id="about">
+  <div class="section-head">
+    <div>
+      <div class="section-eyebrow">// WHY THIS EXISTS</div>
+      <div class="section-title">Three things, not forty</div>
+      <p class="section-sub">Every day in this roadmap ships with the same three pieces, built to the same bar, every time.</p>
+    </div>
   </div>
-</div>
+  <div class="feature-trio">
+    <div class="feature-card">
+      <div class="feature-icon">🧪</div>
+      <div class="feature-title">Interactive, not passive</div>
+      <div class="feature-desc">Live SQL injection terminals, an actual Burp Suite simulator you can type into, a clinical XSS lab — each day's lesson is themed to its subject and built to be operated, not just scrolled past.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📋</div>
+      <div class="feature-title">Full-depth revision notes</div>
+      <div class="feature-desc">Every day gets a standalone note: one-sentence summary, deep-dive sections, a self-test with full answers, and a quick-reference card — built for the night before an interview, not just the day you learned it.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🎯</div>
+      <div class="feature-title">Built for the actual interview</div>
+      <div class="feature-desc">62 flashcards covering tools, Git, and the first four days in depth — drilled the way real technical interviews actually ask, not generic trivia.</div>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="footer-text">AppSec Hub — a 60-day roadmap, built and documented day by day.</div>
+  <div class="footer-links">
+    <a href="notes.html">All Notes</a>
+    <a href="lessons/interview-prep-days-1-4.html">Interview Prep</a>
+    <a href="#roadmap">Roadmap</a>
+    <a href="app/index.html">Install as iPhone App →</a>
+  </div>
+</footer>
 
 <script src="data.js"></script>
-<script src="app.js"></script>
+<script>
+// ===== ROADMAP GRID =====
+let activePhase='all';
+function dayCardHTML(d){
+  const hasLesson=!!d.lesson, hasNote=!!d.note;
+  const hasContent=hasLesson||hasNote;
+  let cls='day-card'+(hasContent?' has-content':' locked');
+  let links='';
+  if(hasLesson) links+=`<a href="day.html?day=${d.day}">Open lesson →</a>`;
+  if(hasNote) links+=`${hasLesson?'<span>·</span>':''}<a href="notes.html?note=${encodeURIComponent(d.note)}">Notes</a>`;
+  if(!hasContent) links=`<span>Not built yet</span>`;
+  return `<div class="${cls}">
+    <div class="day-card-top">
+      <div class="day-num">DAY ${d.day}</div>
+      ${hasContent?'<div class="day-badge-built">● LIVE</div>':''}
+    </div>
+    <div class="day-title">${d.title}</div>
+    <div class="day-tag">${d.tag}</div>
+    <div class="day-card-links">${links}</div>
+  </div>`;
+}
+function renderGrid(){
+  const grid=document.getElementById('dayGrid');
+  const days=activePhase==='all'?DAYS:DAYS.filter(d=>d.phase===activePhase);
+  // Show built days first, capped at a reasonable number for the homepage; full list lives if needed
+  const sorted=[...days].sort((a,b)=>{
+    const aBuilt=(a.lesson||a.note)?0:1, bBuilt=(b.lesson||b.note)?0:1;
+    if(aBuilt!==bBuilt) return aBuilt-bBuilt;
+    return a.day-b.day;
+  });
+  grid.innerHTML=sorted.slice(0,24).map(dayCardHTML).join('');
+}
+function renderPhaseTabs(){
+  const tabs=document.getElementById('phaseTabs');
+  let html=`<button class="phase-tab active" data-phase="all">ALL PHASES</button>`;
+  PHASES.forEach(p=>{
+    html+=`<button class="phase-tab" data-phase="${p.id}">${p.label.toUpperCase()}</button>`;
+  });
+  tabs.innerHTML=html;
+  tabs.querySelectorAll('.phase-tab').forEach(tab=>{
+    tab.addEventListener('click',()=>{
+      tabs.querySelectorAll('.phase-tab').forEach(t=>t.classList.remove('active'));
+      tab.classList.add('active');
+      activePhase=tab.dataset.phase;
+      renderGrid();
+    });
+  });
+}
+renderPhaseTabs();
+renderGrid();
+
+// ===== TERMINAL BOOT SEQUENCE =====
+const termLines=[
+  {type:'cmd', text:'whoami'},
+  {type:'out', text:'bhargav — full-stack dev → appsec engineer (in progress)'},
+  {type:'cmd', text:'./roadmap.sh --status'},
+  {type:'out', text:'Phase 1: Foundations........<BAR1> 90%'},
+  {type:'out', text:'Phase 2: AppSec Core........<BAR2> 0%'},
+  {type:'out', text:'Phase 3: Cloud Security.....<BAR3> 0%'},
+  {type:'cmd', text:'cat days_completed.log | wc -l'},
+  {type:'ok',  text:'9'},
+  {type:'cmd', text:'./roadmap.sh --next'},
+  {type:'ok',  text:'→ Day 10: Phase 1 Review. Run it.'},
+];
+async function typeTerminal(){
+  const body=document.getElementById('termBody');
+  body.innerHTML='';
+  for(const line of termLines){
+    const div=document.createElement('div');
+    div.className='t-line';
+    body.appendChild(div);
+    if(line.type==='cmd'){
+      div.innerHTML=`<span class="t-prompt">$</span> <span class="t-cmd" id="typing"></span>`;
+      const target=div.querySelector('#typing');
+      target.removeAttribute('id');
+      for(let i=0;i<line.text.length;i++){
+        target.textContent+=line.text[i];
+        await sleep(18);
+      }
+      await sleep(150);
+    } else if(line.type==='out'){
+      if(line.text.includes('<BAR')){
+        const pct=line.text.match(/(\d+)%$/)[1];
+        const label=line.text.split('.')[0];
+        div.innerHTML=`<span class="t-out">${label}</span><span class="t-bar-track"><span class="t-bar-fill" style="width:0%"></span></span><span class="t-out">${pct}%</span>`;
+        await sleep(50);
+        div.querySelector('.t-bar-fill').style.width=pct+'%';
+      } else {
+        div.innerHTML=`<span class="t-out">${line.text}</span>`;
+      }
+      await sleep(280);
+    } else if(line.type==='ok'){
+      div.innerHTML=`<span class="t-ok">✓ ${line.text}</span>`;
+      await sleep(350);
+    }
+  }
+  const cursorDiv=document.createElement('div');
+  cursorDiv.className='t-line';
+  cursorDiv.style.opacity='1';
+  cursorDiv.innerHTML=`<span class="t-prompt">$</span> <span class="t-cursor"></span>`;
+  body.appendChild(cursorDiv);
+}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+typeTerminal();
+</script>
 </body>
 </html>

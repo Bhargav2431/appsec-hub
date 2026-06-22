@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#050d1a">
+<title>SIGINT FILE 03 — Network Fundamentals</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Exo+2:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Orbitron:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #050d1a;
+  --bg-panel: #0a1628;
+  --bg-card:  #0d1c32;
+  --border:   #122240;
+  --border-hi:#1e3a6e;
+  --text:     #a8c5e8;
+  --text-soft:#6a8fb0;
+  --text-dim: #3a5878;
+  --blue:     #00aaff;
+  --blue-dim: #0066cc;
+  --blue-glow:rgba(0,170,255,0.12);
+  --green:    #00ff88;
+  --green-dim:#00995a;
+  --red:      #ff4455;
+  --yellow:   #ffd060;
+  --purple:   #aa55ff;
+  --shadow:   rgba(0,0,0,0.6);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Exo 2',sans-serif;
+  font-size:17px;
+  line-height:1.7;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+/* Grid + scanline */
+body::before{
+  content:"";
+  position:fixed;inset:0;
+  background-image:
+    linear-gradient(rgba(0,170,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,170,255,0.025) 1px, transparent 1px);
+  background-size:60px 60px;
+  pointer-events:none;z-index:0;
+}
+body::after{
+  content:"";
+  position:fixed;inset:0;
+  background:radial-gradient(ellipse at 30% 0%, rgba(0,170,255,0.08) 0%, transparent 55%),
+             radial-gradient(ellipse at 80% 100%, rgba(0,255,136,0.04) 0%, transparent 45%);
+  pointer-events:none;z-index:0;
+}
+main{max-width:840px;margin:0 auto;padding:60px 28px 180px;position:relative;z-index:5;}
+code{font-family:'Space Mono',monospace;background:var(--bg-card);color:var(--blue);padding:2px 8px;border:1px solid var(--border);font-size:.85em;}
+strong{color:#d4eaff;font-weight:600;}
+em{color:var(--blue);font-style:normal;font-weight:600;}
+
+/* ======== HEADER ======== */
+.sig-header{
+  border:1px solid var(--border-hi);
+  background:var(--bg-panel);
+  padding:44px;
+  margin-bottom:60px;
+  position:relative;
+  overflow:hidden;
+  box-shadow:0 0 80px rgba(0,170,255,0.06);
+}
+.sig-header::before{
+  content:"";position:absolute;top:0;left:0;width:100%;height:2px;
+  background:linear-gradient(to right,transparent,var(--blue),var(--green),transparent);
+}
+.sig-label{
+  font-family:'Space Mono',monospace;
+  font-size:11px;letter-spacing:.3em;
+  color:var(--blue);margin-bottom:14px;
+  display:flex;align-items:center;gap:10px;
+}
+.sig-label::after{content:"";flex:1;height:1px;background:linear-gradient(to right,var(--blue-dim),transparent);}
+.dot-pulse{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--green);
+  box-shadow:0 0 8px var(--green);
+  animation:pulse 2s infinite;
+  flex-shrink:0;
+}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+h1.sig-title{
+  font-family:'Orbitron',sans-serif;
+  font-size:clamp(28px,5vw,50px);
+  color:var(--blue);
+  line-height:1.05;
+  letter-spacing:.02em;
+  font-weight:700;
+  margin-bottom:16px;
+  text-shadow:0 0 40px var(--blue-glow);
+}
+.sig-sub{font-family:'Exo 2',sans-serif;font-style:italic;font-size:18px;color:var(--text-soft);margin-bottom:28px;}
+.sig-stats{
+  display:flex;gap:20px;flex-wrap:wrap;
+  border-top:1px solid var(--border);padding-top:18px;
+  font-family:'Space Mono',monospace;font-size:11px;
+  letter-spacing:.15em;color:var(--text-dim);
+}
+.sig-stats .sv{color:var(--green);}
+
+/* ======== INTERCEPT BLOCK ======== */
+.intercept{
+  margin:60px 0;background:var(--bg-panel);
+  border:1px solid var(--border);
+  padding:32px;position:relative;
+}
+.intercept::before{
+  content:"";position:absolute;top:0;left:0;
+  width:3px;height:50px;background:var(--blue);
+}
+.ic-num{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.3em;color:var(--blue);margin-bottom:8px;}
+h2.ic-title{
+  font-family:'Orbitron',sans-serif;
+  font-size:clamp(20px,3vw,28px);
+  color:#d4eaff;font-weight:600;
+  margin-bottom:8px;letter-spacing:.02em;
+}
+.ic-sub{font-style:italic;color:var(--text-soft);font-size:15px;margin-bottom:20px;}
+.narrative p{margin-bottom:14px;font-size:17px;line-height:1.75;}
+
+/* ======== INFO BOX ======== */
+.info-box{
+  background:rgba(0,170,255,0.07);
+  border:1px solid var(--blue-dim);border-left:4px solid var(--blue);
+  padding:16px 20px;margin:18px 0;position:relative;
+}
+.info-box::before{
+  content:"◆ KEY INTEL";position:absolute;top:-10px;left:16px;
+  background:var(--blue);color:var(--bg);
+  font-family:'Space Mono',monospace;font-size:9px;
+  letter-spacing:.2em;padding:1px 10px;
+}
+.info-box p{margin:0;font-size:16px;}
+
+.hook-box{
+  background:rgba(0,255,136,0.06);
+  border:1px solid var(--green-dim);border-left:4px solid var(--green);
+  padding:16px 20px;margin:18px 0;position:relative;
+}
+.hook-box::before{
+  content:"★ MEMORY HOOK";position:absolute;top:-10px;left:16px;
+  background:var(--green);color:var(--bg);
+  font-family:'Space Mono',monospace;font-size:9px;
+  letter-spacing:.2em;padding:1px 10px;
+}
+.hook-box p{margin:0;font-size:16px;}
+
+.threat-box{
+  background:rgba(255,68,85,0.07);
+  border:1px solid var(--red);border-left:4px solid var(--red);
+  padding:16px 20px;margin:18px 0;position:relative;
+}
+.threat-box::before{
+  content:"⚠ THREAT RELEVANCE";position:absolute;top:-10px;left:16px;
+  background:var(--red);color:#fff;
+  font-family:'Space Mono',monospace;font-size:9px;
+  letter-spacing:.2em;padding:1px 10px;
+}
+.threat-box p{margin:0;font-size:16px;}
+
+/* ======== COMMAND BLOCK ======== */
+.cmd-block{
+  background:var(--bg);border:1px solid var(--border-hi);
+  border-left:3px solid var(--blue);
+  padding:16px 20px;margin:18px 0;
+  font-family:'Space Mono',monospace;font-size:13px;
+  line-height:1.7;overflow-x:auto;position:relative;
+}
+.cmd-block::before{
+  content:"EXECUTE";position:absolute;top:-10px;left:16px;
+  background:var(--blue);color:var(--bg);
+  font-size:9px;letter-spacing:.2em;padding:1px 10px;
+}
+.p{color:var(--green);}
+.c{color:var(--text-dim);}
+.o{color:#60d0a0;}
+
+/* ======== PORT DIRECTORY ======== */
+.port-search{
+  display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;
+}
+.port-search input{
+  flex:1;min-width:200px;
+  background:var(--bg);border:1px solid var(--border-hi);
+  color:var(--text);padding:10px 14px;
+  font-family:'Space Mono',monospace;font-size:13px;
+  outline:none;transition:border-color .2s;
+}
+.port-search input:focus{border-color:var(--blue);}
+.port-search input::placeholder{color:var(--text-dim);}
+.port-filter{display:flex;gap:8px;flex-wrap:wrap;}
+.filter-btn{
+  font-family:'Space Mono',monospace;font-size:10px;
+  letter-spacing:.15em;padding:6px 12px;
+  background:var(--bg);border:1px solid var(--border);
+  color:var(--text-soft);cursor:pointer;transition:all .15s;
+}
+.filter-btn:hover,.filter-btn.active{background:var(--blue);color:var(--bg);border-color:var(--blue);}
+.port-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));
+  gap:10px;max-height:520px;overflow-y:auto;
+  scrollbar-width:thin;scrollbar-color:var(--border) transparent;
+}
+.port-card{
+  background:var(--bg-card);border:1px solid var(--border);
+  padding:14px 16px;cursor:pointer;
+  transition:all .15s;position:relative;
+}
+.port-card:hover{border-color:var(--blue-dim);box-shadow:0 0 16px var(--blue-glow);}
+.port-card.hidden{display:none;}
+.port-num{
+  font-family:'Orbitron',sans-serif;font-size:24px;
+  font-weight:700;line-height:1;margin-bottom:4px;
+}
+.port-service{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.1em;color:var(--text-soft);margin-bottom:8px;}
+.port-desc{font-size:13px;color:var(--text-soft);line-height:1.5;}
+.port-cat{
+  position:absolute;top:10px;right:12px;
+  font-family:'Space Mono',monospace;font-size:9px;
+  letter-spacing:.15em;padding:2px 8px;border:1px solid;
+}
+.port-cat.web{color:var(--blue);border-color:var(--blue-dim);}
+.port-cat.email{color:var(--yellow);border-color:#997a00;}
+.port-cat.db{color:var(--purple);border-color:#6633aa;}
+.port-cat.remote{color:var(--green);border-color:var(--green-dim);}
+.port-cat.security-flag{color:var(--red);border-color:var(--red);}
+
+/* ======== IP CLASSIFIER ======== */
+.ip-tool{
+  background:var(--bg-card);border:1px solid var(--border-hi);
+  padding:24px;margin:20px 0;
+}
+.ip-tool-title{
+  font-family:'Space Mono',monospace;font-size:12px;
+  letter-spacing:.2em;color:var(--blue);margin-bottom:16px;
+}
+.ip-input-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;}
+.ip-input{
+  flex:1;min-width:180px;
+  background:var(--bg);border:1px solid var(--border-hi);
+  color:var(--text);padding:10px 14px;
+  font-family:'Space Mono',monospace;font-size:15px;
+  outline:none;letter-spacing:.05em;
+  transition:border-color .2s;
+}
+.ip-input:focus{border-color:var(--blue);}
+.ip-btn{
+  background:var(--blue);color:var(--bg);border:none;
+  padding:10px 20px;cursor:pointer;
+  font-family:'Space Mono',monospace;font-size:11px;
+  letter-spacing:.15em;transition:opacity .15s;
+}
+.ip-btn:hover{opacity:.8;}
+.ip-result{
+  background:var(--bg);border:1px solid var(--border);
+  padding:16px;font-family:'Space Mono',monospace;
+  font-size:13px;line-height:1.8;min-height:60px;
+}
+
+/* ======== DNS JOURNEY ======== */
+.dns-journey{margin:20px 0;}
+.journey-steps{display:flex;flex-direction:column;gap:0;}
+.j-step{
+  display:flex;gap:16px;padding:14px 18px;
+  border:1px solid var(--border);border-bottom:none;
+  background:var(--bg-card);
+  cursor:pointer;transition:background .15s;
+  align-items:flex-start;
+}
+.j-step:last-child{border-bottom:1px solid var(--border);}
+.j-step:hover{background:rgba(0,170,255,.06);}
+.j-step.active{background:rgba(0,170,255,.1);border-color:var(--blue-dim);}
+.j-step-num{
+  font-family:'Orbitron',sans-serif;font-size:22px;
+  color:var(--blue);font-weight:700;
+  flex-shrink:0;line-height:1;margin-top:2px;
+}
+.j-step-title{
+  font-family:'Space Mono',monospace;font-size:13px;
+  color:#d4eaff;margin-bottom:4px;
+}
+.j-step-desc{font-size:14px;color:var(--text-soft);display:none;}
+.j-step.active .j-step-desc{display:block;}
+.j-step-code{
+  font-family:'Space Mono',monospace;font-size:12px;
+  color:var(--green);margin-top:6px;
+  display:none;
+}
+.j-step.active .j-step-code{display:block;}
+
+/* ======== QUIZ ======== */
+.quiz-wrap{
+  margin:60px 0;background:var(--bg-panel);
+  border:1px solid var(--border-hi);
+  padding:36px 30px;position:relative;
+}
+.quiz-wrap::before{
+  content:"";position:absolute;top:0;left:0;width:100%;height:2px;
+  background:linear-gradient(to right,var(--blue),var(--green),transparent);
+}
+.quiz-wrap h2{
+  font-family:'Orbitron',monospace;font-size:20px;
+  color:var(--blue);font-weight:600;margin-bottom:6px;letter-spacing:.05em;
+}
+.q-block{margin:28px 0;padding-top:20px;border-top:1px solid var(--border);}
+.q-block:first-of-type{border-top:none;padding-top:0;margin-top:16px;}
+.q-tag{
+  font-family:'Space Mono',monospace;font-size:10px;
+  letter-spacing:.25em;color:var(--blue-dim);margin-bottom:8px;
+}
+.q-text{font-size:17px;color:#d4eaff;margin-bottom:12px;line-height:1.5;}
+.q-opts{display:flex;flex-direction:column;gap:8px;}
+.q-opt{
+  font-family:'Space Mono',monospace;font-size:12px;
+  text-align:left;padding:11px 14px;
+  background:var(--bg);border:1px solid var(--border);
+  color:var(--text);cursor:pointer;transition:all .15s;
+}
+.q-opt:hover:not(.locked){border-color:var(--blue-dim);color:var(--blue);transform:translateX(4px);}
+.q-opt.correct{background:rgba(0,255,136,.1);border-color:var(--green);color:var(--green);}
+.q-opt.wrong{background:rgba(255,68,85,.08);border-color:var(--red);color:var(--red);}
+.q-opt.locked{cursor:not-allowed;}
+.q-opt.locked:not(.correct):not(.wrong){opacity:.35;}
+.q-fb{
+  margin-top:10px;padding:12px 14px;
+  font-size:14px;font-style:italic;color:var(--text-soft);
+  background:var(--bg-card);border-left:3px solid var(--border);display:none;
+}
+.q-fb.show{display:block;}
+.q-fb .vt{
+  display:block;font-style:normal;
+  font-family:'Space Mono',monospace;font-size:10px;
+  letter-spacing:.2em;margin-bottom:4px;
+}
+.q-fb .vt.ok{color:var(--green);}
+.q-fb .vt.bad{color:var(--red);}
+
+/* ======== FIELD NOTES ======== */
+.field-notes{
+  margin:50px 0;background:var(--bg-panel);
+  border:1px dashed var(--border-hi);padding:32px 28px;position:relative;
+}
+.field-notes::before{
+  content:"📋 MISSION DEBRIEF";
+  position:absolute;top:-12px;left:24px;
+  background:var(--bg-panel);padding:0 12px;
+  font-family:'Space Mono',monospace;font-size:11px;
+  letter-spacing:.2em;color:var(--blue);
+}
+.field-notes h3{
+  font-family:'Space Mono',monospace;font-size:12px;
+  letter-spacing:.2em;color:var(--green);margin:20px 0 8px;
+}
+.field-notes h3:first-of-type{margin-top:0;}
+.field-notes p,.field-notes li{font-size:16px;line-height:1.7;}
+.field-notes ul{margin-left:20px;margin-bottom:12px;}
+.field-notes li::marker{color:var(--blue);}
+
+.closing{margin-top:70px;text-align:center;padding-top:28px;border-top:1px solid var(--border-hi);}
+.closing p{color:var(--text-soft);font-family:'Exo 2',sans-serif;font-style:italic;margin-bottom:6px;}
+.closing .sig{font-family:'Space Mono',monospace;font-size:12px;letter-spacing:.3em;color:var(--blue);margin-top:18px;}
+
+.saved{position:fixed;top:16px;right:16px;background:var(--green);color:var(--bg);padding:5px 14px;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.2em;opacity:0;transition:opacity .3s;z-index:100;}
+.saved.show{opacity:1;}
+
+/* Compare table */
+.cmp-table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;}
+.cmp-table th,.cmp-table td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--border);}
+.cmp-table thead{background:var(--bg-card);}
+.cmp-table th{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.12em;color:var(--blue);}
+.cmp-table tr:last-child td{border-bottom:none;}
+
+@media(max-width:680px){
+  main{padding:28px 16px 100px;}
+  .sig-header{padding:24px 18px;}
+  .intercept{padding:22px 16px;}
+  .port-grid{grid-template-columns:1fr;}
+  .quiz-wrap{padding:24px 16px;}
+  .field-notes{padding:24px 16px;}
+}
+</style>
+</head>
+<body>
+<div class="saved" id="sv">▸ SAVED</div>
+<main>
+
+<!-- HEADER -->
+<div class="sig-header">
+  <div class="sig-label"><div class="dot-pulse"></div> SIGINT FILE №03 // DAY 3 OF 60</div>
+  <h1 class="sig-title">NETWORK<br>FUNDAMENTALS</h1>
+  <p class="sig-sub">Every packet on every network follows these rules. Learn the rules, find the vulnerabilities.</p>
+  <div class="sig-stats">
+    <span>PHASE <span class="sv">FOUNDATIONS</span></span>
+    <span>ENV <span class="sv">MAC TERMINAL</span></span>
+    <span>TIME <span class="sv">5–6 HRS</span></span>
+    <span>TOOLS <span class="sv">DIG · NMAP · TCPDUMP</span></span>
+  </div>
+</div>
+
+<!-- INTERCEPT 01: IP Addresses -->
+<section class="intercept">
+  <div class="ic-num">INTERCEPT 01 // IP ADDRESSES</div>
+  <h2 class="ic-title">Every Device Has an Address</h2>
+  <p class="ic-sub">Understand IPs before you can attack or defend anything on a network.</p>
+  <div class="narrative">
+    <p>An <strong>IP address</strong> is a number assigned to every device on a network. Without it, data has no destination. Like a postal address for computers.</p>
+    <p>There are two versions in use today: <em>IPv4</em> (the classic, 4 numbers like 192.168.1.5) and <em>IPv6</em> (the newer, longer one like 2001:db8::1 — we ran out of IPv4 addresses).</p>
+  </div>
+
+  <div class="info-box"><p><strong>Private IPs</strong> (used inside homes/offices — internet can't reach them directly):<br>
+  10.0.0.0 – 10.255.255.255 &nbsp;|&nbsp; 172.16.0.0 – 172.31.255.255 &nbsp;|&nbsp; 192.168.0.0 – 192.168.255.255<br><br>
+  <strong>Public IPs</strong> — unique on the internet. Your home gets one from your ISP.<br>
+  <strong>Loopback</strong> — 127.0.0.1 ("localhost") — your own machine talking to itself.</p></div>
+
+  <div class="hook-box"><p><strong>The Street Address Analogy.</strong> Private IP = apartment number inside a building (only people in the building know it). Public IP = the building's street address (the whole world can find it). NAT (Network Address Translation) is the building receptionist — they receive mail addressed to the building and forward it to the right apartment.</p></div>
+
+  <!-- IP Classifier Tool -->
+  <div class="ip-tool">
+    <div class="ip-tool-title">▸ IP ADDRESS CLASSIFIER — TYPE ANY IP</div>
+    <div class="ip-input-row">
+      <input type="text" class="ip-input" id="ipIn" placeholder="e.g. 192.168.1.1 or 8.8.8.8" maxlength="45">
+      <button class="ip-btn" onclick="classifyIP()">ANALYZE</button>
+    </div>
+    <div class="ip-result" id="ipResult">// Awaiting input...</div>
+    <div style="margin-top:10px;font-family:'Space Mono',monospace;font-size:11px;color:var(--text-dim);">Quick tests: 192.168.1.1 · 10.0.0.1 · 127.0.0.1 · 8.8.8.8 · 172.16.5.4</div>
+  </div>
+
+  <div class="threat-box"><p>When you run recon on a target (Day 22), knowing private vs public IPs tells you: is this server reachable from the internet? Internal IPs on public systems = misconfigured firewall = potential attack vector. The SSRF vulnerability (Day 14) tricks servers into fetching <code>http://169.254.169.254</code> (AWS metadata — a special private IP).</p></div>
+</section>
+
+<!-- INTERCEPT 02: TCP vs UDP -->
+<section class="intercept">
+  <div class="ic-num">INTERCEPT 02 // TCP vs UDP</div>
+  <h2 class="ic-title">Two Ways to Send Data</h2>
+  <p class="ic-sub">Not all network traffic is equal. Know which protocol and why.</p>
+  <div class="narrative">
+    <p>Once you have an IP address (destination) and a port (which service), you need a <strong>transport protocol</strong>. Two options, very different tradeoffs.</p>
+  </div>
+
+  <table class="cmp-table">
+    <thead><tr><th>ASPECT</th><th>TCP</th><th>UDP</th></tr></thead>
+    <tbody>
+      <tr><td>Reliability</td><td>Guaranteed delivery. Retries if lost.</td><td>No guarantee. Packets can drop.</td></tr>
+      <tr><td>Speed</td><td>Slower (handshake + confirmation)</td><td>Faster (fire and forget)</td></tr>
+      <tr><td>Order</td><td>Packets arrive in order</td><td>Packets can arrive out of order</td></tr>
+      <tr><td>Connection</td><td>Requires handshake first (SYN→SYN-ACK→ACK)</td><td>No connection needed</td></tr>
+      <tr><td>Used for</td><td>HTTP, HTTPS, SSH, FTP, databases</td><td>DNS, video streaming, gaming, VoIP</td></tr>
+      <tr><td>AppSec relevance</td><td>SYN flood attacks target TCP handshake</td><td>UDP flood for DDoS, DNS amplification</td></tr>
+    </tbody>
+  </table>
+
+  <div class="hook-box"><p><strong>The Phone Call vs Shouting.</strong><br>
+  TCP = a phone call. You dial, they answer, you confirm they can hear you, then talk. If they miss something, you repeat it.<br>
+  UDP = shouting information into a crowd. Fast, no confirmation. Some people hear it, some don't. Fine for live sports scores; bad for banking.</p></div>
+
+  <div class="threat-box"><p><strong>TCP SYN Flood:</strong> An attacker sends thousands of SYN packets (step 1 of handshake) but never completes the handshake. Server reserves memory for each half-open connection until it runs out of resources. This is a classic DoS attack. Countermeasure: SYN cookies, rate limiting.</p></div>
+</section>
+
+<!-- INTERCEPT 03: Ports -->
+<section class="intercept">
+  <div class="ic-num">INTERCEPT 03 // PORTS</div>
+  <h2 class="ic-title">The Port Directory</h2>
+  <p class="ic-sub">IP gets you to the building. The port tells you which door to knock on.</p>
+  <div class="narrative">
+    <p>A server runs many services at once — a web server, SSH, a database. Each gets a <strong>port number</strong> (0–65535). When data arrives, the port number tells the OS which program should handle it. Search or filter below.</p>
+  </div>
+
+  <div class="port-search">
+    <input type="text" id="portSearch" placeholder="Search port number or service name..." oninput="filterPorts()">
+    <div class="port-filter">
+      <button class="filter-btn active" onclick="filterCat('all',this)">ALL</button>
+      <button class="filter-btn" onclick="filterCat('web',this)">WEB</button>
+      <button class="filter-btn" onclick="filterCat('email',this)">EMAIL</button>
+      <button class="filter-btn" onclick="filterCat('db',this)">DATABASE</button>
+      <button class="filter-btn" onclick="filterCat('remote',this)">REMOTE</button>
+    </div>
+  </div>
+  <div class="port-grid" id="portGrid"></div>
+
+  <div class="threat-box" style="margin-top:20px;"><p><strong>Port scanning</strong> (nmap) is how attackers discover which services are running on a target. Open port 3306 on the internet? That's MySQL exposed — attacker tries default credentials. Open 3389? That's RDP — target for brute force. Your job on Day 22 is to do recon exactly like this. Understanding ports now means you understand what every scan result means.</p></div>
+</section>
+
+<!-- INTERCEPT 04: DNS -->
+<section class="intercept">
+  <div class="ic-num">INTERCEPT 04 // DNS</div>
+  <h2 class="ic-title">How Domains Become IPs</h2>
+  <p class="ic-sub">The internet's phonebook. Understand it to attack it or defend it.</p>
+  <div class="narrative">
+    <p>You type <code>google.com</code>. Your computer doesn't know what that is — it only understands IP addresses. <strong>DNS (Domain Name System)</strong> translates the name to an IP. Click each step to trace the journey.</p>
+  </div>
+
+  <div class="dns-journey">
+    <div class="journey-steps" id="dnsSteps"></div>
+  </div>
+
+  <div class="info-box"><p><strong>DNS record types you need to know:</strong><br>
+  <code>A</code> — domain → IPv4 address (most common)<br>
+  <code>AAAA</code> — domain → IPv6 address<br>
+  <code>CNAME</code> — alias pointing to another domain<br>
+  <code>MX</code> — mail server for the domain (email attacks start here)<br>
+  <code>TXT</code> — text records (SPF, DKIM, DMARC — email security)<br>
+  <code>NS</code> — nameservers for the domain</p></div>
+
+  <div class="cmd-block">
+<span class="c"># Basic DNS lookup</span>
+<span class="p">$</span> dig google.com
+<span class="c"># Get only the answer section</span>
+<span class="p">$</span> dig google.com +short
+<span class="c"># Get mail servers</span>
+<span class="p">$</span> dig google.com MX
+<span class="c"># Get text records (shows SPF/security info)</span>
+<span class="p">$</span> dig google.com TXT
+<span class="c"># Query a specific DNS server</span>
+<span class="p">$</span> dig @8.8.8.8 google.com
+<span class="c"># Reverse lookup (IP to domain)</span>
+<span class="p">$</span> dig -x 8.8.8.8
+<span class="c"># Enumerate subdomains (recon technique)</span>
+<span class="p">$</span> dig www.google.com +short
+<span class="p">$</span> dig mail.google.com +short</div>
+
+  <div class="threat-box"><p><strong>DNS attacks you'll encounter:</strong><br>
+  <strong>DNS spoofing/poisoning</strong> — attacker injects fake records so google.com points to their server.<br>
+  <strong>DNS enumeration</strong> — discovering all subdomains of a target (Day 22 recon).<br>
+  <strong>DNS over HTTPS (DoH)</strong> — encrypts DNS queries so ISPs can't see where you browse.<br>
+  <strong>DNS amplification DDoS</strong> — use DNS servers to flood a target with traffic.</p></div>
+</section>
+
+<!-- INTERCEPT 05: TLS/SSL -->
+<section class="intercept">
+  <div class="ic-num">INTERCEPT 05 // TLS/SSL</div>
+  <h2 class="ic-title">How HTTPS Encryption Works</h2>
+  <p class="ic-sub">The padlock icon. What's actually happening underneath it.</p>
+  <div class="narrative">
+    <p>TLS (Transport Layer Security, incorrectly still called SSL) wraps HTTP in an encrypted tunnel. Without it, everything you type (passwords, credit card numbers) is readable by anyone on the same network — a coffee shop attacker, your ISP, a compromised router.</p>
+  </div>
+
+  <div class="info-box"><p><strong>The TLS Handshake (simplified):</strong><br>
+  1. Client says "Hello" and lists encryption algorithms it supports<br>
+  2. Server sends its <strong>certificate</strong> (proves it's really google.com, not an impersonator)<br>
+  3. Certificate is verified against a trusted Certificate Authority (CA)<br>
+  4. Both sides agree on encryption keys without sending them over the wire<br>
+  5. Encrypted tunnel open — all data now encrypted</p></div>
+
+  <div class="hook-box"><p><strong>The Sealed + Certified Envelope.</strong> Without TLS = sending a postcard (everyone reads it). With TLS = sealed envelope with tamper-evident seal. But critically, TLS also verifies the <em>address on the envelope</em> — a certificate proves you're talking to the real server, not an impersonator pretending to be your bank.</p></div>
+
+  <div class="cmd-block">
+<span class="c"># See a site's TLS certificate</span>
+<span class="p">$</span> echo | openssl s_client -connect google.com:443 2>/dev/null | openssl x509 -noout -dates
+<span class="c"># Simpler: check with curl</span>
+<span class="p">$</span> curl -v https://google.com 2>&1 | grep -E "SSL|certificate|expire"
+<span class="c"># Check what cipher suite is being used</span>
+<span class="p">$</span> nmap --script ssl-cert -p 443 google.com</div>
+
+  <div class="threat-box"><p><strong>TLS vulnerabilities:</strong> Expired certificates (browser warning = still visited by users), self-signed certificates (no verification = easy MITM), weak cipher suites (attackers can downgrade encryption), certificate pinning bypass (used in mobile app pentesting).</p></div>
+</section>
+
+<!-- QUIZ -->
+<section class="quiz-wrap">
+  <h2>SIGNAL ANALYSIS — DAY 3 QUIZ</h2>
+  <p style="color:var(--text-soft);font-style:italic;font-size:15px;margin-top:4px;">10 questions. Every one maps to something you'll need on Day 22 (Recon) or Day 27 (AWS networking).</p>
+
+  <div class="q-block">
+    <div class="q-tag">Q.01</div>
+    <div class="q-text">What is the IP address 192.168.1.100?</div>
+    <div class="q-opts" data-q="d3-1">
+      <button class="q-opt" data-c="true" data-f="Correct. 192.168.x.x is a private range. Private IPs are used inside homes and offices. They're invisible to the internet — NAT translates them to your public IP before traffic leaves your network.">A private IP — only usable inside a local network</button>
+      <button class="q-opt" data-c="false" data-f="Public IPs are globally routable. 192.168.x.x is reserved for private use — ISPs won't route it over the internet.">A public IP — globally routable on the internet</button>
+      <button class="q-opt" data-c="false" data-f="Loopback is 127.0.0.1 (or 127.x.x.x range). That's your own machine.">A loopback IP — refers to the local machine itself</button>
+      <button class="q-opt" data-c="false" data-f="IPv6 addresses look like 2001:db8::1 — completely different format.">An IPv6 address</button>
+    </div>
+    <div class="q-fb"></div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-tag">Q.02</div>
+    <div class="q-text">A server is running MySQL. You run nmap and see port <code>3306</code> is open and accessible from the internet. Why is this a critical security issue?</div>
+    <div class="q-opts" data-q="d3-2">
+      <button class="q-opt" data-c="false" data-f="3306 being open doesn't cause slowness directly. The security risk is different.">MySQL on port 3306 causes network slowness</button>
+      <button class="q-opt" data-c="true" data-f="Exactly. Databases should NEVER be directly internet-accessible. An attacker can attempt brute force attacks on MySQL credentials, exploit vulnerabilities in MySQL itself, or if credentials are weak/default, dump the entire database. Firewall rule: databases only accessible from application servers, not the internet.">Anyone on the internet can directly attack the database — brute force credentials or exploit MySQL vulnerabilities</button>
+      <button class="q-opt" data-c="false" data-f="MySQL on 3306 is a well-known convention but it's not a requirement. You could run it on any port.">Port 3306 is reserved and cannot legally run MySQL</button>
+      <button class="q-opt" data-c="false" data-f="Databases can be encrypted whether or not the port is open. Port exposure is the real issue.">The data is not encrypted because port 3306 doesn't support TLS</button>
+    </div>
+    <div class="q-fb"></div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-tag">Q.03</div>
+    <div class="q-text">You're watching a video call over Zoom. The call drops some frames occasionally but keeps going. What protocol is Zoom almost certainly using?</div>
+    <div class="q-opts" data-q="d3-3">
+      <button class="q-opt" data-c="false" data-f="TCP retransmits dropped packets — for live video, this causes freezing and buffering because TCP waits for the retransmission. Not ideal for real-time.">TCP — because reliability matters for calls</button>
+      <button class="q-opt" data-c="true" data-f="UDP. For live video, it's better to drop a frame and keep going than to freeze the call waiting for TCP retransmission. A dropped frame means slightly worse quality for a moment — far better than the call pausing. This is why UDP is standard for all real-time media.">UDP — dropping a frame is better than pausing to retransmit it</button>
+      <button class="q-opt" data-c="false" data-f="HTTP runs on TCP. Not suitable for real-time video.">HTTP — because all internet traffic uses HTTP</button>
+      <button class="q-opt" data-c="false" data-f="HTTPS (TCP + TLS) would have the same problem as TCP for real-time video. Zoom uses DTLS (Datagram TLS) over UDP for encrypted real-time audio/video.">HTTPS — because the call needs to be secure</button>
+    </div>
+    <div class="q-fb"></div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-tag">Q.04</div>
+    <div class="q-text">What does <code>dig google.com MX</code> return?</div>
+    <div class="q-opts" data-q="d3-4">
+      <button class="q-opt" data-c="false" data-f="A records return IPv4 addresses. MX is a different record type.">The IP address of google.com</button>
+      <button class="q-opt" data-c="false" data-f="NS records give nameservers. MX is for mail.">The nameservers responsible for google.com</button>
+      <button class="q-opt" data-c="true" data-f="Correct. MX = Mail eXchange. Returns which servers handle email for the domain (like aspmx.l.google.com). This is useful in security recon: finding mail servers lets you test for email spoofing vulnerabilities (SPF, DKIM, DMARC).">The mail servers responsible for receiving email for google.com</button>
+      <button class="q-opt" data-c="false" data-f="TXT records contain text info like SPF/DKIM. MX is specifically for mail servers.">SPF and DKIM email security records</button>
+    </div>
+    <div class="q-fb"></div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-tag">Q.05</div>
+    <div class="q-text">Port 22 is open on a target server. What service is almost certainly running there?</div>
+    <div class="q-opts" data-q="d3-5">
+      <button class="q-opt" data-c="false" data-f="HTTP runs on port 80. HTTPS on 443.">HTTP web server</button>
+      <button class="q-opt" data-c="false" data-f="FTP uses ports 20 and 21.">FTP file transfer</button>
+      <button class="q-opt" data-c="true" data-f="Port 22 = SSH (Secure Shell). It's the remote command-line access protocol. Seeing port 22 open on a server means you can try to SSH into it. Attackers brute-force SSH credentials constantly — this is why strong passwords and key-based auth are critical.">SSH — secure remote shell access</button>
+      <button class="q-opt" data-c="false" data-f="SMTP (email sending) runs on port 25. Port 22 is SSH.">SMTP email sending</button>
+    </div>
+    <div class="q-fb"></div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-tag">Q.06</div>
+    <div class="q-text">What does a TLS certificate actually prove?</div>
+    <div class="q-opts" data-q="d3-6">
+      <button class="q-opt" data-c="false" data-f="TLS encrypts the connection regardless of the website's reputation. A phishing site can have a valid TLS certificate.">The website is safe and legitimate</button>
+      <button class="q-opt" data-c="true" data-f="Exactly. TLS proves identity (this domain is controlled by whoever the CA verified) and enables encryption. The padlock doesn't mean 'safe site' — it means 'the connection is encrypted to the real owner of this domain.' A malicious site at evil.com can have a real TLS certificate — it just proves you're talking to the real evil.com.">The server's identity has been verified by a Certificate Authority and the connection is encrypted</button>
+      <button class="q-opt" data-c="false" data-f="TLS certificates don't contain or verify payment information.">The site has verified payment information on file</button>
+      <button class="q-opt" data-c="false" data-f="TLS certificates don't directly relate to malware scanning.">The site has been scanned for malware</button>
+    </div>
+    <div class="q-fb"></div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-tag">Q.07</div>
+    <div class="q-text">What is the loopback address and what is it used for?</div>
+    <div class="q-opts" data-q="d3-7">
+      <button class="q-opt" data-c="false" data-f="192.168.1.1 is a common private IP (often a router) but not the loopback.">192.168.1.1 — the default router address</button>
+      <button class="q-opt" data-c="false" data-f="8.8.8.8 is Google's public DNS server, not loopback.">8.8.8.8 — Google's DNS server</button>
+      <button class="q-opt" data-c="true" data-f="127.0.0.1 (or 'localhost') is the loopback. When you run a local web server (Flask, Node, etc.), it listens on 127.0.0.1:5000 by default. Traffic to loopback never leaves the machine — it loops back to the same device. You'll use it constantly for local development and testing.">127.0.0.1 — a virtual address that routes traffic back to the same machine (localhost)</button>
+      <button class="q-opt" data-c="false" data-f="0.0.0.0 means 'all interfaces' — used when binding a server to all available network interfaces.">0.0.0.0 — the unspecified address meaning all interfaces</button>
+    </div>
+    <div class="q-fb"></div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-tag">Q.08</div>
+    <div class="q-text">You run <code>nmap -sV target.com</code> and see port 3389 open. What's the security concern?</div>
+    <div class="q-opts" data-q="d3-8">
+      <button class="q-opt" data-c="false" data-f="3389 is Windows Remote Desktop, not a web port.">Port 3389 hosts the main website — check for XSS</button>
+      <button class="q-opt" data-c="true" data-f="Correct. Port 3389 = RDP (Remote Desktop Protocol) = Windows remote graphical access. Internet-exposed RDP is one of the most attacked services in the world. BlueKeep (CVE-2019-0708) was a critical RDP vulnerability allowing remote code execution without credentials. RDP should NEVER be directly internet-accessible.">Port 3389 is RDP — Windows remote desktop is exposed to the internet and vulnerable to brute force and critical exploits</button>
+      <button class="q-opt" data-c="false" data-f="Redis (key-value database) runs on 6379, not 3389.">Port 3389 is Redis database — attempt authentication bypass</button>
+      <button class="q-opt" data-c="false" data-f="3389 is not an email port. SMTP=25, IMAP=143, POP3=110.">Port 3389 is email — check for open relay</button>
+    </div>
+    <div class="q-fb"></div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-tag">Q.09</div>
+    <div class="q-text">Why is DNS traffic important to monitor from a security perspective?</div>
+    <div class="q-opts" data-q="d3-9">
+      <button class="q-opt" data-c="false" data-f="DNS queries are usually fast but that's not why security teams monitor them.">DNS queries are slow and need optimization</button>
+      <button class="q-opt" data-c="false" data-f="DNS doesn't encrypt traffic by itself — that's what DNS over HTTPS (DoH) addresses.">DNS encryption prevents eavesdropping by ISPs</button>
+      <button class="q-opt" data-c="true" data-f="Exactly. Malware often uses DNS for C2 (command and control) — malicious code pings unusual domains to receive instructions. Data exfiltration via DNS tunneling encodes stolen data in DNS queries. Unusual DNS patterns (querying random domains, very long subdomains) are red flags. This is why GuardDuty (Day 31) monitors DNS logs.">DNS reveals what domains a device is contacting — malware uses DNS for command-and-control and data exfiltration via DNS tunneling</button>
+      <button class="q-opt" data-c="false" data-f="DNS is for name resolution, not user authentication.">DNS stores user authentication credentials</button>
+    </div>
+    <div class="q-fb"></div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-tag">Q.10</div>
+    <div class="q-text">Which command shows the full path packets take from your machine to google.com?</div>
+    <div class="q-opts" data-q="d3-10">
+      <button class="q-opt" data-c="false" data-f="dig resolves DNS names to IPs. It doesn't show network routing.">dig google.com</button>
+      <button class="q-opt" data-c="false" data-f="nslookup does DNS lookups. It doesn't trace network paths.">nslookup google.com</button>
+      <button class="q-opt" data-c="false" data-f="ping tests if a host is reachable but only shows round-trip time, not the path.">ping google.com</button>
+      <button class="q-opt" data-c="true" data-f="traceroute sends probes with increasing TTL (time-to-live) values. Each router along the path decrements TTL by 1 and returns an ICMP message when TTL hits 0. This reveals every hop between you and the destination — ISPs, backbone routers, and the target's infrastructure.">traceroute google.com</button>
+    </div>
+    <div class="q-fb"></div>
+  </div>
+</section>
+
+<!-- FIELD NOTES -->
+<section class="field-notes">
+  <h3>1. PORT FLASHCARD LIST</h3>
+  <p>The roadmap says document common ports as a flashcard list. Do it now in <code>60-day-appsec-journey/day-03-networking.md</code>. Format: <code>PORT — SERVICE — ONE-LINE SECURITY NOTE</code>. You WILL be asked port questions in every security interview.</p>
+
+  <h3>2. COMMANDS TO RUN ON YOUR MAC</h3>
+  <p>Run these and note the results:</p>
+  <div class="cmd-block" style="margin-top:8px;">
+<span class="p">$</span> ip addr show &amp;&amp; ping -c 3 google.com &amp;&amp; traceroute google.com
+<span class="p">$</span> dig google.com +short
+<span class="p">$</span> dig google.com MX +short
+<span class="p">$</span> nc -zv google.com 80 &amp;&amp; nc -zv google.com 443</div>
+
+  <h3>3. CONNECT TO DAY 22</h3>
+  <p>Day 22 is Recon — you'll use nmap, dig, and subfinder to discover a target's attack surface. Every concept from today powers that work. Write one sentence: "Today's most important thing for recon is ___"</p>
+
+  <h3>4. PUSH TO GITHUB</h3>
+  <div class="cmd-block" style="margin-top:8px;">
+<span class="p">$</span> cd ~/Documents/appsec-roadmap/60-day-appsec-journey
+<span class="p">$</span> git add .
+<span class="p">$</span> git commit -m "Day 3: Networking fundamentals — IPs, TCP/UDP, ports, DNS"
+<span class="p">$</span> git push</div>
+</section>
+
+<div class="closing">
+  <p>Day 3 closed. You understand the language packets speak.</p>
+  <p>Tomorrow: <strong>Day 4 — Python for Security.</strong> Your Java background becomes a weapon.</p>
+  <div class="sig">— END SIGINT FILE 03 —</div>
+</div>
+</main>
+
+<script>
+const SK='day3-v1';
+let S={};
+try{S=JSON.parse(localStorage.getItem(SK)||'{}')}catch(e){}
+function save(){try{localStorage.setItem(SK,JSON.stringify(S))}catch(e){}showSv();}
+function showSv(){const p=document.getElementById('sv');p.classList.add('show');clearTimeout(window._st);window._st=setTimeout(()=>p.classList.remove('show'),1500);}
+
+// Port data
+const ports=[
+  {num:22,service:'SSH',cat:'remote',desc:'Secure Shell — remote command-line access. Brute force attacks target this constantly.',color:'var(--green)'},
+  {num:25,service:'SMTP',cat:'email',desc:'Sending email. Open relays allow spam. Check for email spoofing vulnerabilities.',color:'var(--yellow)'},
+  {num:53,service:'DNS',cat:'web',desc:'Domain Name System. UDP + TCP. DNS tunneling used for data exfiltration by malware.',color:'var(--blue)'},
+  {num:80,service:'HTTP',cat:'web',desc:'Unencrypted web. All traffic readable. Should redirect to 443 HTTPS.',color:'var(--blue)'},
+  {num:110,service:'POP3',cat:'email',desc:'Email retrieval (old). Usually cleartext — use IMAP with TLS instead.',color:'var(--yellow)'},
+  {num:143,service:'IMAP',cat:'email',desc:'Modern email retrieval. Use port 993 for IMAP over TLS.',color:'var(--yellow)'},
+  {num:443,service:'HTTPS',cat:'web',desc:'Encrypted web (HTTP + TLS). The standard. Certificate required.',color:'var(--blue)'},
+  {num:445,service:'SMB',cat:'remote',desc:'Windows file sharing. EternalBlue/WannaCry targeted this. Never expose to internet.',color:'var(--red)'},
+  {num:3306,service:'MySQL',cat:'db',desc:'MySQL database. Should never be internet-accessible. Firewall to app servers only.',color:'var(--purple)'},
+  {num:3389,service:'RDP',cat:'remote',desc:'Windows Remote Desktop. Critical target for brute force + BlueKeep exploit. Never expose publicly.',color:'var(--red)'},
+  {num:5432,service:'PostgreSQL',cat:'db',desc:'PostgreSQL database. Keep behind firewall. Default user "postgres" often has no password.',color:'var(--purple)'},
+  {num:6379,service:'Redis',cat:'db',desc:'Redis in-memory database. Often runs without auth by default. Notorious for exposed instances.',color:'var(--purple)'},
+  {num:8080,service:'HTTP-ALT',cat:'web',desc:'HTTP alternative port. Common for dev servers and proxies. Often less secured than 443.',color:'var(--blue)'},
+  {num:8443,service:'HTTPS-ALT',cat:'web',desc:'HTTPS alternative. Used when 443 is taken. Admin panels often run here.',color:'var(--blue)'},
+  {num:21,service:'FTP',cat:'remote',desc:'File Transfer Protocol. Cleartext credentials. Use SFTP (over SSH port 22) instead.',color:'var(--red)'},
+  {num:23,service:'Telnet',cat:'remote',desc:'Unencrypted remote shell. 1970s tech. If open in 2025, something is very wrong.',color:'var(--red)'},
+  {num:27017,service:'MongoDB',cat:'db',desc:'MongoDB database. Many exposed instances found online with zero authentication.',color:'var(--purple)'},
+  {num:9200,service:'Elasticsearch',cat:'db',desc:'Elasticsearch. Thousands of exposed instances leak millions of records annually.',color:'var(--purple)'},
+];
+
+function buildPorts(){
+  const g=document.getElementById('portGrid');
+  ports.forEach(p=>{
+    const d=document.createElement('div');
+    d.className='port-card';
+    d.dataset.num=p.num;d.dataset.service=p.service.toLowerCase();d.dataset.cat=p.cat;
+    const catClass=p.cat==='security-flag'?'security-flag':p.cat;
+    const catLabel={'web':'WEB','email':'EMAIL','db':'DATABASE','remote':'REMOTE','security-flag':'⚠ CRITICAL'}[p.cat]||p.cat;
+    d.innerHTML=`<span class="port-cat ${catClass}">${catLabel}</span>
+      <div class="port-num" style="color:${p.color}">${p.num}</div>
+      <div class="port-service">${p.service}</div>
+      <div class="port-desc">${p.desc}</div>`;
+    g.appendChild(d);
+  });
+}
+
+let activeCat='all';
+function filterCat(cat,btn){
+  activeCat=cat;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  applyFilter();
+}
+function filterPorts(){applyFilter();}
+function applyFilter(){
+  const q=document.getElementById('portSearch').value.toLowerCase();
+  document.querySelectorAll('.port-card').forEach(c=>{
+    const matchCat=activeCat==='all'||c.dataset.cat===activeCat;
+    const matchQ=!q||(c.dataset.num.includes(q)||c.dataset.service.includes(q));
+    c.classList.toggle('hidden',!(matchCat&&matchQ));
+  });
+}
+
+// IP Classifier
+function classifyIP(){
+  const raw=document.getElementById('ipIn').value.trim();
+  const out=document.getElementById('ipResult');
+  if(!raw){out.textContent='// Enter an IP address';return;}
+  const parts=raw.split('.');
+  if(parts.length!==4||parts.some(p=>isNaN(p)||+p<0||+p>255)){
+    out.innerHTML=`<span style="color:var(--red)">// Invalid IPv4 format. Try: 192.168.1.1</span>`;return;
+  }
+  const [a,b,c,d]=[+parts[0],+parts[1],+parts[2],+parts[3]];
+  let type,color,notes;
+  if(a===127){type='LOOPBACK';color='var(--yellow)';notes='127.0.0.1 = localhost. Your machine talking to itself.\nUsed to access local development servers (flask, node).\nNever routable over a network.';}
+  else if(a===10){type='PRIVATE (Class A)';color='var(--green)';notes='10.0.0.0/8 range. Used in large corporate networks.\nNot routable on the internet.\nNAT translates this to a public IP for internet access.';}
+  else if(a===172&&b>=16&&b<=31){type='PRIVATE (Class B)';color='var(--green)';notes='172.16.0.0/12 range. Often used by Docker networks.\nNot routable on the internet.';}
+  else if(a===192&&b===168){type='PRIVATE (Class C)';color='var(--green)';notes='192.168.0.0/16 range. Used in home/small office networks.\nYour home WiFi devices are likely in this range.\nCheck your own: run `ip addr show` or `ifconfig`.';}
+  else if(a===169&&b===254){type='LINK-LOCAL / AWS METADATA';color='var(--red)';notes='169.254.x.x = APIPA or link-local.\nOn AWS: 169.254.169.254 is the METADATA SERVICE.\nSSRF attacks target this IP to steal AWS credentials!\nSee Day 14 (SSRF) for why this matters.';}
+  else if(a===0){type='UNSPECIFIED';color='var(--text-dim)';notes='0.0.0.0 means "all interfaces" in server binding.\nUsed when you want a server to listen on ALL network interfaces.';}
+  else if(a>=224&&a<=239){type='MULTICAST';color='var(--yellow)';notes='Used to send data to multiple destinations simultaneously.\nNot assigned to individual devices.';}
+  else{type='PUBLIC';color='var(--blue)';notes='Globally routable on the internet.\nThis IP is assigned to a specific organization.\nTry: dig -x '+raw+' to find who owns it (reverse DNS).';}
+  out.innerHTML=`<span style="color:${color}">TYPE: ${type}</span>\nADDRESS: ${raw}\n\n${notes}`;
+}
+document.getElementById('ipIn').addEventListener('keydown',e=>{if(e.key==='Enter')classifyIP();});
+
+// DNS Journey
+const dnsSteps=[
+  {title:'1. You type google.com',desc:'Your browser checks its own cache first. If it has a recent DNS record for google.com, it uses that IP directly and skips the rest.',code:'Browser cache hit: google.com → 142.250.x.x (cached 5 min ago)'},
+  {title:'2. Check OS cache / hosts file',desc:'If not in browser cache, OS checks its local cache and the /etc/hosts file. You can override any domain here — used for development and sometimes malware blocking.',code:'cat /etc/hosts\n# 127.0.0.1 google.com  ← override (for testing)'},
+  {title:'3. Ask your Recursive Resolver',desc:'Your ISP or configured DNS server (8.8.8.8, 1.1.1.1) receives the query. It does the heavy lifting of finding the answer.',code:'dig @8.8.8.8 google.com\n# Asking Google\'s DNS: what is google.com?'},
+  {title:'4. Ask the Root Name Servers',desc:'If the resolver doesn\'t have it cached, it asks a root server. There are only 13 root server clusters worldwide. They know who handles .com, .org, .net etc.',code:'Root says: "For .com domains, ask: a.gtld-servers.net"'},
+  {title:'5. Ask the TLD Name Server',desc:'The .com TLD server knows which nameservers are authoritative for google.com specifically.',code:'TLD says: "For google.com, ask: ns1.google.com"'},
+  {title:'6. Ask Google\'s Authoritative Server',desc:'Google\'s own nameserver has the definitive answer: the actual IP address(es) for google.com.',code:'ns1.google.com says: "google.com = 142.250.190.78"'},
+  {title:'7. Response returned + cached',desc:'The resolver sends the IP back to your browser and caches it for the TTL (time-to-live) period so future requests skip all these steps.',code:'Your browser: connecting to 142.250.190.78:443...'},
+];
+
+function buildDNS(){
+  const c=document.getElementById('dnsSteps');
+  dnsSteps.forEach((step,i)=>{
+    const div=document.createElement('div');
+    div.className='j-step'+(S[`dns-${i}`]?' active':'');
+    div.innerHTML=`<div class="j-step-num">${i+1}</div><div style="flex:1"><div class="j-step-title">${step.title}</div><div class="j-step-desc">${step.desc}</div><div class="j-step-code">${step.code.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div></div>`;
+    div.addEventListener('click',()=>{
+      div.classList.toggle('active');
+      S[`dns-${i}`]=div.classList.contains('active');save();
+    });
+    c.appendChild(div);
+  });
+}
+
+// Quiz
+document.querySelectorAll('.q-opts').forEach(opts=>{
+  const qid=opts.dataset.q;
+  const saved=S[`q-${qid}`];
+  const btns=opts.querySelectorAll('.q-opt');
+  if(saved!==undefined){
+    btns.forEach((b,i)=>{
+      b.classList.add('locked');
+      if(b.dataset.c==='true')b.classList.add('correct');
+      if(i===saved&&b.dataset.c!=='true')b.classList.add('wrong');
+    });
+    const fb=opts.parentElement.querySelector('.q-fb');
+    const ok=btns[saved].dataset.c==='true';
+    fb.innerHTML=`<span class="vt ${ok?'ok':'bad'}">${ok?'CORRECT':'INCORRECT'}</span>${btns[saved].dataset.f}`;
+    fb.classList.add('show');
+  }
+  btns.forEach((btn,i)=>{
+    btn.addEventListener('click',()=>{
+      if(btn.classList.contains('locked'))return;
+      const ok=btn.dataset.c==='true';
+      btns.forEach(b=>{b.classList.add('locked');if(b.dataset.c==='true')b.classList.add('correct');});
+      if(!ok)btn.classList.add('wrong');
+      const fb=opts.parentElement.querySelector('.q-fb');
+      fb.innerHTML=`<span class="vt ${ok?'ok':'bad'}">${ok?'CORRECT':'INCORRECT'}</span>${btn.dataset.f}`;
+      fb.classList.add('show');
+      S[`q-${qid}`]=i;save();
+    });
+  });
+});
+
+buildPorts();buildDNS();
+console.log('%c▸ SIGINT FILE 03 — DAY 3 // NETWORKING',`font-family:monospace;font-weight:bold;color:#00aaff;font-size:14px`);
+</script>
+</body>
+</html>
